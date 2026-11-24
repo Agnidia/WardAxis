@@ -35,7 +35,7 @@ public struct URLSessionWebSocketTransport: ConfigurationStreamTransport {
     /// binary frame could carry encodings the strict pre-scan was not built for.
     static func payload(of message: URLSessionWebSocketTask.Message) -> Data? {
         switch message {
-        case let .string(text):
+        case .string(let text):
             Data(text.utf8)
         case .data:
             nil
@@ -98,7 +98,7 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
     func receiveNext(on task: URLSessionWebSocketTask) {
         task.receive { [self] result in
             switch result {
-            case let .success(message):
+            case .success(let message):
                 if let payload = URLSessionWebSocketTransport.payload(of: message) {
                     continuation.yield(.message(payload))
                 }

@@ -59,10 +59,10 @@ struct IconBadge: View {
     @ViewBuilder
     private var iconView: some View {
         switch content {
-        case let .system(name):
+        case .system(let name):
             Image(systemName: name)
                 .font(.system(size: size * 0.42))
-        case let .resource(resource):
+        case .resource(let resource):
             Image(resource)
                 .resizable()
                 .scaledToFit()

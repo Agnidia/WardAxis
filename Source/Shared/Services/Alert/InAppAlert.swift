@@ -26,9 +26,9 @@ enum InAppAlert: Identifiable, Sendable, Equatable {
     
     var id: String {
         switch self {
-        case let .accent(message, isLoading):
+        case .accent(let message, let isLoading):
             "accent-\(message)-\(isLoading)"
-        case let .banner(message, type):
+        case .banner(let message, let type):
             "banner-\(message)-\(type)"
         }
     }
@@ -36,9 +36,9 @@ enum InAppAlert: Identifiable, Sendable, Equatable {
     /// The duration before auto-dismissal, or nil for manual dismiss only.
     var autoDismissDuration: Double? {
         switch self {
-        case let .accent(_, isLoading):
+        case .accent(_, let isLoading):
             isLoading ? nil : 3
-        case let .banner(_, type):
+        case .banner(_, let type):
             switch type {
             case .info, .success: 3
             case .error: 5

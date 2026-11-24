@@ -112,8 +112,8 @@ struct KeychainItemStoreTests {
         
         var description: String {
             switch self {
-            case let .persist(token, generation): "persist(\(token), \(generation))"
-            case let .erase(generation): "erase(\(generation))"
+            case .persist(let token, let generation): "persist(\(token), \(generation))"
+            case .erase(let generation): "erase(\(generation))"
             }
         }
     }
@@ -127,9 +127,9 @@ struct KeychainItemStoreTests {
         let vault = SecureItemVault<TestSecret>(store: store, marker: MockErasePendingMarker())
         for step in steps {
             switch step {
-            case let .persist(token, generation):
+            case .persist(let token, let generation):
                 _ = try? await vault.persist(makeCredential(token), generation: generation)
-            case let .erase(generation):
+            case .erase(let generation):
                 try? await vault.erase(generation: generation)
             }
         }

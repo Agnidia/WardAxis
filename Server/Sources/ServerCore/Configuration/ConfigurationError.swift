@@ -19,9 +19,9 @@ package enum ConfigurationError: Error, Equatable, Sendable {
 extension ConfigurationError: CustomStringConvertible {
     package var description: String {
         switch self {
-        case let .missing(variable):
+        case .missing(let variable):
             "Missing required environment variable \(variable)"
-        case let .invalid(variable, reason):
+        case .invalid(let variable, let reason):
             "Invalid environment variable \(variable): \(reason)"
         }
     }

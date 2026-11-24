@@ -25,7 +25,7 @@ enum OpenAPISecurityScanner {
         /// No `security` key: the operation would inherit a global default.
         case unspecified
     }
-
+    
     struct Operation: Equatable {
         /// The path key, without the `servers` prefix.
         let path: String
@@ -34,15 +34,15 @@ enum OpenAPISecurityScanner {
         let security: Security
         /// The `servers` path the operation is served under; `/` adds no prefix.
         let serverPath: String
-
+        
         /// The path a client sends: the `servers` path, then the path key.
         var requestPath: String {
             serverPath == "/" ? path : serverPath + path
         }
     }
-
+    
     private static let methods: Set<String> = ["get", "put", "post", "delete", "patch", "head", "options", "trace"]
-
+    
     /// The canonical contract, located from this file so the test runs from any directory.
     static var shippedSpecURL: URL {
         URL(fileURLWithPath: #filePath)
@@ -53,11 +53,11 @@ enum OpenAPISecurityScanner {
             .deletingLastPathComponent() // repository root
             .appendingPathComponent("Packages/WardAxisManagementAPI/Sources/WardAxisAPIServer/openapi.yaml")
     }
-
+    
     static func shippedSpec() throws -> String {
         try String(contentsOf: shippedSpecURL, encoding: .utf8)
     }
-
+    
     /// The first `servers` URL, or `/` when the contract has none, as OpenAPI specifies.
     static func serverPath(in spec: String) -> String {
         var inServers = false
@@ -78,7 +78,7 @@ enum OpenAPISecurityScanner {
         }
         return "/"
     }
-
+    
     static func operations(in spec: String) -> [Operation] {
         let serverPath = serverPath(in: spec)
         var operations: [Operation] = []
@@ -90,11 +90,11 @@ enum OpenAPISecurityScanner {
         var readingSchemes = false
         // `{}` can sit anywhere in the list, so it is folded in only once the operation ends.
         var allowsAnonymous = false
-
+        
         func flush() {
             if let path, let method, let operationID {
                 var scanned = security
-                if allowsAnonymous, case let .schemes(names) = security {
+                if allowsAnonymous, case .schemes(let names) = security {
                     scanned = .optional(names)
                 }
                 operations.append(Operation(path: path, method: method, operationID: operationID, security: scanned, serverPath: serverPath))
@@ -104,7 +104,7 @@ enum OpenAPISecurityScanner {
             readingSchemes = false
             allowsAnonymous = false
         }
-
+        
         for rawLine in spec.split(separator: "\n", omittingEmptySubsequences: false) {
             let line = String(rawLine)
             let indent = line.prefix { $0 == " " }.count
@@ -112,7 +112,7 @@ enum OpenAPISecurityScanner {
             if content.isEmpty || content.hasPrefix("#") {
                 continue
             }
-
+            
             if indent == 0 {
                 flush()
                 method = nil
@@ -121,7 +121,7 @@ enum OpenAPISecurityScanner {
                 continue
             }
             guard inPaths else { continue }
-
+            
             switch indent {
             case 2 where content.hasPrefix("/") && content.hasSuffix(":"):
                 flush()
@@ -148,7 +148,7 @@ enum OpenAPISecurityScanner {
                 allowsAnonymous = true
             case 8 where readingSchemes && content.hasPrefix("- "):
                 let scheme = content.dropFirst(2).split(separator: ":").first.map { String($0).trimmingCharacters(in: .whitespaces) } ?? ""
-                if case let .schemes(names) = security {
+                if case .schemes(let names) = security {
                     security = .schemes(names + [scheme])
                 }
             default:

@@ -97,7 +97,7 @@ package enum ServerTLS {
     /// Whether `configuration` makes every handshake present a verified client certificate.
     /// The config stream is mounted only when this is `true`.
     package static func requiresClientCertificates(_ configuration: TLSConfiguration) -> Bool {
-        guard case let .certificates(roots) = configuration.trustRoots, !roots.isEmpty else {
+        guard case .certificates(let roots) = configuration.trustRoots, !roots.isEmpty else {
             return false
         }
         // `.none` includes optional verification, which admits a client with no certificate.

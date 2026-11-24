@@ -20,7 +20,7 @@ struct ConfigMessageCodingTests {
     func `A snapshot frame decodes to .snapshot and re-encodes byte for byte`() throws {
         let frame = #"{"type":"snapshot","values":{"maxItems":20,"theme":"dark"},"version":41}"#
         let message = try decode(frame)
-        guard case let .snapshot(snapshot) = message else {
+        guard case .snapshot(let snapshot) = message else {
             Issue.record("Expected .snapshot, decoded \(message)")
             return
         }
@@ -33,7 +33,7 @@ struct ConfigMessageCodingTests {
     func `A delta frame decodes to .delta and re-encodes byte for byte`() throws {
         let frame = #"{"changed":{"maxItems":25},"removed":["theme"],"type":"delta","version":42}"#
         let message = try decode(frame)
-        guard case let .delta(delta) = message else {
+        guard case .delta(let delta) = message else {
             Issue.record("Expected .delta, decoded \(message)")
             return
         }
@@ -47,7 +47,7 @@ struct ConfigMessageCodingTests {
     func `A heartbeat frame decodes to .heartbeat and re-encodes byte for byte`() throws {
         let frame = #"{"type":"heartbeat","version":42}"#
         let message = try decode(frame)
-        guard case let .heartbeat(heartbeat) = message else {
+        guard case .heartbeat(let heartbeat) = message else {
             Issue.record("Expected .heartbeat, decoded \(message)")
             return
         }
@@ -66,7 +66,7 @@ struct ConfigMessageCodingTests {
     )
     func `A version above 2^53 stays exact through decode and re-encode`(frame: String, expected: Int64) throws {
         let message = try decode(frame)
-        guard case let .heartbeat(heartbeat) = message else {
+        guard case .heartbeat(let heartbeat) = message else {
             Issue.record("Expected .heartbeat, decoded \(message)")
             return
         }

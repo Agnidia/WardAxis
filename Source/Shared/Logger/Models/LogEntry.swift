@@ -66,7 +66,7 @@ struct LogEntry: Sendable, Identifiable, Hashable {
     
     /// Convenience accessor — `nil` for `.raw` kind.
     var parsed: Parsed? {
-        if case let .parsed(value) = kind {
+        if case .parsed(let value) = kind {
             return value
         }
         return nil

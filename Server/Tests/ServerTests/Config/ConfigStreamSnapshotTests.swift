@@ -36,7 +36,7 @@ struct ConfigStreamSnapshotTests {
         let user = try harness.enrollDevice()
         try await harness.application().test(.live) { client in
             let recording = try await client.openConfigStream(as: user) { $0.count == 1 }
-            guard case let .snapshot(snapshot) = try #require(recording.messages.first) else {
+            guard case .snapshot(let snapshot) = try #require(recording.messages.first) else {
                 Issue.record("The first frame is not a snapshot: \(recording.messages)")
                 return
             }
@@ -80,7 +80,7 @@ struct ConfigStreamSnapshotTests {
                 }
                 #expect(recordings.count == 2)
                 for recording in recordings {
-                    guard case let .delta(delta) = try #require(recording.messages.last) else {
+                    guard case .delta(let delta) = try #require(recording.messages.last) else {
                         Issue.record("Expected a delta, got \(recording.messages)")
                         continue
                     }
@@ -113,7 +113,7 @@ struct ConfigStreamSnapshotTests {
                 return messages.count == 3
             }
             #expect(recording.messages.map(\.version) == [41, 42, 43])
-            guard case let .delta(filled) = recording.messages[1] else {
+            guard case .delta(let filled) = recording.messages[1] else {
                 Issue.record("Expected delta 42, got \(recording.messages)")
                 return
             }

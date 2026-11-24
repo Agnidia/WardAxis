@@ -64,7 +64,7 @@ struct ConfigStreamMutualTLSTests {
                 #expect(harness.hub.connectionCount(for: device.slot) == 1)
                 return messages.count == 1
             }
-            guard case let .snapshot(snapshot) = try #require(recording.messages.first) else {
+            guard case .snapshot(let snapshot) = try #require(recording.messages.first) else {
                 Issue.record("Expected a snapshot first, got \(recording.messages)")
                 return
             }
@@ -158,7 +158,7 @@ struct ConfigStreamMutualTLSTests {
         let mutual = try await TestServerFiles.serverConfiguration(serverAuthority: server, clientCAs: devices)
         #expect(mutual.certificateVerification == .noHostnameVerification)
         #expect(mutual.sendCANameList)
-        guard case let .certificates(roots) = mutual.trustRoots else {
+        guard case .certificates(let roots) = mutual.trustRoots else {
             Issue.record("Expected the device CA bundle as trust roots")
             return
         }
@@ -192,7 +192,7 @@ struct ConfigStreamMutualTLSTests {
                     _ = try ServerTLS.configuration(for: candidate)
                     Issue.record("Expected the device CA file to be rejected")
                 } catch {
-                    guard case let .invalid(variable, _) = error else {
+                    guard case .invalid(let variable, _) = error else {
                         Issue.record("Expected .invalid, got \(error)")
                         continue
                     }

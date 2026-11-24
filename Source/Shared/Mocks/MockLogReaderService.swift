@@ -40,7 +40,7 @@ actor MockLogReaderService: LogReaderServiceProtocol {
             return []
         case .sampleEntries:
             return Self.makeSampleEntries()
-        case let .failure(error):
+        case .failure(let error):
             throw error
         }
     }

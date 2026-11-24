@@ -35,7 +35,7 @@ struct AlertPresenterModifier: ViewModifier {
         if let alert = alertManager.currentAlert {
             Group {
                 switch alert {
-                case let .accent(message, isLoading):
+                case .accent(let message, let isLoading):
                     AccentAlert(
                         message: message,
                         style: .accent,
@@ -43,7 +43,7 @@ struct AlertPresenterModifier: ViewModifier {
                         onTap: { alertManager.dismiss() }
                     )
                 
-                case let .banner(message, type):
+                case .banner(let message, let type):
                     BannerAlert(
                         message: message,
                         type: type,

@@ -124,7 +124,7 @@ struct TLSListenerTests {
                     _ = try ServerTLS.configuration(for: files)
                     Issue.record("Expected \(variable) to be rejected")
                 } catch {
-                    guard case let .invalid(reported, _) = error else {
+                    guard case .invalid(let reported, _) = error else {
                         Issue.record("Expected .invalid, got \(error)")
                         continue
                     }

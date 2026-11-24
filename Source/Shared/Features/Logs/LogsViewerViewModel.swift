@@ -42,7 +42,7 @@ final class LogsViewerViewModel {
         
         /// File-order entries when loaded, else `[]`.
         var entries: [LogEntry] {
-            if case let .loaded(entries) = self {
+            if case .loaded(let entries) = self {
                 return entries
             }
             return []
@@ -315,7 +315,7 @@ final class LogsViewerViewModel {
             switch entry.kind {
             case .raw:
                 true
-            case let .parsed(parsed):
+            case .parsed(let parsed):
                 selectedLevels.contains(parsed.level)
                     && selectedDateRange.contains(parsed.timestamp, now: now)
             }

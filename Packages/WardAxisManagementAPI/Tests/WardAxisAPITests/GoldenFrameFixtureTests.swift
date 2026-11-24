@@ -37,14 +37,14 @@ struct GoldenFrameFixtureTests {
     func `Each frame decodes to its own case and version`(frame: GoldenConfigFrame) throws {
         let message = try JSONDecoder().decode(Message.self, from: frame.data())
         switch (frame, message) {
-        case let (.snapshot, .snapshot(snapshot)):
+        case (.snapshot, .snapshot(let snapshot)):
             #expect(snapshot._type == .snapshot)
             #expect(snapshot.version == frame.expectedVersion)
-        case let (.delta, .delta(delta)):
+        case (.delta, .delta(let delta)):
             #expect(delta._type == .delta)
             #expect(delta.version == frame.expectedVersion)
             #expect(delta.removed == ["kind.null"])
-        case let (.heartbeat, .heartbeat(heartbeat)):
+        case (.heartbeat, .heartbeat(let heartbeat)):
             #expect(heartbeat._type == .heartbeat)
             #expect(heartbeat.version == frame.expectedVersion)
         default:
@@ -63,7 +63,7 @@ struct GoldenFrameFixtureTests {
     
     @Test
     func `The snapshot carries one value of every JSON kind, each decoded as that kind`() throws {
-        guard case let .snapshot(snapshot) = try JSONDecoder().decode(Message.self, from: GoldenConfigFrame.snapshot.data()) else {
+        guard case .snapshot(let snapshot) = try JSONDecoder().decode(Message.self, from: GoldenConfigFrame.snapshot.data()) else {
             Issue.record("The snapshot frame is not a snapshot")
             return
         }

@@ -23,29 +23,29 @@ import WardAxisTelemetry
 public final class ConfigurationService: ConfigurationServiceProtocol {
     public private(set) var configuration: ManagedConfiguration?
     public private(set) var isIdentityRejected = false
-
+    
     @ObservationIgnored private var enrollment: EnrollmentState = .restoring
     @ObservationIgnored private var isForeground = false
-
+    
     /// Changes on every teardown. A loop started under an older value stops.
     @ObservationIgnored private var epoch: UInt64 = 0
-
+    
     /// Changes on every enrollment end, so a cache load for an ended enrollment is dropped.
     @ObservationIgnored private var enrollmentGeneration: UInt64 = 0
-
+    
     /// Reconnects since a connection last proved healthy: a heartbeat after its
     /// snapshot, at least ``minimumHealthyUptime`` after it opened. Neither a
     /// snapshot nor an early heartbeat resets it, so a server that closes soon
     /// after either still escalates the delay.
     @ObservationIgnored private var attempt = 0
     static let minimumHealthyUptime: Duration = .seconds(25)
-
+    
     @ObservationIgnored private var hasLoadedCache = false
     @ObservationIgnored private var connectionTask: Task<Void, Never>?
     /// The most recent loop, kept after a teardown so tests can await its end.
     @ObservationIgnored private var latestConnectionTask: Task<Void, Never>?
     @ObservationIgnored private var cacheTask: Task<Void, Never>?
-
+    
     // Existentials: each dependency is a protocol seam with a test double.
     private let apiConfiguration: APIConfiguration?
     private let identityProvider: any ClientIdentityProvider
@@ -55,7 +55,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
     private let backoff: ReconnectBackoff
     private let decoder = ConfigurationFrameDecoder()
     private let logger = Log(category: .management)
-
+    
     /// - Parameter apiConfiguration: The server base URL; `nil` keeps the service idle.
     public init(
         apiConfiguration: APIConfiguration?,
@@ -72,7 +72,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         self.clock = clock
         backoff = ReconnectBackoff(jitter: jitter)
     }
-
+    
     /// The production service for `bundle`'s `APIBaseURL`.
     public static func live(bundle: Bundle, identityProvider: any ClientIdentityProvider) -> ConfigurationService {
         let rawValue = bundle.object(forInfoDictionaryKey: APIConfiguration.infoPlistKey) as? String
@@ -84,9 +84,9 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             cache: FileConfigurationCache.live()
         )
     }
-
+    
     // MARK: - ConfigurationServiceProtocol
-
+    
     public func enrollmentDidChange(to state: EnrollmentState) {
         guard state != enrollment else { return }
         let previous = enrollment
@@ -105,7 +105,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             reconcile()
         }
     }
-
+    
     public func sceneDidChange(isForeground: Bool) {
         guard isForeground != self.isForeground else { return }
         self.isForeground = isForeground
@@ -115,14 +115,14 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             stopConnection()
         }
     }
-
+    
     // MARK: - Test seams
-
+    
     /// Returns once the connection loop has stopped by itself or was torn down.
     public func connectionLoopFinished() async {
         await latestConnectionTask?.value
     }
-
+    
     /// Returns once every queued cache operation has run.
     public func cacheWorkFinished() async {
         while let task = cacheTask {
@@ -132,20 +132,20 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             }
         }
     }
-
+    
     // MARK: - Lifecycle
-
+    
     private func reconcile() {
         guard case .enrolled = enrollment, isForeground, !isIdentityRejected, connectionTask == nil else { return }
         startConnection()
     }
-
+    
     private func stopConnection() {
         epoch &+= 1
         connectionTask?.cancel()
         connectionTask = nil
     }
-
+    
     private func endEnrollment() {
         stopConnection()
         enrollmentGeneration &+= 1
@@ -155,21 +155,21 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         configuration = nil
         enqueueCacheOperation("delete") { try await $0.delete() }
     }
-
+    
     // MARK: - Connection loop
-
+    
     private enum ConnectionStep {
         case connect(URLRequest, ClientIdentity)
         case retry(after: Duration)
         case stop
     }
-
+    
     private enum ConnectionEnd {
         case closed(ConfigurationStreamClose)
         case gap
         case stopped
     }
-
+    
     private func startConnection() {
         let loopEpoch = epoch
         let transport = transport
@@ -192,10 +192,10 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
                 switch step {
                 case .stop:
                     return
-                case let .retry(after):
+                case .retry(let after):
                     delay = after
                     continue
-                case let .connect(connectRequest, connectIdentity):
+                case .connect(let connectRequest, let connectIdentity):
                     request = connectRequest
                     identity = connectIdentity
                 }
@@ -234,13 +234,13 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         }
         latestConnectionTask = connectionTask
     }
-
+    
     private func connectionLoopDidEnd(epoch loopEpoch: UInt64) {
         if epoch == loopEpoch {
             connectionTask = nil
         }
     }
-
+    
     private func prepareConnection(epoch loopEpoch: UInt64) async -> ConnectionStep {
         await cacheTask?.value
         guard isCurrent(loopEpoch) else { return .stop }
@@ -263,7 +263,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         }
         return .connect(request, identity)
     }
-
+    
     /// How `event` ends the connection, or `nil` while it stays open.
     private func handle(
         _ event: ConfigurationStreamEvent,
@@ -274,13 +274,13 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         case .opened:
             logger.info("Configuration feed connected", privacy: .public)
             return nil
-        case let .message(data):
+        case .message(let data):
             return apply(data, hasSnapshot: &hasSnapshot, uptime: uptime) ? nil : .gap
-        case let .closed(close):
+        case .closed(let close):
             return .closed(close)
         }
     }
-
+    
     /// The delay before the next attempt, or `nil` to stop.
     private func delay(after end: ConnectionEnd, epoch loopEpoch: UInt64) -> Duration? {
         guard isCurrent(loopEpoch) else { return nil }
@@ -291,7 +291,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         case .gap:
             logger.info("Configuration version gap; reconnecting for a snapshot", privacy: .public)
             return nextBackoffDelay()
-        case let .closed(reason):
+        case .closed(let reason):
             close = reason
         }
         switch ConfigurationCloseRoute.route(for: close) {
@@ -306,18 +306,18 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         }
         return nextBackoffDelay()
     }
-
+    
     private func isCurrent(_ loopEpoch: UInt64) -> Bool {
         epoch == loopEpoch && !Task.isCancelled
     }
-
+    
     private func nextBackoffDelay() -> Duration {
         defer { attempt += 1 }
         return backoff.delay(forAttempt: attempt)
     }
-
+    
     // MARK: - Frames
-
+    
     /// Applies one frame. Returns `false` on a version gap, which needs a new
     /// connection for a fresh snapshot.
     private func apply(_ data: Data, hasSnapshot: inout Bool, uptime: () -> Duration) -> Bool {
@@ -326,10 +326,10 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             return true
         }
         switch frame {
-        case let .snapshot(snapshot):
+        case .snapshot(let snapshot):
             hasSnapshot = true
             adopt(snapshot)
-        case let .delta(version, changed, removed):
+        case .delta(let version, let changed, let removed):
             guard hasSnapshot, let current = configuration, current.version < .max, version == current.version + 1 else {
                 logger.info("Configuration delta \(version) is out of order", privacy: .public)
                 return false
@@ -344,7 +344,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
                 return false
             }
             adopt(ManagedConfiguration(version: version, values: entries))
-        case let .heartbeat(version):
+        case .heartbeat(let version):
             guard hasSnapshot, let current = configuration else { break }
             if version > current.version {
                 logger.info("Configuration heartbeat \(version) is ahead of \(current.version)", privacy: .public)
@@ -356,14 +356,14 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         }
         return true
     }
-
+    
     private func adopt(_ next: ManagedConfiguration) {
         configuration = next
         enqueueCacheOperation("save") { try await $0.save(next) }
     }
-
+    
     // MARK: - Cache
-
+    
     private func loadCacheIfNeeded() {
         guard !hasLoadedCache else { return }
         hasLoadedCache = true
@@ -378,7 +378,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             logger.info("Applied cached configuration version \(cached.version)", privacy: .public)
         }
     }
-
+    
     private func enqueueCacheOperation(
         _ name: String,
         _ operation: @escaping @Sendable (any ConfigurationCacheProtocol) async throws -> Void
@@ -395,29 +395,29 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             }
         }
     }
-
+    
     // MARK: - Helpers
-
+    
     /// Time elapsed on `clock` since this call. Generic so the existential's
     /// instants can be compared.
     private static func stopwatch(_ clock: some Clock<Duration>) -> @Sendable () -> Duration {
         let start = clock.now
         return { start.duration(to: clock.now) }
     }
-
+    
     private static func logName(of close: ConfigurationStreamClose) -> String {
         switch close {
-        case let .closeCode(code): "close code \(code)"
-        case let .handshakeRejected(status): "handshake status \(status)"
+        case .closeCode(let code): "close code \(code)"
+        case .handshakeRejected(let status): "handshake status \(status)"
         case .clientCertificateRejected: "client certificate rejected"
         case .connectionFailed: "connection failed"
         }
     }
-
+    
     /// The case name and OS status only, never a payload.
     private static func logName(of error: ClientIdentityError) -> String {
         switch error {
-        case let .osStatus(status): "OSStatus \(status)"
+        case .osStatus(let status): "OSStatus \(status)"
         }
     }
 }

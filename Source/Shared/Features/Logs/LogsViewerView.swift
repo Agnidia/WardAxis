@@ -184,7 +184,7 @@ struct LogsViewerView: View {
                 loadingState
             case .loaded:
                 loadedContent(viewModel: viewModel)
-            case let .failed(error):
+            case .failed(let error):
                 errorState(error: error, viewModel: viewModel)
             }
             HStack {

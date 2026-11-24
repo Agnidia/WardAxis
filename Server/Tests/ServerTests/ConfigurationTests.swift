@@ -98,7 +98,7 @@ struct ConfigurationTests {
             _ = try AppConfiguration(environment: environment)
             Issue.record("Expected \(variable) to be rejected")
         } catch {
-            guard case let .invalid(reported, _) = error else {
+            guard case .invalid(let reported, _) = error else {
                 Issue.record("Expected .invalid, got \(error)")
                 return
             }
@@ -124,7 +124,7 @@ struct ConfigurationTests {
             _ = try AppConfiguration(environment: environment)
             Issue.record("Expected the URL to be rejected")
         } catch {
-            guard case let .invalid(reported, _) = error else {
+            guard case .invalid(let reported, _) = error else {
                 Issue.record("Expected .invalid, got \(error)")
                 return
             }
@@ -282,7 +282,7 @@ struct ConfigurationTests {
             _ = try AppConfiguration(environment: environment)
             Issue.record("Expected TLS_CLIENT_CA_PATH alone to be rejected")
         } catch {
-            guard case let .invalid(reported, _) = error else {
+            guard case .invalid(let reported, _) = error else {
                 Issue.record("Expected .invalid, got \(error)")
                 return
             }

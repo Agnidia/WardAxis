@@ -69,7 +69,7 @@ struct LogsViewerViewModelTests {
         let vm = makeVM(scenario: .empty)
         await vm.load()
         
-        guard case let .loaded(entries) = vm.state else {
+        guard case .loaded(let entries) = vm.state else {
             Issue.record("Expected .loaded but got \(vm.state)")
             return
         }
@@ -81,7 +81,7 @@ struct LogsViewerViewModelTests {
         let vm = makeVM(scenario: .failure(.readFailed(underlying: "simulated error")))
         await vm.load()
         
-        guard case let .failed(error) = vm.state else {
+        guard case .failed(let error) = vm.state else {
             Issue.record("Expected .failed but got \(vm.state)")
             return
         }
@@ -249,7 +249,7 @@ struct LogsViewerViewModelTests {
         vm.select(.tenMinutes)
         
         let parsedKinds = vm.filteredEntries.compactMap { entry -> LogEntry.Parsed? in
-            if case let .parsed(p) = entry.kind {
+            if case .parsed(let p) = entry.kind {
                 p
             } else {
                 nil
@@ -312,7 +312,7 @@ struct LogsViewerViewModelTests {
         #expect(count == 1)
         #expect(!vm.hasAnyEntries)
         #expect(vm.filteredEntries.isEmpty)
-        if case let .loaded(entries) = vm.state {
+        if case .loaded(let entries) = vm.state {
             #expect(entries.isEmpty)
         } else {
             Issue.record("Expected .loaded after clear(), got \(vm.state)")

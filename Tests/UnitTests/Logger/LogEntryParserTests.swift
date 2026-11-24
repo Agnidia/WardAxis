@@ -23,7 +23,7 @@ struct LogEntryParserTests {
         
         #expect(entry.rawLine == line)
         
-        guard case let .parsed(parsed) = entry.kind else {
+        guard case .parsed(let parsed) = entry.kind else {
             Issue.record("Expected .parsed but got .raw for line: \(line)")
             return
         }
@@ -41,7 +41,7 @@ struct LogEntryParserTests {
         
         #expect(entry.rawLine == line)
         
-        guard case let .parsed(parsed) = entry.kind else {
+        guard case .parsed(let parsed) = entry.kind else {
             Issue.record("Expected .parsed but got .raw for line: \(line)")
             return
         }
@@ -59,7 +59,7 @@ struct LogEntryParserTests {
         
         #expect(entry.rawLine == line)
         
-        guard case let .raw(rawText) = entry.kind else {
+        guard case .raw(let rawText) = entry.kind else {
             Issue.record("Expected .raw but got .parsed for line: \(line)")
             return
         }
@@ -74,7 +74,7 @@ struct LogEntryParserTests {
         
         #expect(entry.rawLine == line)
         
-        guard case let .raw(rawText) = entry.kind else {
+        guard case .raw(let rawText) = entry.kind else {
             Issue.record("Expected .raw but got .parsed for line: \(line)")
             return
         }
@@ -89,7 +89,7 @@ struct LogEntryParserTests {
         
         #expect(entry.rawLine == line)
         
-        guard case let .raw(rawText) = entry.kind else {
+        guard case .raw(let rawText) = entry.kind else {
             Issue.record("Expected .raw but got .parsed for malformed line")
             return
         }
@@ -104,7 +104,7 @@ struct LogEntryParserTests {
         
         #expect(entry.rawLine == line)
         
-        guard case let .parsed(parsed) = entry.kind else {
+        guard case .parsed(let parsed) = entry.kind else {
             Issue.record("Expected .parsed but got .raw for line: \(line)")
             return
         }
@@ -128,21 +128,21 @@ struct LogEntryParserTests {
         
         #expect(entries.count == 3)
         
-        if case let .parsed(first) = entries[0].kind {
+        if case .parsed(let first) = entries[0].kind {
             #expect(first.message == "First message")
             #expect(first.level == .info)
         } else {
             Issue.record("Entry 0 expected .parsed")
         }
         
-        if case let .parsed(second) = entries[1].kind {
+        if case .parsed(let second) = entries[1].kind {
             #expect(second.message == "Second message")
             #expect(second.level == .debug)
         } else {
             Issue.record("Entry 1 expected .parsed")
         }
         
-        if case let .parsed(third) = entries[2].kind {
+        if case .parsed(let third) = entries[2].kind {
             #expect(third.message == "Third message")
             #expect(third.level == .error)
         } else {
@@ -161,7 +161,7 @@ struct LogEntryParserTests {
         
         #expect(entries.count == 2)
         
-        if case let .parsed(first) = entries[0].kind {
+        if case .parsed(let first) = entries[0].kind {
             #expect(first.category == .application)
             #expect(first.message.contains("Valid line"))
             #expect(first.message.contains("this is a continuation"))
@@ -169,7 +169,7 @@ struct LogEntryParserTests {
             Issue.record("Entry 0 expected .parsed")
         }
         
-        if case let .parsed(second) = entries[1].kind {
+        if case .parsed(let second) = entries[1].kind {
             #expect(second.category == .ui)
             #expect(second.message == "UI failure")
         } else {
@@ -204,7 +204,7 @@ struct LogEntryParserTests {
         
         for (line, expectedLevel) in cases {
             let entry = parser.parse(line)
-            guard case let .parsed(parsed) = entry.kind else {
+            guard case .parsed(let parsed) = entry.kind else {
                 Issue.record("Expected .parsed for line: \(line)")
                 continue
             }
@@ -228,7 +228,7 @@ struct LogEntryParserTests {
         
         #expect(entries.count == 2)
         
-        guard case let .parsed(first) = entries[0].kind else {
+        guard case .parsed(let first) = entries[0].kind else {
             Issue.record("Expected first entry to be .parsed")
             return
         }
@@ -238,7 +238,7 @@ struct LogEntryParserTests {
         #expect(first.message.contains("\"FIRMNESS\" : 76"))
         #expect(first.message.contains("}"))
         
-        guard case let .parsed(second) = entries[1].kind else {
+        guard case .parsed(let second) = entries[1].kind else {
             Issue.record("Expected second entry to be .parsed")
             return
         }
@@ -255,7 +255,7 @@ struct LogEntryParserTests {
         let entries = parser.parseAll(source)
         #expect(entries.count == 2)
         
-        guard case let .raw(rawText) = entries[0].kind else {
+        guard case .raw(let rawText) = entries[0].kind else {
             Issue.record("Expected first entry to be .raw")
             return
         }

@@ -120,9 +120,9 @@ struct LogRowView: View {
     @ViewBuilder
     private var content: some View {
         switch entry.kind {
-        case let .parsed(parsed):
+        case .parsed(let parsed):
             parsedRow(parsed)
-        case let .raw(text):
+        case .raw(let text):
             rawRow(text)
         }
     }
@@ -191,11 +191,11 @@ struct LogRowView: View {
     
     private var accessibilityLabel: String {
         switch entry.kind {
-        case let .parsed(parsed):
+        case .parsed(let parsed):
             let timestamp = timestampText(parsed.timestamp)
             let levelName = Log.Level.name(parsed.level)
             return "\(levelName), \(timestamp), \(parsed.category.rawValue), \(parsed.message)"
-        case let .raw(text):
+        case .raw(let text):
             return "Raw entry: \(text)"
         }
     }

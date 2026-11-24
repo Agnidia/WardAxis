@@ -297,9 +297,9 @@ extension TestClientProtocol {
 extension ConfigMessage {
     var version: Int64 {
         switch self {
-        case let .snapshot(snapshot): snapshot.version
-        case let .delta(delta): delta.version
-        case let .heartbeat(heartbeat): heartbeat.version
+        case .snapshot(let snapshot): snapshot.version
+        case .delta(let delta): delta.version
+        case .heartbeat(let heartbeat): heartbeat.version
         }
     }
     

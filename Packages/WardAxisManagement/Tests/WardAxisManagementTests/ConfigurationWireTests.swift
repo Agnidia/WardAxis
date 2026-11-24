@@ -277,7 +277,7 @@ struct ConfigurationWireTests {
         // The envelope and `values` take two of the 32 levels.
         for depth in [1, 16, 30] {
             let frame = ConfigurationFrameDecoder().decode(Self.nestedFrame(depth: depth))
-            guard case let .snapshot(configuration)? = frame else {
+            guard case .snapshot(let configuration)? = frame else {
                 Issue.record("depth \(depth) did not decode")
                 continue
             }

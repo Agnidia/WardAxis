@@ -110,7 +110,7 @@ extension DatabaseSuites {
                         try await client.query(#"UPDATE config_entries SET value = '"light"' WHERE key = 'theme'"#, logger: logger)
                         for try await recording in group {
                             #expect(recording.messages.map(\.version) == [1, 2])
-                            guard case let .delta(delta) = recording.messages.last else {
+                            guard case .delta(let delta) = recording.messages.last else {
                                 Issue.record("Expected a delta, got \(recording.messages)")
                                 continue
                             }

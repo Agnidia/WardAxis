@@ -23,15 +23,15 @@ struct ConfigFrameContractTests {
         let decodedKind: String
         let encoded: String
         switch message {
-        case let .snapshot(snapshot):
+        case .snapshot(let snapshot):
             decodedKind = "snapshot"
             encoded = try ConfigFrameEncoder.snapshot(ConfigSnapshotRecord(version: snapshot.version, values: snapshot.values))
-        case let .delta(delta):
+        case .delta(let delta):
             decodedKind = "delta"
             let deltaFrame = try ConfigFrameEncoder.delta(ConfigChange(version: delta.version, changed: delta.changed, removed: delta.removed))
             #expect(deltaFrame.version == frame.expectedVersion)
             encoded = deltaFrame.text
-        case let .heartbeat(heartbeat):
+        case .heartbeat(let heartbeat):
             decodedKind = "heartbeat"
             encoded = try ConfigFrameEncoder.heartbeat(version: heartbeat.version)
         }
@@ -42,7 +42,7 @@ struct ConfigFrameContractTests {
     
     @Test
     func `A store at the golden snapshot, then the golden change, yields the golden snapshot and delta frames`() async throws {
-        guard case let .snapshot(golden) = try JSONDecoder().decode(ConfigMessage.self, from: GoldenConfigFrame.snapshot.data()) else {
+        guard case .snapshot(let golden) = try JSONDecoder().decode(ConfigMessage.self, from: GoldenConfigFrame.snapshot.data()) else {
             Issue.record("The snapshot fixture is not a snapshot")
             return
         }
