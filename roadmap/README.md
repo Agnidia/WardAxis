@@ -63,7 +63,7 @@ Source: [TN3134](https://developer.apple.com/documentation/technotes/tn3134-netw
 
 | Layer | Technology |
 |---|---|
-| Language / target | Swift 6, C interoperability, macOS 26 / iOS 26 / tvOS 26 |
+| Language / target | Swift 6.4 toolchain (Swift 6 language mode), C interoperability, macOS 26 / iOS 26 / tvOS 26 |
 | UI | SwiftUI multiplatform (focus-based navigation on tvOS) |
 | Concurrency | Swift Concurrency, actors; bounded synchronous authorization paths |
 | Networking | NetworkExtension (content filter, URL filter, DNS proxy, transparent proxy, packet tunnel), Network.framework |
@@ -72,7 +72,7 @@ Source: [TN3134](https://developer.apple.com/documentation/technotes/tn3134-netw
 | IPC / services | XPC services, App Groups, NE provider messaging, `SMAppService` login item |
 | Extensions | Safari Web Extension (WebExtensions + native messaging), MailKit |
 | Storage | SQLite, GRDB in the App Group container |
-| Backend | Vapor, PostgreSQL |
+| Backend | Hummingbird 2, PostgreSQL ([ADR 0001](../docs/adr/0001-swift-server-stack.md)) |
 | Infrastructure | Docker Compose, NanoMDM (separate supported storage) |
 | ML | CoreML, NaturalLanguage |
 | Observability | OSLog, OSSignposter |
@@ -85,7 +85,7 @@ Source: [TN3134](https://developer.apple.com/documentation/technotes/tn3134-netw
 
 ```mermaid
 flowchart TD
-    M[Management API: Vapor / PostgreSQL] <-->|mTLS| A[Sandboxed agent: login item / XPC service]
+    M[Management API: Hummingbird / PostgreSQL] <-->|mTLS| A[Sandboxed agent: login item / XPC service]
     MDM[NanoMDM] -->|MDM / APNs, profiles, managed app config| OS[Device MDM client]
     ABM[Apple Business Manager Apps and Books] -->|Managed App Store install| APP
     APP[SwiftUI app: macOS / iOS / tvOS] <-->|Authenticated XPC| A
@@ -132,7 +132,8 @@ WardAxisEndpoint/
 │   ├── WardAxisPKI/
 │   ├── WardAxisProcess/
 │   ├── WardAxisDLP/
-│   └── WardAxisManagement/
+│   ├── WardAxisManagement/
+│   └── WardAxisManagementAPI/      # OpenAPI contract shared by the agent and the server
 ├── Lab/                            # Excluded from App Store schemes
 │   ├── EndpointSecurity/
 │   └── Schemes/
