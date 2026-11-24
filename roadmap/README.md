@@ -56,7 +56,7 @@ Source: [TN3134](https://developer.apple.com/documentation/technotes/tn3134-netw
 | 2.4.5(vii) | Updates only through the Mac App Store | No custom updater. Upgrade tests use App Store and TestFlight updates. |
 | 4.4, 4.4.2 | Extensions must include functionality; Safari extensions request the minimum site access | Safari permissions are limited to registered AI and policy domains. |
 | 5.1.1, 5.1.2, 2.5.14 | Privacy policy, consent, data minimization, visible indication of activity logging | Consent screen before any monitoring. Classification is on-device. Telemetry is opt-in and contains no matched content. |
-| 5.4 | Apps that use NEVPNManager (packet tunnel) must come from an organization account | Organization enrollment in Phase 0. |
+| 5.4 | Apps that use NEVPNManager (packet tunnel) must come from an organization account | Organization enrollment at the start of Phase 5 (ORG-001); development before it uses an individual account. |
 | 5.5 | MDM capability and configuration profiles in apps | The app does not ship MDM features or profiles. NanoMDM delivers profiles from the separate server. |
 
 ## Stack

@@ -12,7 +12,7 @@
 
 ## Tasks
 
-- [ ] PRE-001 — Create GitHub repository; select Apache-2.0 or MIT license; configure issue templates and milestones. Enroll in the Apple Developer Program as an **organization** (required for packet tunnel apps, guideline 5.4).
+- [x] PRE-001 — Create GitHub repository; select Apache-2.0 or MIT license; configure issue templates and milestones. Development uses a paid individual Apple Developer account; organization enrollment is [ORG-001](05-enterprise-management.md#50-prerequisite-organization-enrollment) at the start of Phase 5.
 - [ ] PRE-002 — Configure App Store signing: bundle-identifier scheme for the app, each extension, the Safari Web Extension and the Mail extension; App Group and Keychain access-group identifiers; App Store Connect app records with Universal Purchase for macOS, iOS and tvOS; Xcode automatic signing for App Store schemes.
 - [ ] PRE-003 — **Lab-only.** Request the restricted EndpointSecurity entitlement from Apple; track approval as an external dependency. Configure a separate Developer ID scheme for the lab build.
 - [ ] PRE-004 — Enable NetworkExtension capabilities per [TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment): content filter, DNS proxy and app proxy as system extensions on macOS; URL filter on macOS and iOS; packet tunnel on iOS and tvOS. Add `com.apple.developer.system-extension.install` and the App Sandbox to every macOS target.
@@ -31,12 +31,12 @@
 |---|---|---|
 | NetworkExtension (macOS system extensions) | Provider-specific capability, signing and provisioning | Policy and flow fixture tests |
 | URL filter (macOS, iOS) | URL filter capability, OS 26 | Policy fixture tests |
-| Packet tunnel (iOS, tvOS) | Packet tunnel capability, organization account | Simulated tunnel fixtures |
+| Packet tunnel (iOS, tvOS) | Packet tunnel capability (paid developer account); organization account for App Review (ORG-001) | Simulated tunnel fixtures |
 | SystemExtensions | Host installation entitlement and signed embedded extension | Test host and lifecycle mock |
 | Sandboxed agent (macOS) | Login item registration, App Group | In-app service fixture |
 | Safari Web Extension | Embedded extension, user enables it in Safari | Headless JS/TS unit tests |
 | Mail extension | Embedded MailKit extension, user enables it in Mail | Handler unit tests with fixture messages |
-| App Store review | Organization account, privacy policy, review notes | TestFlight internal builds |
+| App Store review | Organization account (ORG-001), privacy policy, review notes | TestFlight internal builds |
 | MDM | HTTPS, MDM APNs credentials and supported enrollment | Simulated command and enrollment fixtures |
 | EndpointSecurity (**Lab-only**) | Apple restricted entitlement, Developer ID signing and Full Disk Access | Synthetic event adapter; no claim of kernel integration |
 

@@ -10,7 +10,7 @@
 
 //Signing
 CODE_SIGN_STYLE = Automatic
-// Interim team until the Agnidia organization enrollment completes (issue #1). Packet tunnel
-// apps must ship from an organization account (App Review guideline 5.4).
+// Individual development team until the Agnidia organization enrollment (ORG-001, issue #192).
+// Packet tunnel builds pass App Review only from an organization account (guideline 5.4).
 DEVELOPMENT_TEAM = DMP42GVPJ3
 CODE_SIGN_IDENTITY = Apple Development
