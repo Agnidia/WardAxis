@@ -108,11 +108,13 @@ Edit build settings here, not in the Xcode UI.
 |---|---|
 | `base.xcconfig` | `APP_NAME`, `APP_BUNDLE_ID`, extension bundle IDs, `APP_GROUP_ID`, `KEYCHAIN_SHARED_GROUP`, supported platforms, deployment targets, `SWIFT_VERSION = 6`, strict concurrency |
 | `debug.xcconfig` / `release.xcconfig` | Per-configuration flags (optimization, `DEBUG` condition) |
+| `lab.xcconfig` | Lab-only `Lab` configuration on top of Release: `.lab` bundle-ID root, macOS only, `WARDAXIS_LAB`, manual Developer ID signing ([ADR 0003](adr/0003-lab-build-signing.md)) |
 | `sign.xcconfig` | Signing style and the interim `DEVELOPMENT_TEAM` |
 | `app/app.xcconfig` | App target: bundle ID, Info.plist, entitlements, App Sandbox, Hardened Runtime |
-| `app/app-debug.xcconfig` / `app/app-release.xcconfig` | `API_BASE_URL` per configuration |
+| `app/app-debug.xcconfig` / `app/app-release.xcconfig` / `app/app-lab.xcconfig` | `API_BASE_URL` per configuration |
 | `tests/` | `UnitTests` and `UITests` targets: bundle IDs, test host |
 | `export/app-store.plist` | Export options for App Store Connect (automatic signing, no team ID) |
+| `export/developer-id.plist` | Export options for the lab build (Developer ID, manual profile); never uploaded |
 
 ---
 
