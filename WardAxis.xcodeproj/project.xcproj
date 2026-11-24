@@ -52,6 +52,7 @@
           "target": "UnitTests",
           "inclusions": [
             "UnitTests/Core/AppContainerTests.swift",
+            "UnitTests/Core/EntitlementsTests.swift",
             "UnitTests/Core/HostConfigurationTests.swift",
             "UnitTests/Features/Settings/SettingsViewModelTests.swift",
             "UnitTests/Logger/LogEntryParserTests.swift",

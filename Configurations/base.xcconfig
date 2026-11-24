@@ -17,6 +17,30 @@ APP_DOMAIN = com.agnidia
 APP_BUNDLE_ID = $(APP_DOMAIN).wardaxis
 MTL_FAST_MATH = YES
 
+//Identifiers (ADR 0002)
+// Every embedded bundle starts with APP_BUNDLE_ID: the OS ties an extension to
+// its host app by that prefix, and App Store validation rejects any other ID.
+// A target sets PRODUCT_BUNDLE_IDENTIFIER to one of these; none is free-form.
+AGENT_BUNDLE_ID = $(APP_BUNDLE_ID).agent
+NETWORK_FILTER_BUNDLE_ID = $(APP_BUNDLE_ID).networkfilter
+TRANSPARENT_PROXY_BUNDLE_ID = $(APP_BUNDLE_ID).transparentproxy
+DNS_PROXY_BUNDLE_ID = $(APP_BUNDLE_ID).dnsproxy
+URL_FILTER_BUNDLE_ID = $(APP_BUNDLE_ID).urlfilter
+PACKET_TUNNEL_BUNDLE_ID = $(APP_BUNDLE_ID).packettunnel
+SAFARI_EXTENSION_BUNDLE_ID = $(APP_BUNDLE_ID).safari
+MAIL_EXTENSION_BUNDLE_ID = $(APP_BUNDLE_ID).mail
+
+// macOS uses the team-prefixed form: the code signature alone authorizes it,
+// with no consent prompt, and NEMachServiceName must start with such a group.
+// iOS and tvOS accept only the `group.` form, registered on the App ID.
+APP_GROUP_ID = group.$(APP_BUNDLE_ID)
+APP_GROUP_ID[sdk=macosx*] = $(DEVELOPMENT_TEAM).$(APP_BUNDLE_ID)
+
+// Shared Keychain group, without the $(AppIdentifierPrefix) that the
+// entitlements file adds. Separate from the App Group, so a target can read
+// the shared container without reading shared secrets.
+KEYCHAIN_SHARED_GROUP = $(APP_BUNDLE_ID).shared
+
 //Architectures
 SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator appletvos appletvsimulator
 SDKROOT = auto
