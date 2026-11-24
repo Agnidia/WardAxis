@@ -10,6 +10,18 @@
 
 **Goal:** Centrally managed enterprise security agent on all three platforms. Use NanoMDM for operating-system management, Apple Business Manager for managed App Store distribution, and a separate Hummingbird backend for WardAxis policy and telemetry. Do not implement a custom MDM protocol server for the MVP.
 
+## 5.0. Prerequisite: organization enrollment
+
+ORG-001 is the first Phase 5 task. Development in Phases 0–4 runs on a paid individual Apple Developer account. That account signs every NetworkExtension capability for development and internal TestFlight.
+
+| Item | Detail |
+|---|---|
+| Task | Enroll Agnidia as an **organization** and move `DEVELOPMENT_TEAM` to the organization team |
+| Why now | MDM-004 needs an MDM push certificate. Apple grants the certificate-signing capability only to organization accounts. App Review of the packet tunnel build also needs one (guideline 5.4) |
+| Lead time | D-U-N-S verification can take weeks. Start the enrollment before Phase 5 so it does not block MDM-004 |
+| Migration | The team ID changes. Register the bundle IDs, App Groups and Keychain access groups under the new team. Development Keychain items stored under the old team prefix are not migrated |
+| Blocks | MDM-004, external TestFlight and App Store submission (Phase 6) |
+
 ## 5.1. Architecture
 
 ```mermaid

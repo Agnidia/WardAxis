@@ -239,7 +239,7 @@ rg -n "logger\.(debug|info|warning|error)\(" Source Packages/*/Sources
 ### Signing
 
 - `APP_BUNDLE_ID` in `Configurations/base.xcconfig` is `com.agnidia.wardaxis`. Test bundles add `.tests` and `.uitests`.
-- `DEVELOPMENT_TEAM` in `Configurations/sign.xcconfig` is interim until the Agnidia organization enrollment completes (issue #1).
+- `DEVELOPMENT_TEAM` in `Configurations/sign.xcconfig` is an individual development team until the Agnidia organization enrollment at the start of Phase 5 (ORG-001, issue #192).
 
 ### Safe Operations
 

@@ -42,7 +42,7 @@ Xcode asks once to trust the OpenAPIGenerator build plugin of `WardAxisManagemen
 | Setting | File | Value |
 |---|---|---|
 | `APP_BUNDLE_ID` | `Configurations/base.xcconfig` | `com.agnidia.wardaxis` (test bundles add `.tests` and `.uitests`) |
-| `DEVELOPMENT_TEAM` | `Configurations/sign.xcconfig` | Interim team until the Agnidia organization enrollment completes (issue #1) |
+| `DEVELOPMENT_TEAM` | `Configurations/sign.xcconfig` | Individual development team until the Agnidia organization enrollment (ORG-001, issue #192) |
 | `CODE_SIGN_STYLE` | `Configurations/sign.xcconfig` | `Automatic` |
 
 Do not commit a personal team ID. Change `sign.xcconfig` locally only when you must sign with another team.
