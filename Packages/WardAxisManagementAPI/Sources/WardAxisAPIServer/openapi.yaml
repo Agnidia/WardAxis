@@ -1,0 +1,256 @@
+openapi: 3.1.0
+info:
+  title: WardAxis Management API
+  version: 2.0.0
+  description: |
+    The contract between enrolled WardAxis agents (the app on a managed device) and the
+    WardAxis management server. This file is the single source for the
+    `WardAxisAPIServer` and `WardAxisAPIClient` products.
+
+    Trust model:
+    - Agents authenticate with mutual TLS. The client certificate must chain to the
+      device CA that the server trusts. The server reads no identity from any header.
+    - Administrator authentication is a separate surface and is not part of this
+      contract yet.
+
+    Evolution rules (frozen from 2027-01-15):
+    - Responses only grow. Clients ignore unknown properties.
+    - Requests never tighten: no new required fields, no narrower types or limits.
+    - Every 4xx and 5xx body is an `ErrorResponse`. Branch on `code`, never on `message`.
+
+    Every path below is relative to the `servers` URL, so `/config/stream` is served at
+    `/v1/config/stream`. The live configuration feed is a WebSocket at
+    `GET /v1/config/stream`. Its frames carry `ConfigMessage` (see `components/schemas`).
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit
+servers:
+  - url: /v1
+    description: Relative to the base URL that each client configures.
+tags:
+  - name: config
+    description: Live configuration feed for enrolled agents.
+paths:
+  /config/stream:
+    get:
+      operationId: streamConfig
+      tags:
+        - config
+      summary: Open the live configuration feed (WebSocket upgrade).
+      description: |
+        Upgrades the connection to a WebSocket (RFC 6455) that carries the live
+        configuration. The client sends the usual handshake headers (`Connection: Upgrade`,
+        `Sec-WebSocket-Key`, `Sec-WebSocket-Version: 13`) beside `Upgrade: websocket`.
+
+        Authentication is the TLS client certificate only (`mutualTLS`). The handshake
+        fails unless the certificate chains to the server's device CA, so a client without
+        such a certificate never reaches HTTP. The request carries no `Authorization`
+        header; the server ignores one if it is sent.
+
+        The feed exists only on a server that verifies client certificates. A server
+        without a configured device CA does not serve this path: a plain `GET` gets `404`,
+        and a WebSocket handshake gets the bare `400` of a refused upgrade.
+
+        The server does not generate a handler for this operation; a hand-written
+        WebSocket route serves it. The message types come from this spec.
+      security:
+        - mutualTLS: []
+      parameters:
+        - name: Upgrade
+          in: header
+          required: true
+          description: Requests the WebSocket protocol.
+          schema:
+            type: string
+            enum:
+              - websocket
+      responses:
+        '101':
+          description: |
+            Switching Protocols. The connection is now a WebSocket that carries
+            `ConfigMessage` frames (`#/components/schemas/ConfigMessage`).
+
+            - Each text frame holds exactly one UTF-8 JSON `ConfigMessage`.
+            - The first frame is a `ConfigSnapshot`.
+            - A `ConfigHeartbeat` follows every 30 seconds.
+            - A client skips a frame that it cannot decode, so a newer server can add a
+              message type without crashing an older app.
+            - The server closes every stream after at most 15 minutes, with close code
+              1000 (Normal Closure) and reason `lifetime`, so each client presents its
+              certificate again in a new TLS handshake. The exact time varies per stream by
+              up to 3 minutes. The client reconnects at once, with a short random delay, for
+              a new snapshot.
+            - When the client certificate already holds the maximum number of open streams,
+              the server completes the upgrade and then closes the connection with close
+              code 1013 (Try Again Later) before any frame. The client waits before it
+              reconnects.
+            - When the server has just started and cannot yet relay every change, it holds
+              the new stream for up to 10 seconds. If its change feed is still not running
+              then, it closes the connection with close code 1013 before any frame.
+            - When no pong arrives for 90 seconds, the server closes the connection with
+              close code 1001 (Going Away).
+            - When the server cannot read the configuration or its change log has a gap, the
+              server closes the connection with close code 1011. The client reconnects for a
+              new snapshot.
+        '400':
+          description: |
+            A plain `GET` without `Upgrade: websocket` gets code `invalid_request`.
+
+            A WebSocket handshake that the server refuses gets `400` with an empty body
+            and `Connection: close`, and no upgrade.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: invalid_request
+                message: The request must upgrade to a WebSocket.
+                requestId: 4f6c2a1e-8d3b-4a8e-9c1d-2b7e5f0a9c34
+        '404':
+          description: |
+            The server verifies no client certificates, so it does not serve the feed. Code
+            `not_found`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: not_found
+                message: The resource does not exist.
+                requestId: 4f6c2a1e-8d3b-4a8e-9c1d-2b7e5f0a9c34
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    mutualTLS:
+      type: mutualTLS
+      description: |
+        A TLS client certificate issued by the WardAxis device CA at enrollment. The server
+        verifies the chain to that CA during the handshake; it checks no host name,
+        because devices have none.
+  responses:
+    InternalServerError:
+      description: The server failed to handle the request. Code `internal_error`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: internal_error
+            message: Something went wrong. Try again later.
+            requestId: 4f6c2a1e-8d3b-4a8e-9c1d-2b7e5f0a9c34
+  schemas:
+    ErrorResponse:
+      type: object
+      description: |
+        The body of every 4xx and 5xx response. It never holds stack traces, SQL or
+        internal identifiers.
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]*$'
+          description: |
+            A stable, machine-readable error code. The set is open: a client treats an
+            unknown code as a generic error. Known codes: `invalid_request`, `not_found`,
+            `method_not_allowed`, `payload_too_large`, `internal_error`.
+        message:
+          type: string
+          description: A short explanation that is safe to show to the user.
+        requestId:
+          type: string
+          description: Correlates the response with the server logs.
+    ConfigEntries:
+      type: object
+      description: Configuration values keyed by setting name. Each value is any JSON value.
+      additionalProperties: true
+    ConfigSnapshot:
+      type: object
+      description: The full configuration. Always the first frame on a new connection.
+      required:
+        - type
+        - version
+        - values
+      properties:
+        type:
+          type: string
+          enum:
+            - snapshot
+          description: The message tag.
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+          description: The configuration version that `values` represents.
+        values:
+          $ref: '#/components/schemas/ConfigEntries'
+    ConfigDelta:
+      type: object
+      description: |
+        A change to the configuration. The client applies it only when `version` equals its
+        current version plus one; otherwise it has missed a delta and reconnects for a new
+        snapshot.
+      required:
+        - type
+        - version
+        - changed
+        - removed
+      properties:
+        type:
+          type: string
+          enum:
+            - delta
+          description: The message tag.
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+          description: The configuration version after this delta.
+        changed:
+          $ref: '#/components/schemas/ConfigEntries'
+        removed:
+          type: array
+          description: Names of deleted settings. May be empty.
+          items:
+            type: string
+    ConfigHeartbeat:
+      type: object
+      description: |
+        A keep-alive frame, sent every 30 seconds. A client whose version is below
+        `version` has missed a delta and reconnects for a new snapshot.
+      required:
+        - type
+        - version
+      properties:
+        type:
+          type: string
+          enum:
+            - heartbeat
+          description: The message tag.
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+          description: The server's current configuration version.
+    ConfigMessage:
+      description: |
+        One frame of the `GET /config/stream` WebSocket. The `type` property selects the
+        message. Example frames:
+
+        ```json
+        {"type":"snapshot","version":41,"values":{"theme":"dark","maxItems":20}}
+        {"type":"delta","version":42,"changed":{"maxItems":25},"removed":["theme"]}
+        {"type":"heartbeat","version":42}
+        ```
+      oneOf:
+        - $ref: '#/components/schemas/ConfigSnapshot'
+        - $ref: '#/components/schemas/ConfigDelta'
+        - $ref: '#/components/schemas/ConfigHeartbeat'
+      discriminator:
+        propertyName: type
+        mapping:
+          snapshot: '#/components/schemas/ConfigSnapshot'
+          delta: '#/components/schemas/ConfigDelta'
+          heartbeat: '#/components/schemas/ConfigHeartbeat'

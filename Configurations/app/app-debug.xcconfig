@@ -1,0 +1,19 @@
+//
+//  app-debug.xcconfig
+//  WardAxis
+//
+//  Created by vitalii on 05.03.2023.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "../debug.xcconfig"
+#include "app.xcconfig"
+
+//API
+// Local development server. `/$()/` stops xcconfig from reading `//` as a comment.
+// Debug only: http to the loopback IP the compose stack binds. ATS exempts IP
+// literals, so no ATS key is needed; Release accepts https only.
+// Host only: the app appends the contract's servers path (/v1); a path here is rejected.
+API_BASE_URL = http:/$()/127.0.0.1:8080
