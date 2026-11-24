@@ -1,0 +1,2 @@
+# Xcode writes per-user scheme and workspace data here when it opens the package.
+/.swiftpm/

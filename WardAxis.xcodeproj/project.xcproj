@@ -1,0 +1,166 @@
+{
+  "organization": "Agnidia",
+  "default-configuration": "Release",
+  "configurations": [
+    { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "debug.xcconfig" } },
+    { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "release.xcconfig" } },
+  ],
+  "localizations": {
+    "development": "en",
+    "supported": [
+      "Base",
+    ],
+  },
+  "packages": [
+    {
+      "kind": "local",
+      "path": "Packages/WardAxisManagementAPI",
+    }, {
+      "kind": "local",
+      "path": "Packages/WardAxisTelemetry",
+    }, {
+      "kind": "local",
+      "path": "Packages/WardAxisManagement",
+    },
+  ],
+  "files": [
+    { "kind": "folder", "path": "Configurations" },
+    {
+      "kind": "folder",
+      "path": "Resources",
+      "membership-exceptions": [
+        {
+          "target": "WardAxis",
+          "inclusions": [
+            "Assets.xcassets",
+            "Colors.xcassets",
+            "InfoPlist.xcstrings",
+            "Localizable.xcstrings",
+            "Preview Content/Preview Assets.xcassets",
+            "PrivacyInfo.xcprivacy",
+          ],
+        },
+      ],
+    },
+    { "kind": "folder", "path": "Source", "target-membership": [ "WardAxis" ] },
+    { "path": "WardAxis.xcodeproj/testPlan.xctestplan" },
+    {
+      "kind": "folder",
+      "path": "Tests",
+      "membership-exceptions": [
+        {
+          "target": "UnitTests",
+          "inclusions": [
+            "UnitTests/Core/AppContainerTests.swift",
+            "UnitTests/Core/HostConfigurationTests.swift",
+            "UnitTests/Features/Settings/SettingsViewModelTests.swift",
+            "UnitTests/Logger/LogEntryParserTests.swift",
+            "UnitTests/Logger/LogReaderServiceTests.swift",
+            "UnitTests/Logger/LogsViewerViewModelTests.swift",
+            "UnitTests/Navigation/AppCoordinatorTests.swift",
+            "UnitTests/Navigation/RoutePresentationTests.swift",
+            "UnitTests/Navigation/RouteResolverTests.swift",
+          ],
+        }, {
+          "target": "UITests",
+          "inclusions": [
+            "UITests/LaunchUITests.swift",
+          ],
+        },
+      ],
+    }, {
+      "kind": "group",
+      "name": "Products",
+      "children": [
+        { "path": "<PRODUCTS>/WardAxis.app", "id": "A5C24CE329B20A4200B8D860", "type": "wrapper.application", "index": false },
+        { "path": "<PRODUCTS>/UnitTests.xctest", "id": "A5C24CF929B20A4500B8D860", "type": "wrapper.cfbundle", "index": false },
+        { "path": "<PRODUCTS>/UITests.xctest", "id": "A5C24D0329B20A4500B8D860", "type": "wrapper.cfbundle", "index": false },
+      ],
+    },
+  ],
+  "targets": [
+    {
+      "name": "WardAxis",
+      "id": "A5C24CE229B20A4200B8D860",
+      "product": "Products/WardAxis.app",
+      "product-type": "application",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "app/app-debug.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "app/app-release.xcconfig" } },
+      ],
+      "build-phases": [
+        {
+          "kind": "script",
+          "name": "SwiftFormat",
+          "log-environment-variables": true,
+          "run-on-every-build": true,
+          "shell": "/bin/sh",
+          "script": [
+            "# Skip formatting for CLI builds (xcodebuild)",
+            "if [ -z \"$XPC_SERVICE_NAME\" ]; then",
+            "    exit 0",
+            "fi",
+            "",
+            "# Format modified Swift files only",
+            "# Uses formatter.py which runs SwiftFormat + adds blank line indentation",
+            "if [ -f \"$SRCROOT/scripts/formatter.py\" ]; then",
+            "    cd \"$SRCROOT\"",
+            "    python3 scripts/formatter.py",
+            "fi",
+            "",
+          ],
+        },
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "package-product-members": [
+        {
+          "product-name": "WardAxisManagement",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "product-name": "WardAxisTelemetry",
+          "build-phase": { "build-phase": "frameworks" },
+        },
+      ],
+    }, {
+      "name": "UnitTests",
+      "id": "A5C24CF829B20A4500B8D860",
+      "product": "Products/UnitTests.xctest",
+      "product-type": "bundle.unit-test",
+      "test-host-target": "WardAxis",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "tests/test-debug.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "tests/test-release.xcconfig" } },
+      ],
+      "dependencies": [
+        "WardAxis",
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+    }, {
+      "name": "UITests",
+      "id": "A5C24D0229B20A4500B8D860",
+      "product": "Products/UITests.xctest",
+      "product-type": "bundle.ui-testing",
+      "test-host-target": "WardAxis",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "tests/uitest-debug.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "tests/uitest-release.xcconfig" } },
+      ],
+      "dependencies": [
+        "WardAxis",
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+    },
+  ],
+  "last-upgrade": "27.2",
+  "last-swift-update": "14.2",
+}

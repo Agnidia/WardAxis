@@ -1,0 +1,16 @@
+//
+//  sign.xcconfig
+//  WardAxis
+//
+//  Created by vitalii on 05.03.2023.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+//Signing
+CODE_SIGN_STYLE = Automatic
+// Interim team until the Agnidia organization enrollment completes (issue #1). Packet tunnel
+// apps must ship from an organization account (App Review guideline 5.4).
+DEVELOPMENT_TEAM = DMP42GVPJ3
+CODE_SIGN_IDENTITY = Apple Development

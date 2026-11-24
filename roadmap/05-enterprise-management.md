@@ -6,15 +6,15 @@
 
 **Platforms:** macOS · iOS/iPadOS · tvOS
 
-**Distribution:** The management agent in the app is **Shipped**. NanoMDM, the Vapor backend and the dashboard are separate server components. The App Store app does not offer MDM features and does not install configuration profiles (guideline 5.5).
+**Distribution:** The management agent in the app is **Shipped**. NanoMDM, the Hummingbird backend and the dashboard are separate server components. The App Store app does not offer MDM features and does not install configuration profiles (guideline 5.5).
 
-**Goal:** Centrally managed enterprise security agent on all three platforms. Use NanoMDM for operating-system management, Apple Business Manager for managed App Store distribution, and a separate Vapor backend for WardAxis policy and telemetry. Do not implement a custom MDM protocol server for the MVP.
+**Goal:** Centrally managed enterprise security agent on all three platforms. Use NanoMDM for operating-system management, Apple Business Manager for managed App Store distribution, and a separate Hummingbird backend for WardAxis policy and telemetry. Do not implement a custom MDM protocol server for the MVP.
 
 ## 5.1. Architecture
 
 ```mermaid
 flowchart TD
-    UI[Administrator dashboard] --> API[Vapor management API]
+    UI[Administrator dashboard] --> API[Hummingbird management API]
     UI --> MDM[NanoMDM]
     API --> DB[(PostgreSQL)]
     MDM --> MS[(NanoMDM supported storage)]
@@ -153,7 +153,7 @@ Implement endpoint list with platform, compliant / attention / offline counts, l
 - [ ] Unenrollment and removal tested.
 - [ ] Load test covers 100 simulated endpoints, with simulated status explicit.
 
-**Deliverables:** Vapor backend, Docker infrastructure, NanoMDM integration, managed App Store distribution, configuration profiles, signed policy protocol, dashboard, v0.5.0 TestFlight release.
+**Deliverables:** Hummingbird backend, Docker infrastructure, NanoMDM integration, managed App Store distribution, configuration profiles, signed policy protocol, dashboard, v0.5.0 TestFlight release.
 
 **Skills:** Apple enterprise deployment, MDM, declarative device management, managed app distribution, APNs, mTLS, posture, fleet management, signed policy distribution.
 

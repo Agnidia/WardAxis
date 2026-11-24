@@ -1,0 +1,18 @@
+//
+//  app-release.xcconfig
+//  WardAxis
+//
+//  Created by vitalii on 05.03.2023.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "../release.xcconfig"
+#include "app.xcconfig"
+
+//API
+// Placeholder that never resolves (RFC 6761) until a deploy sets the real host.
+// Release builds accept https only. `/$()/` stops xcconfig from reading `//` as a comment.
+// Host only: the app appends the contract's servers path (/v1); a path here is rejected.
+API_BASE_URL = https:/$()/api.invalid

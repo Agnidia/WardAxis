@@ -1,0 +1,68 @@
+# Local development stack: docker compose -f Server/compose.yaml up -d
+#
+# Every credential below is a local-only development default, used when no
+# Server/.env overrides it (see Server/.env.example). Ports bind to 127.0.0.1 only,
+# so these values never reach the network. COMPOSE_PROJECT_NAME, POSTGRES_PORT and
+# SERVER_PORT let two stacks run side by side.
+
+name: ${COMPOSE_PROJECT_NAME:-wardaxis}
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-wardaxis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-not-a-secret}
+      POSTGRES_DB: ${POSTGRES_DB:-wardaxis}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # The major-18 image keeps its data under /var/lib/postgresql (ADR 0001).
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  server:
+    build:
+      # The repository root: the server depends on Packages/WardAxisManagementAPI by path.
+      context: ..
+      dockerfile: Server/Dockerfile
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # sslmode=disable is local-only: this Postgres has no TLS, and the server
+      # otherwise defaults to require.
+      DATABASE_URL: postgres://${POSTGRES_USER:-wardaxis}:${POSTGRES_PASSWORD:-local-dev-not-a-secret}@postgres:5432/${POSTGRES_DB:-wardaxis}?sslmode=disable
+      # development allows plain HTTP on 127.0.0.1. Without TLS and TLS_CLIENT_CA_PATH the
+      # config feed is not served; the server logs that once at start-up. The server
+      # defaults to production.
+      SERVER_ENVIRONMENT: ${SERVER_ENVIRONMENT:-development}
+      # Empty leaves the server's default: docs on in development, off in production.
+      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-}
+    ports:
+      - "127.0.0.1:${SERVER_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # The probe from Server/Dockerfile, kept the same. $$ leaves each variable for the
+    # container's shell, not for compose interpolation.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          scheme=http;
+          if [ -n "$${TLS_CERTIFICATE_CHAIN_PATH:-}" ]; then scheme=https; set -- --insecure; fi;
+          if [ -n "$${TLS_CLIENT_CA_PATH:-}" ]; then set -- "$$@" --cert "$${HEALTHCHECK_CLIENT_CERTIFICATE_PATH:-}" --key "$${HEALTHCHECK_CLIENT_KEY_PATH:-}"; fi;
+          curl -fsS --noproxy '*' --max-time 4 -o /dev/null "$$@" "$$scheme://127.0.0.1:$${PORT:-8080}/v1/health" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres-data:

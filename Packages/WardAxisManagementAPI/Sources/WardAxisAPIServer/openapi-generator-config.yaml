@@ -1,0 +1,12 @@
+generate:
+  - types
+accessModifier: public
+# Types only: the one operation is a WebSocket upgrade, served by a hand-written route,
+# so no generated server handler exists to satisfy. The schemas are the frame types.
+filter:
+  schemas:
+    - ConfigMessage
+    - ConfigSnapshot
+    - ConfigDelta
+    - ConfigHeartbeat
+    - ErrorResponse
