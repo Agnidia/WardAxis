@@ -28,7 +28,7 @@ struct ErrorHandlingMiddlewareTests {
             "SELECT secret_column FROM hidden_table"
         }
     }
-
+    
     /// The production router plus routes that fail on purpose.
     private static func application(logger: Logger = Logger(label: "test")) throws -> some ApplicationProtocol {
         let router = try buildRouter(dependencies: .testing())
@@ -36,7 +36,7 @@ struct ErrorHandlingMiddlewareTests {
         router.get("/test/forbidden") { _, _ -> Response in throw HTTPError(.forbidden, message: "hidden detail") }
         return Application(router: router, logger: logger)
     }
-
+    
     private static func expectErrorBody(_ response: TestResponse, status: HTTPResponse.Status, code: String) throws {
         #expect(response.status == status)
         #expect(response.headers[.contentType]?.hasPrefix("application/json") == true)
@@ -50,9 +50,9 @@ struct ErrorHandlingMiddlewareTests {
             #expect(!text.contains(leak))
         }
     }
-
-    @Test("A non-HTTP error answers 500 internal_error; the log has its type, not its text")
-    func unknownErrorIs500() async throws {
+    
+    @Test
+    func `A non-HTTP error answers 500 internal_error; the log has its type, not its text`() async throws {
         let capture = LogCapture()
         let application = try Self.application(logger: capture.makeLogger())
         try await application.test(.router) { client in
@@ -65,9 +65,9 @@ struct ErrorHandlingMiddlewareTests {
         #expect(failure.metadata[RequestIDMiddleware.metadataKey] != nil)
         #expect(!capture.records.contains { $0.renderedText.contains("secret_column") })
     }
-
-    @Test("A body over 64 KiB answers 413 with an ErrorResponse")
-    func oversizedBodyIs413() async throws {
+    
+    @Test
+    func `A body over 64 KiB answers 413 with an ErrorResponse`() async throws {
         let application = try Self.application()
         try await application.test(.router) { client in
             let response = try await client.executeRequest(
@@ -79,9 +79,9 @@ struct ErrorHandlingMiddlewareTests {
             try Self.expectErrorBody(response, status: .contentTooLarge, code: "payload_too_large")
         }
     }
-
-    @Test("An HTTPError keeps its status, drops its message; an unknown route answers not_found")
-    func httpErrorsKeepStatus() async throws {
+    
+    @Test
+    func `An HTTPError keeps its status, drops its message; an unknown route answers not_found`() async throws {
         let application = try Self.application()
         try await application.test(.router) { client in
             let forbidden = try await client.executeRequest(uri: "/test/forbidden", method: .get, headers: [:], body: nil)
@@ -90,9 +90,9 @@ struct ErrorHandlingMiddlewareTests {
             try Self.expectErrorBody(missing, status: .notFound, code: "not_found")
         }
     }
-
-    @Test("Classification: an APIError wins, an HTTP status error maps to its contract code, anything else is 500")
-    func classification() {
+    
+    @Test
+    func `Classification: an APIError wins, an HTTP status error maps to its contract code, anything else is 500`() {
         let invalid = APIError.invalidRequest(message: "The request must upgrade to a WebSocket.")
         #expect(ErrorHandlingMiddleware.classify(invalid).0 == invalid)
         #expect(ErrorHandlingMiddleware.classify(SampleDatabaseMeltdown()).0 == .internalError)

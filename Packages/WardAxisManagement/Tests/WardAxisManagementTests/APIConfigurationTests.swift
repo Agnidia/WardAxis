@@ -12,60 +12,58 @@ import WardAxisManagementTestSupport
 
 @Suite("APIConfiguration")
 struct APIConfigurationTests {
-    @Test("A local http URL is accepted when https is not required")
-    func acceptsLocalHTTPInDebug() throws {
+    @Test
+    func `A local http URL is accepted when https is not required`() throws {
         let configuration = try APIConfiguration.resolve(rawValue: "http://localhost:8080", requiresHTTPS: false)
-
+        
         #expect(configuration.baseURL.absoluteString == "http://localhost:8080/v1")
     }
-
-    @Test("The Release placeholder https://api.invalid is accepted")
-    func acceptsReleasePlaceholder() throws {
+    
+    @Test
+    func `The Release placeholder https://api.invalid is accepted`() throws {
         let configuration = try APIConfiguration.resolve(rawValue: "https://api.invalid", requiresHTTPS: true)
-
+        
         #expect(configuration.baseURL.host() == "api.invalid")
     }
-
-    @Test("Surrounding whitespace is ignored")
-    func trimsWhitespace() throws {
+    
+    @Test
+    func `Surrounding whitespace is ignored`() throws {
         let configuration = try APIConfiguration.resolve(rawValue: "  https://api.invalid\n", requiresHTTPS: true)
-
+        
         #expect(configuration.baseURL.absoluteString == "https://api.invalid/v1")
     }
-
-    @Test("A Release build rejects an http URL")
-    func releaseRejectsHTTP() {
+    
+    @Test
+    func `A Release build rejects an http URL`() {
         #expect(throws: APIConfigurationError.insecureScheme) {
             try APIConfiguration.resolve(rawValue: "http://example.com", requiresHTTPS: true)
         }
     }
-
-    @Test("Debug accepts http to a loopback host", arguments: ["http://localhost:8080", "http://127.0.0.1:8080", "http://[::1]:8080"])
-    func debugAcceptsLoopbackHTTP(rawValue: String) {
+    
+    @Test(arguments: ["http://localhost:8080", "http://127.0.0.1:8080", "http://[::1]:8080"])
+    func `Debug accepts http to a loopback host`(rawValue: String) {
         #expect(throws: Never.self) {
             try APIConfiguration.resolve(rawValue: rawValue, requiresHTTPS: false)
         }
     }
-
+    
     @Test(
-        "Debug rejects http to any other host",
         arguments: ["http://192.168.1.10:8080", "http://devbox.local:8080", "http://devbox:8080", "http://example.com"]
     )
-    func debugRejectsRemoteHTTP(rawValue: String) {
+    func `Debug rejects http to any other host`(rawValue: String) {
         #expect(throws: APIConfigurationError.insecureScheme) {
             try APIConfiguration.resolve(rawValue: rawValue, requiresHTTPS: false)
         }
     }
-
-    @Test("A missing or blank value is reported as missing", arguments: [nil, "", "   "] as [String?])
-    func missingValue(rawValue: String?) {
+    
+    @Test(arguments: [nil, "", "   "] as [String?])
+    func `A missing or blank value is reported as missing`(rawValue: String?) {
         #expect(throws: APIConfigurationError.missing) {
             try APIConfiguration.resolve(rawValue: rawValue, requiresHTTPS: false)
         }
     }
-
+    
     @Test(
-        "An unusable value is reported as malformed",
         arguments: [
             "not a url",
             "/relative/path",
@@ -76,7 +74,7 @@ struct APIConfigurationTests {
             "$(API_BASE_URL)"
         ]
     )
-    func malformedValue(rawValue: String) {
+    func `An unusable value is reported as malformed`(rawValue: String) {
         #expect(throws: APIConfigurationError.malformed) {
             try APIConfiguration.resolve(rawValue: rawValue, requiresHTTPS: false)
         }

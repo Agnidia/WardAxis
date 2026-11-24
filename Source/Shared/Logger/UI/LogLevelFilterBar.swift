@@ -45,7 +45,9 @@ struct LogLevelFilterBar: View {
         ) {
             // VM also no-ops when the invariant would be broken, so this
             // disabled gate is purely a UX hint (no destructive double-tap).
-            if isOn, !canRemove { return }
+            if isOn, !canRemove {
+                return
+            }
             onToggle(level)
         }
         .disabled(isOn && !canRemove)

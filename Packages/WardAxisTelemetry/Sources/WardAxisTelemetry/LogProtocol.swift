@@ -49,20 +49,20 @@ public protocol LogProtocol: Sendable {
 
 /// Messages without an explicit label are private: an interpolated value
 /// (hostname, path, identifier) must never reach a persisted log by omission.
-extension LogProtocol {
-    public func debug(_ message: String) {
+public extension LogProtocol {
+    func debug(_ message: String) {
         debug(message, privacy: .private)
     }
-
-    public func info(_ message: String) {
+    
+    func info(_ message: String) {
         info(message, privacy: .private)
     }
-
-    public func warning(_ message: String) {
+    
+    func warning(_ message: String) {
         warning(message, privacy: .private)
     }
-
-    public func error(_ message: String) {
+    
+    func error(_ message: String) {
         error(message, privacy: .private)
     }
 }

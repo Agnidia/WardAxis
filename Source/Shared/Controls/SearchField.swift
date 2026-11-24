@@ -110,9 +110,13 @@ struct SearchField: View {
     // MARK: - Computed Properties
     
     private var currentState: SearchFieldState {
-        if isFocused { .pressed }
-        else if !text.isEmpty { .entered }
-        else { .default }
+        if isFocused {
+            .pressed
+        } else if !text.isEmpty {
+            .entered
+        } else {
+            .default
+        }
     }
     
     private var borderColor: Color {

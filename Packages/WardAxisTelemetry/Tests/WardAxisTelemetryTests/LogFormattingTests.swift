@@ -12,9 +12,9 @@ import Testing
 @Suite("Log Formatting Tests", .serialized)
 struct LogFormattingTests {
     // MARK: - formatTimestamp
-
-    @Test("formatTimestamp returns empty for .none style")
-    func formatTimestampReturnsEmptyForNone() {
+    
+    @Test
+    func `formatTimestamp returns empty for .none style`() {
         let config = Log.Configuration(
             categoryStates: [:],
             label: "",
@@ -26,9 +26,9 @@ struct LogFormattingTests {
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(result.isEmpty)
     }
-
-    @Test("formatTimestamp returns non-empty for .time style")
-    func formatTimestampReturnsNonEmptyForTime() {
+    
+    @Test
+    func `formatTimestamp returns non-empty for .time style`() {
         let config = Log.Configuration(
             categoryStates: [:],
             label: "",
@@ -40,9 +40,9 @@ struct LogFormattingTests {
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(!result.isEmpty)
     }
-
-    @Test("formatTimestamp returns non-empty for .short style")
-    func formatTimestampReturnsNonEmptyForShort() {
+    
+    @Test
+    func `formatTimestamp returns non-empty for .short style`() {
         let config = Log.Configuration(
             categoryStates: [:],
             label: "",
@@ -54,9 +54,9 @@ struct LogFormattingTests {
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(!result.isEmpty)
     }
-
-    @Test("formatTimestamp returns non-empty for .full style")
-    func formatTimestampReturnsNonEmptyForFull() {
+    
+    @Test
+    func `formatTimestamp returns non-empty for .full style`() {
         let config = Log.Configuration(
             categoryStates: [:],
             label: "",
@@ -68,9 +68,9 @@ struct LogFormattingTests {
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(!result.isEmpty)
     }
-
-    @Test("formatTimestamp with .time style contains colons")
-    func formatTimestampTimeContainsColons() {
+    
+    @Test
+    func `formatTimestamp with .time style contains colons`() {
         let config = Log.Configuration(
             categoryStates: [:],
             label: "",
@@ -82,9 +82,9 @@ struct LogFormattingTests {
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(result.contains(":"))
     }
-
-    @Test("formatTimestamp with .time style contains period (milliseconds)")
-    func formatTimestampTimeContainsPeriod() {
+    
+    @Test
+    func `formatTimestamp with .time style contains period (milliseconds)`() {
         let config = Log.Configuration(
             categoryStates: [:],
             label: "",
@@ -96,37 +96,37 @@ struct LogFormattingTests {
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(result.contains("."))
     }
-
+    
     // MARK: - isEnabled / configure
-
-    @Test("isEnabled respects test configuration")
-    func isEnabledRespectsTestConfig() {
+    
+    @Test
+    func `isEnabled respects test configuration`() {
         let original = Log.configuration
-
+        
         Log.configure(for: .test)
         for category in Log.Category.allCases {
             #expect(Log.isEnabled(category))
         }
-
+        
         Log.configuration = original
     }
-
-    @Test("isEnabled respects release configuration")
-    func isEnabledRespectsReleaseConfig() {
+    
+    @Test
+    func `isEnabled respects release configuration`() {
         let original = Log.configuration
-
+        
         Log.configure(for: .release)
         for category in Log.Category.allCases {
             #expect(!Log.isEnabled(category))
         }
-
+        
         Log.configuration = original
     }
-
-    @Test("configure with custom configuration applies it")
-    func configureWithCustomConfig() {
+    
+    @Test
+    func `configure with custom configuration applies it`() {
         let original = Log.configuration
-
+        
         let custom = Log.Configuration(
             categoryStates: [.ui: true, .management: false],
             label: "Custom",
@@ -136,26 +136,25 @@ struct LogFormattingTests {
             dateDisplayStyle: .none
         )
         Log.configure(custom)
-
+        
         #expect(Log.isEnabled(.ui))
         #expect(!Log.isEnabled(.management))
         #expect(Log.configuration.label == "Custom")
-
+        
         Log.configuration = original
     }
-
+    
     // MARK: - Category prefix
-
+    
     @Test(
-        "all categories have non-empty prefix",
         arguments: Log.Category.allCases
     )
-    func categoryPrefixNonEmpty(category: Log.Category) {
+    func `all categories have non-empty prefix`(category: Log.Category) {
         #expect(!category.prefix.isEmpty)
     }
-
-    @Test("known categories have expected emoji prefixes")
-    func knownCategoryPrefixes() {
+    
+    @Test
+    func `known categories have expected emoji prefixes`() {
         #expect(Log.Category.application.prefix == "🗳️")
         #expect(Log.Category.ui.prefix == "🪟")
         #expect(Log.Category.cache.prefix == "💾")
@@ -163,23 +162,23 @@ struct LogFormattingTests {
         #expect(Log.Category.management.prefix == "🔌")
         #expect(Log.Category.pki.prefix == "🔐")
     }
-
+    
     // MARK: - LogMetadata
-
-    @Test("LogMetadata auto-captures timestamp")
-    func logMetadataAutoTimestamp() {
+    
+    @Test
+    func `LogMetadata auto-captures timestamp`() {
         let before = Date()
         let metadata = LogMetadata(category: .ui)
         let after = Date()
-
+        
         #expect(metadata.timestamp >= before)
         #expect(metadata.timestamp <= after)
         #expect(metadata.category == .ui)
         #expect(metadata.info == nil)
     }
-
-    @Test("LogMetadata stores info when provided")
-    func logMetadataWithInfo() {
+    
+    @Test
+    func `LogMetadata stores info when provided`() {
         let metadata = LogMetadata(category: .management, info: ["host": "example.com"])
         #expect(metadata.info != nil)
         #expect(metadata.info?.count == 1)

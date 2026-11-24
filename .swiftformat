@@ -24,7 +24,7 @@
 --wrap-collections preserve
 --wrap-parameters preserve
 --wrap-return-type preserve
---wrap-conditions disabled
+--wrap-conditions preserve
 --closing-paren balanced
 
 # === Spacing (Observed: standard Swift spacing) ===
@@ -51,7 +51,7 @@
 # === Modern Swift Patterns (Observed: same-line else, auto guard) ===
 --else-position same-line
 --guard-else auto
---pattern-let hoist
+--pattern-let inline
 
 # === Organization (Observed: class, struct, enum, extension) ===
 --organize-types class,struct,enum,extension

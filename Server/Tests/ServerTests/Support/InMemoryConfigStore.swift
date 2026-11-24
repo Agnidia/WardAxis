@@ -5,32 +5,32 @@
 //  Copyright © 2026 Agnidia. All rights reserved.
 //
 
-import WardAxisAPIServer
 import Foundation
 import NIOConcurrencyHelpers
 import OpenAPIRuntime
 import ServerCore
+import WardAxisAPIServer
 
 /// ``ConfigStore`` in memory, versioned like migration 6: each commit that changes
 /// something advances the version by exactly 1 and appends one change to the log.
 final class InMemoryConfigStore: ConfigStore, Sendable {
     struct StoreFailure: Error {}
-
+    
     private struct State {
         var version: Int64
         var values: [String: OpenAPIValueContainer]
         var log: [ConfigChange] = []
         var failing: Bool = false
     }
-
+    
     private let state: NIOLockedValueBox<State>
-
+    
     /// - Parameter valuesJSON: The entries at `version`, as a JSON object.
     init(version: Int64 = 0, valuesJSON: String = "{}") throws {
         let values = try JSONDecoder().decode([String: OpenAPIValueContainer].self, from: Data(valuesJSON.utf8))
         state = NIOLockedValueBox(State(version: version, values: values))
     }
-
+    
     /// Applies one change, as one SQL statement would; returns the version after it.
     @discardableResult
     func commit(changedJSON: String = "{}", removed: [String] = []) throws -> Int64 {
@@ -49,23 +49,23 @@ final class InMemoryConfigStore: ConfigStore, Sendable {
             return state.version
         }
     }
-
+    
     /// Drops logged changes up to `version`, as a future retention job could.
     func pruneLog(through version: Int64) {
         state.withLockedValue { $0.log.removeAll { $0.version <= version } }
     }
-
+    
     /// Makes every read throw ``StoreFailure`` until reset.
     func setFailing(_ failing: Bool) {
         state.withLockedValue { $0.failing = failing }
     }
-
+    
     func change(at version: Int64) -> ConfigChange? {
         state.withLockedValue { $0.log.first { $0.version == version } }
     }
-
+    
     // MARK: ConfigStore
-
+    
     func snapshot() async throws -> ConfigSnapshotRecord {
         let (version, values) = try state.withLockedValue { state in
             guard !state.failing else { throw StoreFailure() }
@@ -73,21 +73,21 @@ final class InMemoryConfigStore: ConfigStore, Sendable {
         }
         return try ConfigSnapshotRecord(version: version, values: Self.entries(values))
     }
-
+    
     func currentVersion() async throws -> Int64 {
         try state.withLockedValue { state in
             guard !state.failing else { throw StoreFailure() }
             return state.version
         }
     }
-
+    
     func changes(after version: Int64, limit: Int) async throws -> [ConfigChange] {
         try state.withLockedValue { state in
             guard !state.failing else { throw StoreFailure() }
             return Array(state.log.filter { $0.version > version }.prefix(limit))
         }
     }
-
+    
     private static func entries(_ values: [String: OpenAPIValueContainer]) throws -> Components.Schemas.ConfigEntries {
         try JSONDecoder().decode(Components.Schemas.ConfigEntries.self, from: JSONEncoder().encode(values))
     }

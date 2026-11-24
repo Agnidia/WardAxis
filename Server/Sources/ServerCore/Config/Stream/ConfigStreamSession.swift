@@ -20,22 +20,22 @@ import NIOWebSocket
 struct ConfigStreamSession {
     /// Close code 1013 (Try Again Later), which `WebSocketErrorCode` has no case for.
     static let tryAgainLater: WebSocketErrorCode = .unknown(1013)
-
+    
     /// Close code 1000 with this reason ends a stream at its lifetime cap; the client
     /// reconnects at once with a new TLS handshake.
     static let lifetimeReason: String = "lifetime"
-
+    
     let store: any ConfigStore
     let hub: ConfigConnectionHub
     let policy: ConfigStreamPolicy
     let logger: Logger
-
+    
     private enum Event: Sendable {
         case delta(ConfigDeltaFrame)
         case heartbeat
         case lifetimeReached
     }
-
+    
     private enum TaskEnd: Sendable {
         case clientGone
         case serverClosed
@@ -43,14 +43,14 @@ struct ConfigStreamSession {
         case graceElapsed
         case idle
     }
-
+    
     private enum RelayReadiness: Sendable {
         case alreadyReady
         case readyAfterWait
         case timedOut
         case cancelled
     }
-
+    
     /// - Parameter client: Set by ``ConfigStreamAdmissionMiddleware``; `nil` only if the
     ///   route was mounted without it, and then the stream closes with 1011 before any frame.
     func run(client: ConfigStreamClient?, inbound: WebSocketInboundStream, outbound: WebSocketOutboundWriter) async {
@@ -65,7 +65,7 @@ struct ConfigStreamSession {
             return
         }
         defer { hub.unregister(subscription) }
-
+        
         // A snapshot read before the relay reads its start version can be older than that
         // version. The versions in between then get no delta, and the client misses them
         // until the next change.
@@ -78,7 +78,7 @@ struct ConfigStreamSession {
         case .cancelled:
             return
         }
-
+        
         // Subscribed before the snapshot is read: a delta that committed before the
         // snapshot has a version the snapshot covers and is skipped, and one that
         // committed after it arrives through the subscription.
@@ -96,7 +96,7 @@ struct ConfigStreamSession {
             logger.debug("Config stream ended before the snapshot was sent", metadata: ["error.type": "\(type(of: error))"])
             return
         }
-
+        
         let (events, sink) = AsyncStream.makeStream(of: Event.self, bufferingPolicy: .bufferingNewest(policy.subscriberBufferSize))
         await withTaskGroup(of: TaskEnd.self) { group in
             group.addTask {
@@ -142,7 +142,7 @@ struct ConfigStreamSession {
             }
         }
     }
-
+    
     /// Waits for the relay to start, at most ``ConfigStreamPolicy/relayReadyTimeout``. The
     /// session keeps its slot meanwhile, so the per-user cap still holds.
     private func relayReadiness() async -> RelayReadiness {
@@ -168,7 +168,7 @@ struct ConfigStreamSession {
             return first
         }
     }
-
+    
     /// Consumes `events` until the session closes the stream or a write fails.
     private func writeFrames(
         from events: AsyncStream<Event>,
@@ -179,7 +179,7 @@ struct ConfigStreamSession {
         do {
             for await event in events {
                 switch event {
-                case let .delta(frame):
+                case .delta(let frame):
                     guard frame.version > currentVersion else { continue }
                     if frame.version > currentVersion + 1 {
                         // The subscription dropped frames: send the missing ones from the
@@ -206,7 +206,7 @@ struct ConfigStreamSession {
         }
         return .idle
     }
-
+    
     /// Sends the stored changes after `version` up to `target`, in order.
     ///
     /// - Returns: The last version sent; `nil` when the store cannot be read or its log
@@ -230,7 +230,7 @@ struct ConfigStreamSession {
         }
         return currentVersion
     }
-
+    
     /// Reads and discards client frames. Ends on the client's close frame or a dropped connection.
     private func drain(_ inbound: WebSocketInboundStream) async {
         do {
@@ -239,7 +239,7 @@ struct ConfigStreamSession {
             logger.debug("Config stream inbound ended with an error", metadata: ["error.type": "\(type(of: error))"])
         }
     }
-
+    
     private func tick(every interval: Duration, _ action: () -> Void) async {
         while true {
             do {
@@ -250,7 +250,7 @@ struct ConfigStreamSession {
             action()
         }
     }
-
+    
     private func close(_ outbound: WebSocketOutboundWriter, code: WebSocketErrorCode, reason: String?, cause: String) async {
         logger.info("Config stream closed by the server", metadata: ["config.close.cause": "\(cause)"])
         do {

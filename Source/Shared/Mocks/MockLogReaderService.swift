@@ -20,34 +20,36 @@ actor MockLogReaderService: LogReaderServiceProtocol {
         case sampleEntries
         case failure(LogReaderError)
     }
-
+    
     private var scenario: Scenario
     private(set) var lastExportedEntries: [LogEntry]?
     private(set) var exportCallCount: Int = 0
     private(set) var clearCallCount: Int = 0
     private var wasCleared: Bool = false
-
+    
     init(scenario: Scenario = .sampleEntries) {
         self.scenario = scenario
     }
-
+    
     func loadEntries() async throws -> [LogEntry] {
-        if wasCleared { return [] }
+        if wasCleared {
+            return []
+        }
         switch scenario {
         case .empty:
             return []
         case .sampleEntries:
             return Self.makeSampleEntries()
-        case let .failure(error):
+        case .failure(let error):
             throw error
         }
     }
-
+    
     func clearEntries() async throws {
         clearCallCount += 1
         wasCleared = true
     }
-
+    
     func exportEntries(_ entries: [LogEntry]) async throws -> URL {
         lastExportedEntries = entries
         exportCallCount += 1
@@ -61,7 +63,7 @@ actor MockLogReaderService: LogReaderServiceProtocol {
         }
         return url
     }
-
+    
     private static func makeSampleEntries() -> [LogEntry] {
         let baseDate = Date()
         return [
@@ -76,7 +78,7 @@ actor MockLogReaderService: LogReaderServiceProtocol {
             )
         ]
     }
-
+    
     private static func makeEntry(
         category: Log.Category,
         level: Log.Level,

@@ -21,7 +21,7 @@ public enum ConfigurationValue: Sendable, Hashable, Codable {
     case string(String)
     case array([ConfigurationValue])
     case object([String: ConfigurationValue])
-
+    
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         // Backstop for the byte pre-scan: decoding recurses once per level.
@@ -46,23 +46,23 @@ public enum ConfigurationValue: Sendable, Hashable, Codable {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported JSON value")
         }
     }
-
+    
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
         case .null:
             try container.encodeNil()
-        case let .bool(value):
+        case .bool(let value):
             try container.encode(value)
-        case let .integer(value):
+        case .integer(let value):
             try container.encode(value)
-        case let .number(value):
+        case .number(let value):
             try container.encode(value)
-        case let .string(value):
+        case .string(let value):
             try container.encode(value)
-        case let .array(value):
+        case .array(let value):
             try container.encode(value)
-        case let .object(value):
+        case .object(let value):
             try container.encode(value)
         }
     }

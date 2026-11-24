@@ -39,12 +39,12 @@ struct LogEntryParser: Sendable {
         let info = #"(?: \| (.*))?"#
         return "^\(timestamp)\(category) \(level)\(body)\(info)$"
     }()
-
+    
     private static let regex: NSRegularExpression? = try? NSRegularExpression(
         pattern: pattern,
         options: [.dotMatchesLineSeparators]
     )
-
+    
     /// Header pattern used to detect the start of a new entry when merging
     /// continuation lines (multi-line log messages such as JSON dumps).
     /// Matches `[ts] [cat] [lvl]` or `[cat] [lvl]` at line start.
@@ -52,7 +52,7 @@ struct LogEntryParser: Sendable {
         pattern: #"^(?:\[[^\]]+\] )?\[[^\]]+\] \[[^\]]+\] "#,
         options: []
     )
-
+    
     /// Time-of-day formatter (no date component). Output dates land on
     /// `DateFormatter`'s reference epoch — see `parseTimestamp(_:now:)` for
     /// the reanchor step that pins them to today.
@@ -63,7 +63,7 @@ struct LogEntryParser: Sendable {
         formatter.dateFormat = LogDateFormat.timeWithMilliseconds
         return formatter
     }()
-
+    
     /// Date+time formatters used when the file logger emits a date-bearing
     /// timestamp (`.short` or `.full` configuration). Output dates already
     /// carry year/month/day so they need no reanchoring.
@@ -74,50 +74,42 @@ struct LogEntryParser: Sendable {
             formatter.timeStyle = .short
             return formatter
         }()
-
+        
         let fullFormatter: DateFormatter = {
             let formatter = DateFormatter()
             formatter.dateStyle = .full
             formatter.timeStyle = .full
             return formatter
         }()
-
+        
         return [shortFormatter, fullFormatter]
     }()
-
+    
     init() {}
-
+    
     /// Parses a single line. Never throws; unrecognised lines become `.raw`.
     func parse(_ line: String) -> LogEntry {
-        guard !line.isEmpty else {
+        guard !line.isEmpty, let regex = Self.regex else {
             return LogEntry(id: UUID(), kind: .raw(line), rawLine: line)
         }
-
-        guard let regex = Self.regex else {
-            return LogEntry(id: UUID(), kind: .raw(line), rawLine: line)
-        }
-
+        
         let range = NSRange(line.startIndex..<line.endIndex, in: line)
         guard let match = regex.firstMatch(in: line, options: [], range: range) else {
             return LogEntry(id: UUID(), kind: .raw(line), rawLine: line)
         }
-
+        
         let timestampText = capture(match, at: 1, in: line)
         let categoryText = capture(match, at: 2, in: line) ?? ""
         let levelText = capture(match, at: 3, in: line) ?? ""
         let messageText = capture(match, at: 4, in: line) ?? ""
         let infoText = capture(match, at: 5, in: line)
-
-        guard let category = Log.Category(rawValue: categoryText) else {
+        
+        guard let category = Log.Category(rawValue: categoryText), let level = Self.level(named: levelText) else {
             return LogEntry(id: UUID(), kind: .raw(line), rawLine: line)
         }
-
-        guard let level = Self.level(named: levelText) else {
-            return LogEntry(id: UUID(), kind: .raw(line), rawLine: line)
-        }
-
+        
         let timestamp = timestampText.flatMap { Self.parseTimestamp($0) }
-
+        
         let parsed = LogEntry.Parsed(
             timestamp: timestamp,
             level: level,
@@ -125,10 +117,10 @@ struct LogEntryParser: Sendable {
             message: messageText,
             info: infoText
         )
-
+        
         return LogEntry(id: UUID(), kind: .parsed(parsed), rawLine: line)
     }
-
+    
     /// Splits a multi-line source on `\n` and reassembles entries that span
     /// multiple physical lines (e.g. messages containing pretty-printed JSON).
     ///
@@ -138,14 +130,14 @@ struct LogEntryParser: Sendable {
     /// is preserved (file order — caller may reverse).
     func parseAll(_ source: String) -> [LogEntry] {
         guard !source.isEmpty else { return [] }
-
+        
         let rawLines = source
             .split(separator: "\n", omittingEmptySubsequences: true)
             .map(String.init)
-
+        
         var merged: [String] = []
         merged.reserveCapacity(rawLines.count)
-
+        
         for line in rawLines {
             if Self.isHeaderLine(line) || merged.isEmpty {
                 merged.append(line)
@@ -154,10 +146,10 @@ struct LogEntryParser: Sendable {
                 merged[merged.count - 1].append(line)
             }
         }
-
+        
         return merged.map(parse)
     }
-
+    
     /// Returns `true` when `line` begins with the canonical entry header
     /// (`[<ts>] [<cat>] [<lvl>] ` or `[<cat>] [<lvl>] `).
     private static func isHeaderLine(_ line: String) -> Bool {
@@ -165,9 +157,9 @@ struct LogEntryParser: Sendable {
         let range = NSRange(line.startIndex..<line.endIndex, in: line)
         return headerRegex.firstMatch(in: line, options: [], range: range) != nil
     }
-
+    
     // MARK: - Helpers
-
+    
     private func capture(_ match: NSTextCheckingResult, at index: Int, in line: String) -> String? {
         guard index < match.numberOfRanges else { return nil }
         let nsRange = match.range(at: index)
@@ -176,7 +168,7 @@ struct LogEntryParser: Sendable {
         }
         return String(line[swiftRange])
     }
-
+    
     /// Maps the textual level token (as produced by `Log.Level.name(_:)`) to
     /// the corresponding single-bit `Log.Level`. Composite tokens fall through.
     private static func level(named name: String) -> Log.Level? {
@@ -188,7 +180,7 @@ struct LogEntryParser: Sendable {
         default: nil
         }
     }
-
+    
     /// Recovers a `Date` from a textual timestamp.
     ///
     /// Date-bearing formats (`.short`, `.full`) are tried first and returned
@@ -198,14 +190,16 @@ struct LogEntryParser: Sendable {
     /// (or yesterday for cross-midnight entries).
     static func parseTimestamp(_ text: String, now: Date = Date()) -> Date? {
         for formatter in dateBearingFormatters {
-            if let date = formatter.date(from: text) { return date }
+            if let date = formatter.date(from: text) {
+                return date
+            }
         }
         if let timeOfDay = timeOnlyFormatter.date(from: text) {
             return reanchorTimeOfDay(timeOfDay, now: now)
         }
         return nil
     }
-
+    
     /// Combines the time-of-day from `timeOfDay` with today's date in the
     /// current calendar. If the resulting instant is in the future relative
     /// to `now` (entry written before midnight, viewed after), step one

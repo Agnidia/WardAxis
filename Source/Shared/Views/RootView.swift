@@ -27,15 +27,15 @@ import WardAxisTelemetry
 @MainActor
 struct RootView: View {
     // MARK: - Properties
-
+    
     @Bindable var coordinator: AppCoordinator
     @Environment(\.appContainer) private var container
-
+    
     private let resolver = RouteResolver()
     private let logger = Log(category: .ui)
-
+    
     // MARK: - Body
-
+    
     var body: some View {
         Group {
             switch coordinator.appPhase {
@@ -64,10 +64,9 @@ struct RootView: View {
             logger.debug("RootView appeared")
         }
     }
-
+    
     // MARK: - Splash Overlay
-
-    @ViewBuilder
+    
     private var splashOverlay: some View {
         // macOS: Full-screen blocking background with centered splash card
         SplashView {
@@ -83,10 +82,9 @@ struct RootView: View {
         .background(Color.Background.primary)
 #endif
     }
-
+    
     // MARK: - Main Content
-
-    @ViewBuilder
+    
     private var mainContent: some View {
         CoordinatedMainTabView(coordinator: coordinator, resolver: resolver)
             .sheet(item: $coordinator.presentedSheet) { route in
@@ -109,11 +107,11 @@ struct RootView: View {
 struct CoordinatedMainTabView: View {
     @Bindable var coordinator: AppCoordinator
     let resolver: RouteResolver
-
+    
     @Environment(\.appContainer) private var container
-
+    
     private let logger = Log(category: .ui)
-
+    
     var body: some View {
         // Through switchTab(to:), so a tab with unsaved changes can hold the switch.
         TabView(selection: Binding(get: { coordinator.selectedTab }, set: { coordinator.switchTab(to: $0) })) {
@@ -128,9 +126,9 @@ struct CoordinatedMainTabView: View {
             AccessibilityAnnouncer.screenChanged()
         }
     }
-
+    
     // MARK: - Tabs
-
+    
     private var homeTab: some View {
         NavigationStack(path: $coordinator.navigationPath) {
             HomeView()
@@ -143,7 +141,7 @@ struct CoordinatedMainTabView: View {
         }
         .tag(AppCoordinator.Tab.home)
     }
-
+    
     private var settingsTab: some View {
         NavigationStack(path: $coordinator.settingsNavigationPath) {
             SettingsView()

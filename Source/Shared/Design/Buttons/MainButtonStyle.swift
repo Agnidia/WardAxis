@@ -81,17 +81,27 @@ struct MainButtonStyle: ButtonStyle {
     }
     
     private func backgroundColor(isPressed: Bool) -> Color {
-        if !isEnabled { .Button.Background.Primary.disabled }
-        else if showShimmer { .Button.Background.Primary.loading }
-        else if isPressed { .Button.Background.Primary.pressed }
-        else { .Button.Background.Primary.default }
+        if !isEnabled {
+            .Button.Background.Primary.disabled
+        } else if showShimmer {
+            .Button.Background.Primary.loading
+        } else if isPressed {
+            .Button.Background.Primary.pressed
+        } else {
+            .Button.Background.Primary.default
+        }
     }
     
     private func labelColor(isPressed: Bool) -> Color {
-        if !isEnabled { .Button.Label.Primary.disabled }
-        else if showShimmer { .Button.Label.Primary.loading }
-        else if isPressed { .Button.Label.Primary.pressed }
-        else { .Button.Label.Primary.default }
+        if !isEnabled {
+            .Button.Label.Primary.disabled
+        } else if showShimmer {
+            .Button.Label.Primary.loading
+        } else if isPressed {
+            .Button.Label.Primary.pressed
+        } else {
+            .Button.Label.Primary.default
+        }
     }
 }
 

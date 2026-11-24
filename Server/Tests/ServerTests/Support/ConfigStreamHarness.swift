@@ -5,7 +5,6 @@
 //  Copyright © 2026 Agnidia. All rights reserved.
 //
 
-import WardAxisAPIServer
 import Foundation
 import Hummingbird
 import HummingbirdTesting
@@ -18,6 +17,7 @@ import NIOSSL
 import NIOWebSocket
 import ServerCore
 import Testing
+import WardAxisAPIServer
 
 typealias ConfigMessage = Components.Schemas.ConfigMessage
 
@@ -39,7 +39,7 @@ struct ConfigStreamHarness: Sendable {
         retryBackoff: RetryBackoff(initial: .milliseconds(10), maximum: .milliseconds(50)),
         closeGracePeriod: .milliseconds(500)
     )
-
+    
     let dependencies: ServerDependencies
     let configStore: any ConfigStore
     let notifier: any ConfigChangeNotifier
@@ -49,11 +49,11 @@ struct ConfigStreamHarness: Sendable {
     let deviceAuthority: TestAuthority
     private let mutualTLS: TLSConfiguration
     private let serverOnlyTLS: TLSConfiguration
-
+    
     var hub: ConfigConnectionHub {
         dependencies.configHub
     }
-
+    
     init(
         policy: ConfigStreamPolicy = ConfigStreamHarness.quietPolicy,
         configStore: any ConfigStore,
@@ -71,7 +71,7 @@ struct ConfigStreamHarness: Sendable {
         mutualTLS = try await TestServerFiles.serverConfiguration(serverAuthority: serverAuthority, clientCAs: [deviceAuthority])
         serverOnlyTLS = try await TestServerFiles.serverConfiguration(serverAuthority: serverAuthority, clientCAs: nil)
     }
-
+    
     /// How the listener terminates connections.
     enum Listener {
         /// TLS with the device CA: the production configuration that serves the stream.
@@ -81,7 +81,7 @@ struct ConfigStreamHarness: Sendable {
         /// Plain TCP, for tests of the HTTP layer below TLS.
         case plain
     }
-
+    
     func application(
         listener: Listener = .mutualTLS,
         httpIdleTimeout: TimeAmount = HTTPServerLimits.idleTimeout,
@@ -100,7 +100,7 @@ struct ConfigStreamHarness: Sendable {
             tlsConfiguration: tlsConfiguration
         )
     }
-
+    
     /// A device holding a certificate the device CA issued, as enrollment leaves it.
     func enrollDevice() throws -> StreamDevice {
         let identity = try deviceAuthority.issueClientIdentity()
@@ -109,7 +109,7 @@ struct ConfigStreamHarness: Sendable {
             client: identity.streamClient
         )
     }
-
+    
     /// A client whose certificate another CA issued.
     func foreignDevice() throws -> StreamDevice {
         let identity = try TestAuthority(name: "Foreign CA").issueClientIdentity()
@@ -118,12 +118,12 @@ struct ConfigStreamHarness: Sendable {
             client: identity.streamClient
         )
     }
-
+    
     /// A client that trusts the server but presents no certificate.
     func anonymousClient() throws -> StreamDevice {
         try StreamDevice(tlsConfiguration: .testClient(trusting: serverAuthority, identity: nil), client: nil)
     }
-
+    
     /// Waits until the relay has read its start version and listens for wake-ups.
     func waitForRelay() async throws {
         guard let manual = notifier as? ManualConfigChangeNotifier else { return }
@@ -136,7 +136,7 @@ struct StreamDevice: Sendable {
     let tlsConfiguration: TLSConfiguration
     /// `nil` for a client without a certificate.
     let client: ConfigStreamClient?
-
+    
     /// The slot key of a client with a certificate.
     var slot: ConfigStreamClient {
         guard let client else { preconditionFailure("A client without a certificate holds no slot") }
@@ -195,7 +195,7 @@ func holdRawConnection(port: Int, sending bytes: String) async throws {
 /// A TCP connection that sends no request unless a test writes one.
 struct RawConnection: Sendable {
     private let channel: NIOAsyncChannel<ByteBuffer, ByteBuffer>
-
+    
     static func open(port: Int) async throws -> RawConnection {
         let channel = try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
             .connect(host: "localhost", port: port) { channel in
@@ -205,7 +205,7 @@ struct RawConnection: Sendable {
             }
         return RawConnection(channel: channel)
     }
-
+    
     /// Writes `bytes`, then returns once the server closes the connection.
     func hold(sending bytes: String) async throws {
         try await channel.executeThenClose { inbound, outbound in
@@ -264,7 +264,7 @@ extension TestClientProtocol {
         }
         return StreamRecording(messages: received.withLockedValue { $0 }, closeCode: closeCode)
     }
-
+    
     /// Sends a complete WebSocket handshake over a raw HTTP/1.1 connection and returns
     /// the response to it, so a test can read the status of a refused upgrade.
     /// Use it only where the upgrade must fail: a `101` leaves this client nothing to read.
@@ -297,12 +297,12 @@ extension TestClientProtocol {
 extension ConfigMessage {
     var version: Int64 {
         switch self {
-        case let .snapshot(snapshot): snapshot.version
-        case let .delta(delta): delta.version
-        case let .heartbeat(heartbeat): heartbeat.version
+        case .snapshot(let snapshot): snapshot.version
+        case .delta(let delta): delta.version
+        case .heartbeat(let heartbeat): heartbeat.version
         }
     }
-
+    
     var isSnapshot: Bool {
         if case .snapshot = self {
             true
@@ -310,7 +310,7 @@ extension ConfigMessage {
             false
         }
     }
-
+    
     var isHeartbeat: Bool {
         if case .heartbeat = self {
             true
@@ -328,11 +328,11 @@ func configEntries(_ json: String) throws -> Components.Schemas.ConfigEntries {
 /// A one-way gate a test opens to let a waiting stream handler finish.
 final class Gate: Sendable {
     private let opened: NIOLockedValueBox<Bool> = .init(false)
-
+    
     func open() {
         opened.withLockedValue { $0 = true }
     }
-
+    
     func wait() async throws {
         try await waitUntil("the gate to open", timeout: .seconds(10)) { self.opened.withLockedValue { $0 } }
     }

@@ -24,12 +24,12 @@ package struct AppConfiguration: Sendable {
         package static let tlsClientCAPath: String = "TLS_CLIENT_CA_PATH"
         package static let apiDocsEnabled: String = "API_DOCS_ENABLED"
     }
-
+    
     package static let defaultHost: String = "0.0.0.0"
     package static let defaultPort: Int = 8080
     package static let defaultLogLevel: Logger.Level = .info
     package static let defaultServerEnvironment: ServerEnvironment = .production
-
+    
     package let host: String
     package let port: Int
     package let database: DatabaseConfiguration
@@ -44,7 +44,7 @@ package struct AppConfiguration: Sendable {
     /// on in ``ServerEnvironment/development``; production never serves them, and refuses
     /// to start when asked to.
     package let apiDocsEnabled: Bool
-
+    
     /// Parses and validates the environment. An empty value counts as missing.
     ///
     /// - Throws: ``ConfigurationError`` naming the first variable that is missing or invalid.
@@ -53,9 +53,9 @@ package struct AppConfiguration: Sendable {
             guard let raw = environment[name], !raw.isEmpty else { return nil }
             return raw
         }
-
+        
         host = value(Variable.host) ?? Self.defaultHost
-
+        
         if let rawPort = value(Variable.port) {
             guard let parsed = Int(rawPort), (1...65_535).contains(parsed) else {
                 throw .invalid(variable: Variable.port, reason: "must be an integer between 1 and 65535")
@@ -64,12 +64,12 @@ package struct AppConfiguration: Sendable {
         } else {
             port = Self.defaultPort
         }
-
+        
         guard let databaseURL = value(Variable.databaseURL) else {
             throw .missing(variable: Variable.databaseURL)
         }
         database = try DatabaseConfiguration(url: databaseURL, variable: Variable.databaseURL)
-
+        
         if let rawEnvironment = value(Variable.serverEnvironment) {
             guard let parsed = ServerEnvironment(rawValue: rawEnvironment) else {
                 throw .invalid(variable: Variable.serverEnvironment, reason: "must be development or production")
@@ -78,7 +78,7 @@ package struct AppConfiguration: Sendable {
         } else {
             self.environment = Self.defaultServerEnvironment
         }
-
+        
         if let rawLevel = value(Variable.logLevel) {
             guard let level = Logger.Level(rawValue: rawLevel.lowercased()) else {
                 throw .invalid(
@@ -90,7 +90,7 @@ package struct AppConfiguration: Sendable {
         } else {
             logLevel = Self.defaultLogLevel
         }
-
+        
         switch value(Variable.apiDocsEnabled) {
         case "true":
             // A refusal, not a silent off: a deployment that asks for docs in production
@@ -106,13 +106,13 @@ package struct AppConfiguration: Sendable {
         case _?:
             throw .invalid(variable: Variable.apiDocsEnabled, reason: "must be true or false")
         }
-
+        
         // Both paths or neither: one alone is a typo, never a request for plain HTTP.
         // Production has no plain-HTTP option at all. A device CA without them is refused
         // too: client certificates exist only inside TLS, so it would protect nothing.
         let clientCAPath = value(Variable.tlsClientCAPath)
         switch (value(Variable.tlsCertificateChainPath), value(Variable.tlsPrivateKeyPath)) {
-        case let (chain?, key?):
+        case (let chain?, let key?):
             tls = TLSFiles(certificateChainPath: chain, privateKeyPath: key, clientCertificateAuthorityPath: clientCAPath)
         case (_?, nil):
             throw .missing(variable: Variable.tlsPrivateKeyPath)

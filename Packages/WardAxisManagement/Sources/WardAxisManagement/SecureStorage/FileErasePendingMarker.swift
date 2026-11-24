@@ -17,19 +17,19 @@ import WardAxisTelemetry
 public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
     static let fileName = "erase-pending"
     static let directoryName = "Vault"
-
+    
     /// The directory that holds the marker file. `set()` creates it when needed.
     let directory: URL
     private let fileURL: URL
     private let logger = Log(category: .storage)
-
+    
     /// - Parameter directory: Tests pass a throwaway directory, so they never
     ///   touch the app's own marker.
     public init(directory: URL) {
         self.directory = directory
         fileURL = directory.appending(path: Self.fileName, directoryHint: .notDirectory)
     }
-
+    
     /// The marker for the main bundle: `<Application Support>/<bundle identifier>/Vault`,
     /// or under Caches on tvOS.
     public static func live() -> any ErasePendingMarkerProtocol {
@@ -44,7 +44,7 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
 #endif
         return live(in: base, bundleIdentifier: Bundle.main.bundleIdentifier)
     }
-
+    
     /// The marker under `base`, in a folder named by `bundleIdentifier`.
     ///
     /// Without App Sandbox, `base` is shared by every app of the user. The bundle
@@ -62,13 +62,13 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
         }
         return Self(directory: directory(in: base, bundleIdentifier: bundleIdentifier))
     }
-
+    
     /// `<base>/<bundleIdentifier>/Vault`.
     static func directory(in base: URL, bundleIdentifier: String) -> URL {
         base.appending(path: bundleIdentifier, directoryHint: .isDirectory)
             .appending(path: directoryName, directoryHint: .isDirectory)
     }
-
+    
     /// The bundle identifier character set (letters, digits, hyphen, period) has
     /// no separator, and a letter or digit rules out `.` and `..`, so the
     /// identifier cannot move the marker out of `base`.
@@ -76,11 +76,11 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
         identifier.contains { $0.isLetter || $0.isNumber }
             && identifier.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == ".") }
     }
-
+    
     public var isSet: Bool {
         FileManager.default.fileExists(atPath: fileURL.path(percentEncoded: false))
     }
-
+    
     public func set() {
         do {
             try createFile()
@@ -88,7 +88,7 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
             logger.error("Writing the erase-pending marker failed: \(Self.logName(of: error))", privacy: .public)
         }
     }
-
+    
     public func clear() {
         do {
             try removeFile()
@@ -96,7 +96,7 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
             logger.error("Removing the erase-pending marker failed: \(Self.logName(of: error))", privacy: .public)
         }
     }
-
+    
     /// The throwing form of `set()`.
     ///
     /// The caller deletes the Keychain item next, so the file and every
@@ -120,7 +120,7 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
         // write, because a later call finds the directories and skips them. A
         // failure still lets the write run: an unflushed marker guards every
         // launch short of a power loss, and no marker guards none.
-        var parentFlushError: (any Error)?
+        var parentFlushError: any Error?
         for newDirectory in created {
             do {
                 try Self.flush(newDirectory.deletingLastPathComponent(), isDirectory: true)
@@ -135,7 +135,7 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
             throw parentFlushError
         }
     }
-
+    
     /// The throwing form of `clear()`. A missing file is success.
     func removeFile() throws {
         do {
@@ -145,7 +145,7 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
         }
         try Self.flush(directory, isDirectory: true)
     }
-
+    
     /// `directory` and each ancestor that does not exist yet, deepest first.
     static func missingDirectories(upTo directory: URL) -> [URL] {
         var missing: [URL] = []
@@ -157,7 +157,7 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
         }
         return missing
     }
-
+    
     /// Flushes `url` to storage through a descriptor that refuses a link or a
     /// FIFO in its place, so a planted object can neither redirect nor stall the
     /// sync.
@@ -187,11 +187,11 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
             throw posixError()
         }
     }
-
+    
     private static func posixError() -> POSIXError {
         POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
     }
-
+    
     /// The error domain and code only: a Cocoa file error's description holds
     /// the container path, which names the user on macOS.
     private static func logName(of error: any Error) -> String {

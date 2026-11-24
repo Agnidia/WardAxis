@@ -26,13 +26,13 @@ package enum MigrationError: Error, Equatable, Sendable {
 extension MigrationError: CustomStringConvertible {
     package var description: String {
         switch self {
-        case let .invalidOrder(version):
+        case .invalidOrder(let version):
             "Migration versions are not contiguous from 1 at version \(version)"
-        case let .drift(version):
+        case .drift(let version):
             "Migration \(version) is recorded under a different name than the code uses"
-        case let .databaseAhead(version):
+        case .databaseAhead(let version):
             "The database has migration \(version), which this server does not know"
-        case let .pendingBelowApplied(version):
+        case .pendingBelowApplied(let version):
             "Migration \(version) is pending, but the database already has a later migration"
         }
     }

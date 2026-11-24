@@ -15,8 +15,8 @@ import Testing
 struct RequestLoggingTests {
     private static let requestCompleted: String = "Request completed"
     
-    @Test("A request without X-Request-ID gets a generated ID in the response and in its log lines")
-    func generatedRequestIDMatchesLogs() async throws {
+    @Test
+    func `A request without X-Request-ID gets a generated ID in the response and in its log lines`() async throws {
         let capture = LogCapture()
         let application = try makeTestApplication(logger: capture.makeLogger())
         
@@ -38,8 +38,8 @@ struct RequestLoggingTests {
         }
     }
     
-    @Test("Credentials, cookies, query strings and bodies never reach the log")
-    func credentialsAreNotLogged() async throws {
+    @Test
+    func `Credentials, cookies, query strings and bodies never reach the log`() async throws {
         let capture = LogCapture()
         let application = try makeTestApplication(logger: capture.makeLogger())
         let bearerToken = "sample-bearer-token-7f3a9c"
@@ -80,7 +80,6 @@ struct RequestLoggingTests {
     }
     
     @Test(
-        "An unsafe inbound X-Request-ID is replaced",
         arguments: [
             "has space",
             "line\u{7F}break",
@@ -88,7 +87,7 @@ struct RequestLoggingTests {
             String(repeating: "a", count: RequestIDMiddleware.maximumLength + 1)
         ]
     )
-    func unsafeRequestIDIsReplaced(inboundID: String) async throws {
+    func `An unsafe inbound X-Request-ID is replaced`(inboundID: String) async throws {
         let application = try makeTestApplication()
         let responseID: String? = try await application.test(.router) { client in
             try await client.execute(
@@ -105,8 +104,8 @@ struct RequestLoggingTests {
         #expect(UUID(uuidString: requestID) != nil)
     }
     
-    @Test("Error responses carry the request ID too")
-    func errorResponseCarriesRequestID() async throws {
+    @Test
+    func `Error responses carry the request ID too`() async throws {
         let capture = LogCapture()
         let application = try makeTestApplication(logger: capture.makeLogger())
         

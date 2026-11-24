@@ -15,7 +15,7 @@ import Synchronization
 /// connection.
 public struct URLSessionWebSocketTransport: ConfigurationStreamTransport {
     public init() {}
-
+    
     public func open(_ request: URLRequest, identity: ClientIdentity) -> AsyncStream<ConfigurationStreamEvent> {
         let (stream, continuation) = AsyncStream.makeStream(of: ConfigurationStreamEvent.self, bufferingPolicy: .unbounded)
         let connection = WebSocketConnection(continuation: continuation, identity: identity)
@@ -30,12 +30,12 @@ public struct URLSessionWebSocketTransport: ConfigurationStreamTransport {
         connection.receiveNext(on: task)
         return stream
     }
-
+    
     /// The payload of a text frame. The contract sends text frames only, and a
     /// binary frame could carry encodings the strict pre-scan was not built for.
     static func payload(of message: URLSessionWebSocketTask.Message) -> Data? {
         switch message {
-        case let .string(text):
+        case .string(let text):
             Data(text.utf8)
         case .data:
             nil
@@ -43,10 +43,10 @@ public struct URLSessionWebSocketTransport: ConfigurationStreamTransport {
             nil
         }
     }
-
+    
     /// Maps how a task ended to one close reason. A refused handshake surfaces as
     /// a task error with the HTTP response, not as a close code.
-    static func close(closeCode: URLSessionWebSocketTask.CloseCode, response: URLResponse?, error: (any Error)? = nil) -> ConfigurationStreamClose {
+    static func close(closeCode: URLSessionWebSocketTask.CloseCode, response: URLResponse?, error: any Error? = nil) -> ConfigurationStreamClose {
         if closeCode != .invalid {
             return .closeCode(closeCode.rawValue)
         }
@@ -58,9 +58,9 @@ public struct URLSessionWebSocketTransport: ConfigurationStreamTransport {
         }
         return .connectionFailed
     }
-
+    
     static let clientCertificateFailures: Set<URLError.Code> = [.clientCertificateRejected, .clientCertificateRequired]
-
+    
     /// Only two challenges are answered: the server's trust goes to the system
     /// evaluation (ATS rules included), and a client-certificate request gets the
     /// device identity. Anything else, such as HTTP Basic, is cancelled, so no
@@ -86,19 +86,19 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
     private let continuation: AsyncStream<ConfigurationStreamEvent>.Continuation
     private let identity: ClientIdentity
     private let isClosed = Mutex(false)
-
+    
     init(continuation: AsyncStream<ConfigurationStreamEvent>.Continuation, identity: ClientIdentity) {
         self.continuation = continuation
         self.identity = identity
     }
-
+    
     /// Keeps one receive outstanding at all times: the task answers the server's
     /// pings only while a receive is pending, and the server drops a client that
     /// misses pongs.
     func receiveNext(on task: URLSessionWebSocketTask) {
         task.receive { [self] result in
             switch result {
-            case let .success(message):
+            case .success(let message):
                 if let payload = URLSessionWebSocketTransport.payload(of: message) {
                     continuation.yield(.message(payload))
                 }
@@ -109,11 +109,11 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
             }
         }
     }
-
+    
     func urlSession(_: URLSession, webSocketTask _: URLSessionWebSocketTask, didOpenWithProtocol _: String?) {
         continuation.yield(.opened)
     }
-
+    
     func urlSession(
         _: URLSession,
         webSocketTask _: URLSessionWebSocketTask,
@@ -122,12 +122,12 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
     ) {
         finish(.closeCode(closeCode.rawValue))
     }
-
-    func urlSession(_: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
+    
+    func urlSession(_: URLSession, task: URLSessionTask, didCompleteWithError error: any Error?) {
         let closeCode = (task as? URLSessionWebSocketTask)?.closeCode ?? .invalid
         finish(URLSessionWebSocketTransport.close(closeCode: closeCode, response: task.response, error: error))
     }
-
+    
     func urlSession(
         _: URLSession,
         task _: URLSessionTask,
@@ -140,7 +140,7 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
         )
         completionHandler(disposition, credential)
     }
-
+    
     /// A redirect would present the device identity to the host the `Location` names.
     func urlSession(
         _: URLSession,
@@ -151,7 +151,7 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
     ) {
         completionHandler(nil)
     }
-
+    
     private func finish(_ close: ConfigurationStreamClose) {
         let isFirst = isClosed.withLock { isClosed in
             defer { isClosed = true }

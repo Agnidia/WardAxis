@@ -24,27 +24,27 @@ extension DatabaseSuites {
     )
     struct ConfigFanOutTests {
         private struct RollbackRequested: Error {}
-
+        
         /// Capped like production: below notice the driver logs bind values.
         private let logger: Logger = {
             var logger = Logger(label: "test.config.postgres")
             logger.logLevel = .notice
             return logger
         }()
-
+        
         private static let policy: ConfigStreamPolicy = {
             var policy = ConfigStreamHarness.quietPolicy
             policy.retryBackoff = RetryBackoff(initial: .milliseconds(50), maximum: .milliseconds(200))
             return policy
         }()
-
-        @Test("Each statement that changes something adds exactly one version and one log row; no-ops, rollbacks and TRUNCATE add none")
-        func versionsAreGapless() async throws {
+        
+        @Test
+        func `Each statement that changes something adds exactly one version and one log row; no-ops, rollbacks and TRUNCATE add none`() async throws {
             try await TestDatabase.withClient(logger: logger) { client in
                 try await TestDatabase.resetConfigData(on: client, logger: logger)
                 let store = PostgresConfigStore(client: client, logger: logger)
                 #expect(try await store.snapshot() == ConfigSnapshotRecord(version: 0, values: .init()))
-
+                
                 try await client.query(#"INSERT INTO config_entries (key, value) VALUES ('theme', '"dark"'), ('maxItems', '20')"#, logger: logger)
                 #expect(try await store.currentVersion() == 1)
                 try await client.query("UPDATE config_entries SET value = value", logger: logger)
@@ -53,7 +53,7 @@ extension DatabaseSuites {
                 try await client.query("UPDATE config_entries SET value = '25' WHERE key = 'maxItems'", logger: logger)
                 try await client.query("DELETE FROM config_entries WHERE key = 'theme'", logger: logger)
                 #expect(try await store.currentVersion() == 3)
-
+                
                 // PostgresNIO wraps the closure's error; an empty rollbackError means ROLLBACK ran.
                 let rollback = await #expect(throws: PostgresTransactionError.self) {
                     try await client.withTransaction(logger: logger) { connection in
@@ -68,7 +68,7 @@ extension DatabaseSuites {
                 }
                 #expect(try await store.currentVersion() == 3)
                 try await client.query(#"INSERT INTO config_entries (key, value) VALUES ('flag', 'null')"#, logger: logger)
-
+                
                 let changes = try await store.changes(after: 0, limit: 10)
                 #expect(changes.map(\.version) == [1, 2, 3, 4])
                 #expect(try changes[0] == ConfigChange(version: 1, changed: configEntries(#"{"theme":"dark","maxItems":20}"#), removed: []))
@@ -79,9 +79,9 @@ extension DatabaseSuites {
                 #expect(try await store.snapshot() == ConfigSnapshotRecord(version: 4, values: configEntries(#"{"maxItems":25,"flag":null}"#)))
             }
         }
-
-        @Test("Two clients both get the next version's delta within 1 s of a commit in PostgreSQL")
-        func fanOutFromPostgres() async throws {
+        
+        @Test
+        func `Two clients both get the next version's delta within 1 s of a commit in PostgreSQL`() async throws {
             try await TestDatabase.withClient(logger: logger) { client in
                 try await TestDatabase.resetConfigData(on: client, logger: logger)
                 try await client.query(#"INSERT INTO config_entries (key, value) VALUES ('theme', '"dark"')"#, logger: logger)
@@ -110,7 +110,7 @@ extension DatabaseSuites {
                         try await client.query(#"UPDATE config_entries SET value = '"light"' WHERE key = 'theme'"#, logger: logger)
                         for try await recording in group {
                             #expect(recording.messages.map(\.version) == [1, 2])
-                            guard case let .delta(delta) = recording.messages.last else {
+                            guard case .delta(let delta) = recording.messages.last else {
                                 Issue.record("Expected a delta, got \(recording.messages)")
                                 continue
                             }
@@ -123,9 +123,9 @@ extension DatabaseSuites {
                 }
             }
         }
-
-        @Test("After the listener's connection drops, clients get the changes committed meanwhile, in order with no gap")
-        func catchUpAfterListenerDrop() async throws {
+        
+        @Test
+        func `After the listener's connection drops, clients get the changes committed meanwhile, in order with no gap`() async throws {
             try await TestDatabase.withClient(logger: logger) { client in
                 try await TestDatabase.resetConfigData(on: client, logger: logger)
                 try await client.query(#"INSERT INTO config_entries (key, value) VALUES ('theme', '"dark"')"#, logger: logger)
@@ -159,7 +159,7 @@ extension DatabaseSuites {
                 }
             }
         }
-
+        
         private func makeHarness(client: PostgresClient) async throws -> ConfigStreamHarness {
             try await ConfigStreamHarness(
                 policy: Self.policy,
@@ -167,7 +167,7 @@ extension DatabaseSuites {
                 notifier: PostgresConfigChangeNotifier(client: client, backoff: Self.policy.retryBackoff, logger: logger)
             )
         }
-
+        
         /// Waits for the backend that runs the relay's LISTEN and returns its process ID.
         private func waitForListener(on client: PostgresClient) async throws -> Int32 {
             let found = NIOLockedValueBox<Int32?>(nil)

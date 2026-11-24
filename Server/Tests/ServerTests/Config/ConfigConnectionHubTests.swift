@@ -21,7 +21,7 @@ struct ConfigConnectionHubTests {
     private static func frame(_ version: Int64) -> ConfigDeltaFrame {
         ConfigDeltaFrame(version: version, text: "v\(version)")
     }
-
+    
     private static func collect(_ subscription: ConfigSubscription, count: Int) async throws -> [Int64] {
         try await withTimeout(.seconds(2), "\(count) frames") {
             var versions: [Int64] = []
@@ -34,9 +34,9 @@ struct ConfigConnectionHubTests {
             return versions
         }
     }
-
-    @Test("Each client certificate gets at most the cap of slots; a released slot is free again; clients do not share slots")
-    func perClientCap() throws {
+    
+    @Test
+    func `Each client certificate gets at most the cap of slots; a released slot is free again; clients do not share slots`() throws {
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 2, bufferSize: 4)
         let alice = ConfigStreamClient.sample()
         let bob = ConfigStreamClient.sample()
@@ -45,25 +45,25 @@ struct ConfigConnectionHubTests {
         #expect(hub.register(client: alice) == nil)
         #expect(hub.connectionCount(for: alice) == 2)
         #expect(hub.register(client: bob) != nil)
-
+        
         hub.unregister(first)
         hub.unregister(first)
         #expect(hub.connectionCount(for: alice) == 1)
         #expect(hub.register(client: alice) != nil)
         #expect(hub.subscriberCount == 3)
     }
-
-    @Test("The slot key never prints the certificate")
-    func slotKeyIsRedacted() {
+    
+    @Test
+    func `The slot key never prints the certificate`() {
         let client = ConfigStreamClient(certificateDER: Array("sample-certificate-bytes".utf8))
         #expect(String(describing: client) == "ConfigStreamClient(redacted)")
         var dumped = ""
         dump(client, to: &dumped)
         #expect(!dumped.contains("certificateDER"))
     }
-
-    @Test("Concurrent registrations never exceed the cap")
-    func concurrentRegistrations() async {
+    
+    @Test
+    func `Concurrent registrations never exceed the cap`() async {
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 4)
         let user = ConfigStreamClient.sample()
         let granted = await withTaskGroup(of: Bool.self) { group in
@@ -75,9 +75,9 @@ struct ConfigConnectionHubTests {
         #expect(granted == 5)
         #expect(hub.connectionCount(for: user) == 5)
     }
-
-    @Test("Every subscriber receives every published frame, in order")
-    func fanOut() async throws {
+    
+    @Test
+    func `Every subscriber receives every published frame, in order`() async throws {
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 8)
         let first = try #require(hub.register(client: .sample()))
         let second = try #require(hub.register(client: .sample()))
@@ -87,9 +87,9 @@ struct ConfigConnectionHubTests {
         #expect(try await Self.collect(first, count: 3) == [1, 2, 3])
         #expect(try await Self.collect(second, count: 3) == [1, 2, 3])
     }
-
-    @Test("A slow subscriber keeps only the newest frames, and unregistering ends its stream")
-    func boundedBuffer() async throws {
+    
+    @Test
+    func `A slow subscriber keeps only the newest frames, and unregistering ends its stream`() async throws {
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 2)
         let subscription = try #require(hub.register(client: .sample()))
         for version in Int64(1)...5 {
@@ -103,11 +103,11 @@ struct ConfigConnectionHubTests {
         #expect(versions == [4, 5])
         #expect(hub.subscriberCount == 0)
     }
-
+    
     // MARK: Relay readiness
-
-    @Test("Readiness is a one-way latch: every waiter resumes with true, a second mark changes nothing, and a later caller returns at once")
-    func readinessLatch() async throws {
+    
+    @Test
+    func `Readiness is a one-way latch: every waiter resumes with true, a second mark changes nothing, and a later caller returns at once`() async throws {
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 4)
         #expect(!hub.isRelayReady)
         try await withThrowingTaskGroup(of: Bool.self) { group in
@@ -126,16 +126,16 @@ struct ConfigConnectionHubTests {
         #expect(hub.isRelayReady)
         #expect(try await withTimeout(.seconds(1), "an immediate answer") { await hub.awaitRelayReady() })
     }
-
-    @Test("A waiter whose task is cancelled returns false, and the hub stays not ready")
-    func cancelledWaiterReturnsFalse() async throws {
+    
+    @Test
+    func `A waiter whose task is cancelled returns false, and the hub stays not ready`() async throws {
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 4)
         let waiter = Task { await hub.awaitRelayReady() }
         try await Task.sleep(for: .milliseconds(50))
         waiter.cancel()
         #expect(await waiter.value == false)
         #expect(!hub.isRelayReady)
-
+        
         let alreadyCancelled = Task {
             withUnsafeCurrentTask { $0?.cancel() }
             return await hub.awaitRelayReady()
