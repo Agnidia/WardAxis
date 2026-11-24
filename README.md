@@ -1,2 +1,2 @@
 # WardAxis
-Open-source macOS endpoint security, network protection and AI data loss prevention platform. The goal is to demonstrate macOS security engineering across EDR, DLP, SWG, ZTNA, MDM and enterprise deployment. Build the engine first; each milestone must include tests, architecture documentation, a demonstration and measured results.
+Open-source Apple-platform endpoint, network and AI data loss prevention protection for macOS, iOS/iPadOS and tvOS, distributed through the App Store. The goal is to demonstrate Apple-platform security engineering across network filtering, DLP, SWG, ZTNA, MDM and enterprise deployment. Build the engine first; each milestone must include tests, architecture documentation, a demonstration and measured results.
