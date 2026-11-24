@@ -240,6 +240,8 @@ rg -n "logger\.(debug|info|warning|error)\(" Source Packages/*/Sources
 
 - `APP_BUNDLE_ID` in `Configurations/base.xcconfig` is `com.agnidia.wardaxis`. Test bundles add `.tests` and `.uitests`.
 - `DEVELOPMENT_TEAM` in `Configurations/sign.xcconfig` is an individual development team until the Agnidia organization enrollment at the start of Phase 5 (ORG-001, issue #192).
+- Every new target takes its bundle ID from a `*_BUNDLE_ID` setting in `Configurations/base.xcconfig` and its App Group and Keychain group membership from [ADR 0002](docs/adr/0002-app-store-signing-identifiers.md) D5. List the private Keychain group first.
+- Run `python3 -I scripts/verify-entitlements.py <archive>` on every archive before an App Store upload; never upload one that fails.
 
 ### Safe Operations
 

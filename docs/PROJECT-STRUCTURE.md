@@ -15,7 +15,7 @@ WardAxis/
 ├── Server/                  # Management server (Hummingbird 2, PostgreSQL)
 ├── docs/                    # This documentation; docs/adr/ holds decisions
 ├── roadmap/                 # Product roadmap by phase
-├── scripts/                 # Tooling (formatter.py)
+├── scripts/                 # Tooling (formatter.py, verify-entitlements.py)
 ├── ci_scripts/              # Xcode Cloud hooks
 ├── .github/                 # Issue forms and security policy (no workflows)
 ├── WardAxis.xcodeproj/      # Xcode project (JSON format, project.xcproj)
@@ -94,7 +94,7 @@ The app target links `WardAxisTelemetry` and `WardAxisManagement`. `WardAxisMana
 | `Localizable.xcstrings` | App String Catalog |
 | `InfoPlist.xcstrings` | Localized `Info.plist` values |
 | `Info.plist` | `APIBaseURL` (from `API_BASE_URL`), scene manifest, `ITSAppUsesNonExemptEncryption` |
-| `entitlement.entitlements` | `keychain-access-groups` |
+| `entitlement.entitlements` | App Group, `keychain-access-groups` (private group first, then shared) |
 | `PrivacyInfo.xcprivacy` | Privacy manifest |
 | `Preview Content/` | Preview assets (development only) |
 
@@ -106,12 +106,13 @@ Edit build settings here, not in the Xcode UI.
 
 | File | Purpose |
 |---|---|
-| `base.xcconfig` | `APP_NAME`, `APP_BUNDLE_ID`, supported platforms, deployment targets, `SWIFT_VERSION = 6`, strict concurrency |
+| `base.xcconfig` | `APP_NAME`, `APP_BUNDLE_ID`, extension bundle IDs, `APP_GROUP_ID`, `KEYCHAIN_SHARED_GROUP`, supported platforms, deployment targets, `SWIFT_VERSION = 6`, strict concurrency |
 | `debug.xcconfig` / `release.xcconfig` | Per-configuration flags (optimization, `DEBUG` condition) |
 | `sign.xcconfig` | Signing style and the interim `DEVELOPMENT_TEAM` |
 | `app/app.xcconfig` | App target: bundle ID, Info.plist, entitlements, App Sandbox, Hardened Runtime |
 | `app/app-debug.xcconfig` / `app/app-release.xcconfig` | `API_BASE_URL` per configuration |
 | `tests/` | `UnitTests` and `UITests` targets: bundle IDs, test host |
+| `export/app-store.plist` | Export options for App Store Connect (automatic signing, no team ID) |
 
 ---
 
@@ -119,7 +120,7 @@ Edit build settings here, not in the Xcode UI.
 
 | Folder | Purpose |
 |---|---|
-| `Tests/UnitTests/Core/` | `AppContainer` factories; host app configuration (`Info.plist`, bundle ID) |
+| `Tests/UnitTests/Core/` | `AppContainer` factories; host app configuration (`Info.plist`, bundle ID); signed entitlements (macOS) |
 | `Tests/UnitTests/Features/Settings/` | `SettingsViewModel` |
 | `Tests/UnitTests/Logger/` | Log parser, `LogReaderService`, `LogsViewerViewModel` |
 | `Tests/UnitTests/Navigation/` | `AppCoordinator`, `RoutePresentation`, `RouteResolver` |
@@ -146,4 +147,5 @@ Reference material. Update a doc in the same change as the behaviour it describe
 | File | Purpose |
 |---|---|
 | `scripts/formatter.py` | Runs SwiftFormat on modified files (`--all`, `--check`, `--staged` options); called by the Xcode build phase |
+| `scripts/verify-entitlements.py` | Checks the signed entitlements of every bundle in an archive or app; run before each App Store upload |
 | `ci_scripts/ci_post_clone.sh` | Xcode Cloud post-clone hook; resets the Xcode package-resolution defaults |

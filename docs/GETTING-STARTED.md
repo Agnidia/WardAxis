@@ -44,8 +44,42 @@ Xcode asks once to trust the OpenAPIGenerator build plugin of `WardAxisManagemen
 | `APP_BUNDLE_ID` | `Configurations/base.xcconfig` | `com.agnidia.wardaxis` (test bundles add `.tests` and `.uitests`) |
 | `DEVELOPMENT_TEAM` | `Configurations/sign.xcconfig` | Individual development team until the Agnidia organization enrollment (ORG-001, issue #192) |
 | `CODE_SIGN_STYLE` | `Configurations/sign.xcconfig` | `Automatic` |
+| `APP_GROUP_ID` | `Configurations/base.xcconfig` | `$(DEVELOPMENT_TEAM).com.agnidia.wardaxis` on macOS; `group.com.agnidia.wardaxis` on iOS and tvOS |
+| `KEYCHAIN_SHARED_GROUP` | `Configurations/base.xcconfig` | `com.agnidia.wardaxis.shared`, after `$(AppIdentifierPrefix)` |
+| Extension bundle IDs | `Configurations/base.xcconfig` | `*_BUNDLE_ID`, each a child of `APP_BUNDLE_ID` |
 
 Do not commit a personal team ID. Change `sign.xcconfig` locally only when you must sign with another team.
+
+The scheme, the group membership per component and the rationale are in [ADR 0002](adr/0002-app-store-signing-identifiers.md).
+
+### App Store archive
+
+An iOS or tvOS device build needs the App ID and the App Group registered on the team. The first archive with `-allowProvisioningUpdates` registers them through automatic signing.
+
+```bash
+for platform in macOS iOS tvOS; do
+  xcodebuild -project WardAxis.xcodeproj -scheme WardAxis -configuration Release \
+             -destination "generic/platform=$platform" \
+             -archivePath "build/WardAxis-$platform.xcarchive" \
+             -skipPackagePluginValidation -onlyUsePackageVersionsFromResolvedFile \
+             -allowProvisioningUpdates archive
+  python3 -I scripts/verify-entitlements.py "build/WardAxis-$platform.xcarchive"
+  xcodebuild -exportArchive -archivePath "build/WardAxis-$platform.xcarchive" \
+             -exportPath "build/export-$platform" \
+             -exportOptionsPlist Configurations/export/app-store.plist \
+             -allowProvisioningUpdates
+done
+```
+
+Do not upload an archive that fails `verify-entitlements.py`.
+
+### App Store Connect record
+
+One record carries all three platforms, which gives Universal Purchase:
+
+1. In App Store Connect, create a new app: platforms macOS, iOS and tvOS; bundle ID `com.agnidia.wardaxis`; SKU `wardaxis`.
+2. Confirm that the record lists all three platforms under the same bundle ID.
+3. Upload each exported build (`.pkg` for macOS, `.ipa` for iOS and tvOS) with Xcode Organizer or Transporter.
 
 ---
 

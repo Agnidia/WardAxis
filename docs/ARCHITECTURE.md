@@ -318,9 +318,12 @@ Evidence: `KeychainItemStoreTests` and `SecureItemVaultTests` in `Packages/WardA
 | Hardened Runtime | On | `ENABLE_HARDENED_RUNTIME` |
 | User-selected files | Read-only | `ENABLE_USER_SELECTED_FILES` |
 | Outgoing network | Allowed | `ENABLE_OUTGOING_NETWORK_CONNECTIONS` |
-| Keychain access group | `$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)` | `Resources/entitlement.entitlements` |
+| App Group | `$(APP_GROUP_ID)`: team-prefixed on macOS, `group.` on iOS and tvOS | `Resources/entitlement.entitlements` |
+| Keychain access groups | `$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)` first (default for writes), then `$(AppIdentifierPrefix)$(KEYCHAIN_SHARED_GROUP)` | `Resources/entitlement.entitlements` |
 | Privacy manifest | No tracking, no collected data types; file timestamp access with reason `C617.1` | `Resources/PrivacyInfo.xcprivacy` |
 | Export compliance | `ITSAppUsesNonExemptEncryption` = `false` | `Resources/Info.plist` |
+
+Bundle IDs, groups and group membership per component: [ADR 0002](adr/0002-app-store-signing-identifiers.md). `EntitlementsTests` checks the test host's signature on macOS; `scripts/verify-entitlements.py` checks every bundle of an archive.
 
 ---
 
