@@ -4,6 +4,7 @@
   "configurations": [
     { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "debug.xcconfig" } },
     { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "release.xcconfig" } },
+    { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "lab.xcconfig" } },
   ],
   "localizations": {
     "development": "en",
@@ -54,6 +55,7 @@
             "UnitTests/Core/AppContainerTests.swift",
             "UnitTests/Core/EntitlementsTests.swift",
             "UnitTests/Core/HostConfigurationTests.swift",
+            "UnitTests/Core/LabExclusionTests.swift",
             "UnitTests/Features/Settings/SettingsViewModelTests.swift",
             "UnitTests/Logger/LogEntryParserTests.swift",
             "UnitTests/Logger/LogReaderServiceTests.swift",
@@ -88,6 +90,7 @@
       "specialized-configurations": [
         { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "app/app-debug.xcconfig" } },
         { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "app/app-release.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "app/app-lab.xcconfig" } },
       ],
       "build-phases": [
         {
