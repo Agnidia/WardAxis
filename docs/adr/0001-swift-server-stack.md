@@ -4,11 +4,13 @@
 
 Accepted on 2026-10-11.
 
-Amended on 2026-10-11 (#17): the OpenAPI generator pin is 1.13.0 with `exact:`. See the exception note under [Pinned versions](#pinned-versions).
+Amended on 2026-10-11 (#17): the OpenAPI generator pin is 1.13.0 with `exact:`. Superseded on 2026-11-24, see below.
 
 Amended on 2026-10-11 (#19): the approved set adds `hummingbird-auth` (bcrypt password hashing) and `jwt-kit` (JWT signing and verification). See [Pinned versions](#pinned-versions).
 
 Amended on 2026-11-24 (WardAxis #5): the template server became the WardAxis management server. See [WardAxis adoption](#wardaxis-adoption). Issue numbers in the earlier amendments and notes refer to the template project, not to WardAxis.
+
+Amended on 2026-11-24 (WardAxis #5): the OpenAPI generator moves to `from: "1.14.0"` and the #17 `exact:` exception ends. `WardAxisManagementAPI` and `Server` raise their macOS floor to 26, the app's floor. See [Generator pin](#generator-pin-2026-11-24).
 
 The pins in [Pinned versions](#pinned-versions) were checked against the upstream tags on 2026-10-11.
 
@@ -90,7 +92,7 @@ Every package row is a released upstream tag, checked with `git ls-remote --tags
 | Hummingbird | `https://github.com/hummingbird-project/hummingbird` | `2.27.1` | 2 |
 | Hummingbird WebSocket | `https://github.com/hummingbird-project/hummingbird-websocket` | `2.8.1` | 2 |
 | ~~OpenAPI Hummingbird transport~~ (removed 2026-11-24, see [WardAxis adoption](#wardaxis-adoption)) | `https://github.com/swift-server/swift-openapi-hummingbird` | `2.1.0` | 2 |
-| OpenAPI generator | `https://github.com/apple/swift-openapi-generator` | `1.13.0` | 1 |
+| OpenAPI generator | `https://github.com/apple/swift-openapi-generator` | `1.14.0` | 1 |
 | OpenAPI runtime | `https://github.com/apple/swift-openapi-runtime` | `1.13.0` | 1 |
 | PostgresNIO | `https://github.com/vapor/postgres-nio` | `1.33.1` | 1 |
 | ~~Hummingbird Auth (product `HummingbirdBcrypt`)~~ (removed 2026-11-24, see [WardAxis adoption](#wardaxis-adoption)) | `https://github.com/hummingbird-project/hummingbird-auth` | `2.5.0` | 2 |
@@ -112,13 +114,16 @@ Apply each package pin in `Package.swift` with the `from:` form and commit `Pack
 
 Transitive packages are not pinned here.
 
-Exception (#17): `Packages/WardAxisManagementAPI/` pins the OpenAPI generator with `exact: "1.13.0"`.
+### Generator pin (2026-11-24)
+
+The #17 exception (`exact: "1.13.0"`) is withdrawn. `Packages/WardAxisManagementAPI/` uses `from: "1.14.0"`, like every other pin.
 
 | Item | Detail |
 |---|---|
-| Reason | Generator 1.13.1 and 1.14.0 each emit 27 `UnusedImportAccess` warnings per product in generated sources; 1.13.0 emits none. All three were built on Swift 6.4 (apple/swift-openapi-generator#946). |
-| Scope | The generator is a build-time plugin and links into no product. `exact:` still constrains SwiftPM resolution for every package graph that depends on `WardAxisManagementAPI`: a root that requires generator 1.13.1 or later cannot resolve. |
-| Exit condition | When a release contains apple/swift-openapi-generator#947, use `from:` that version and delete this note. |
+| Cost | An Xcode build reports 27 `UnusedImportAccess` warnings in the generated sources (`Types*.swift`, `docs.swift`) of each product. `swift build` reports none. The warnings come from generated code (apple/swift-openapi-generator#946) and point to no defect in WardAxis code. |
+| Reason | `exact:` blocked every generator patch release and stopped any graph that requires 1.13.1 or later from resolving. The generator is a build-time plugin and links into no product, so the warnings carry no runtime risk. |
+| Platform floor | Both manifests declare macOS 26. `Server` depends on `WardAxisManagementAPI`, and SwiftPM refuses a root whose floor is lower than a dependency's. Linux builds ignore the floor. |
+| Exit condition | When a release contains apple/swift-openapi-generator#947, raise the `from:` version to it. |
 
 ## Consequences
 
@@ -139,7 +144,7 @@ Exception (#17): `Packages/WardAxisManagementAPI/` pins the OpenAPI generator wi
 | Fluent with PostgresKit | Adds an ORM layer and its model and query abstractions on top of the driver; D2 chose hand-written SQL on PostgresNIO | Hand-written SQL and migrations become a cost the server cannot carry |
 | AsyncAPI for the WebSocket messages | A second spec and a second toolchain beside `swift-openapi-generator` | OpenAPI cannot describe a message the feed needs |
 | A separate server repository | The contract drifts between two repositories and needs a release step to share it | The server gets a separate team or release cycle |
-| `exact:` package requirements | Every security patch needs a manifest edit and can conflict with transitive requirements | Never for the server; `Package.resolved` already gives reproducibility. One exception: the OpenAPI generator pin (see the exception note under Pinned versions) |
+| `exact:` package requirements | Every security patch needs a manifest edit and can conflict with transitive requirements | Never; `Package.resolved` already gives reproducibility |
 
 ## WardAxis adoption
 

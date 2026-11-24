@@ -7,7 +7,7 @@ import PackageDescription
 /// arrive through them; declaring one directly widens the approved set.
 let package = Package(
     name: "Server",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v26)],
     dependencies: [
         .package(path: "../Packages/WardAxisManagementAPI"),
         .package(url: "https://github.com/hummingbird-project/hummingbird", from: "2.27.1"),

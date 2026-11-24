@@ -4,8 +4,8 @@ import PackageDescription
 
 let package = Package(
     name: "WardAxisManagementAPI",
-    // macOS 14 is Hummingbird 2's floor, so the server package can depend on this one.
-    platforms: [.macOS(.v14), .iOS(.v26), .tvOS(.v26)],
+    // macOS 26 matches the app floor; Server/Package.swift declares the same floor so it can depend on this package.
+    platforms: [.macOS(.v26), .iOS(.v26), .tvOS(.v26)],
     products: [
         .library(name: "WardAxisAPIServer", targets: ["WardAxisAPIServer"]),
         .library(name: "WardAxisAPIClient", targets: ["WardAxisAPIClient"]),
@@ -14,9 +14,9 @@ let package = Package(
         .library(name: "WardAxisAPIFixtures", type: .static, targets: ["WardAxisAPIFixtures"])
     ],
     dependencies: [
-        // 1.13.1 and 1.14.0 emit UnusedImportAccess warnings in generated sources (apple/swift-openapi-generator#946);
-        // stay exact until a release ships #947.
-        .package(url: "https://github.com/apple/swift-openapi-generator", exact: "1.13.0"),
+        // 1.14.0 emits UnusedImportAccess warnings in generated sources (apple/swift-openapi-generator#946).
+        // The warnings are accepted to stay on the supported line; see ADR 0001.
+        .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.14.0"),
         .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.13.0")
     ],
     targets: [
