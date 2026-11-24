@@ -14,29 +14,29 @@ struct MigrationPlannerTests {
     private static let first: Migration = .init(version: 1, name: "baseline", statements: [])
     private static let second: Migration = .init(version: 2, name: "users", statements: ["SELECT 1"])
     private static let third: Migration = .init(version: 3, name: "sessions", statements: ["SELECT 1"])
-
-    @Test("An empty database gets every migration, in order")
-    func emptyDatabase() throws {
+    
+    @Test
+    func `An empty database gets every migration, in order`() throws {
         let pending = try MigrationPlanner.pending(all: [Self.first, Self.second], applied: [])
         #expect(pending == [Self.first, Self.second])
     }
-
-    @Test("Only migrations missing from the database are pending")
-    func pendingSubset() throws {
+    
+    @Test
+    func `Only migrations missing from the database are pending`() throws {
         let applied = [AppliedMigration(version: 1, name: "baseline")]
         let pending = try MigrationPlanner.pending(all: [Self.first, Self.second, Self.third], applied: applied)
         #expect(pending == [Self.second, Self.third])
     }
-
-    @Test("A current database has nothing pending")
-    func currentDatabase() throws {
+    
+    @Test
+    func `A current database has nothing pending`() throws {
         let applied = [AppliedMigration(version: 2, name: "users"), AppliedMigration(version: 1, name: "baseline")]
         let pending = try MigrationPlanner.pending(all: [Self.first, Self.second], applied: applied)
         #expect(pending.isEmpty)
     }
-
-    @Test("Code versions that are not contiguous from 1 are rejected at the first misplaced version")
-    func invalidOrder() {
+    
+    @Test
+    func `Code versions that are not contiguous from 1 are rejected at the first misplaced version`() {
         #expect(throws: MigrationError.invalidOrder(version: 2)) {
             try MigrationPlanner.pending(all: [Self.second, Self.first], applied: [])
         }
@@ -48,36 +48,36 @@ struct MigrationPlannerTests {
             try MigrationPlanner.pending(all: [Self.first, Self.second, fourth], applied: [])
         }
     }
-
-    @Test("A pending version below the highest applied one refuses start-up")
-    func pendingBelowApplied() throws {
+    
+    @Test
+    func `A pending version below the highest applied one refuses start-up`() throws {
         let gapped = [AppliedMigration(version: 1, name: "baseline"), AppliedMigration(version: 3, name: "sessions")]
         #expect(throws: MigrationError.pendingBelowApplied(version: 2)) {
             try MigrationPlanner.pending(all: [Self.first, Self.second, Self.third], applied: gapped)
         }
-
+        
         let contiguous = [AppliedMigration(version: 1, name: "baseline"), AppliedMigration(version: 2, name: "users")]
         #expect(try MigrationPlanner.pending(all: [Self.first, Self.second, Self.third], applied: contiguous) == [Self.third])
     }
-
-    @Test("A recorded version with a different name is drift")
-    func drift() {
+    
+    @Test
+    func `A recorded version with a different name is drift`() {
         let applied = [AppliedMigration(version: 1, name: "renamed")]
         #expect(throws: MigrationError.drift(version: 1)) {
             try MigrationPlanner.pending(all: [Self.first, Self.second], applied: applied)
         }
     }
-
-    @Test("A recorded version unknown to the code means the database is ahead")
-    func databaseAhead() {
+    
+    @Test
+    func `A recorded version unknown to the code means the database is ahead`() {
         let applied = [AppliedMigration(version: 1, name: "baseline"), AppliedMigration(version: 7, name: "future")]
         #expect(throws: MigrationError.databaseAhead(version: 7)) {
             try MigrationPlanner.pending(all: [Self.first, Self.second], applied: applied)
         }
     }
-
-    @Test("The shipped registry is valid and starts with the baseline")
-    func shippedRegistry() throws {
+    
+    @Test
+    func `The shipped registry is valid and starts with the baseline`() throws {
         let pending = try MigrationPlanner.pending(all: Migrations.all, applied: [])
         #expect(pending == Migrations.all)
         #expect(Migrations.all.first?.version == 1)
@@ -86,9 +86,9 @@ struct MigrationPlannerTests {
         // The rate limiter is in memory: no shipped migration creates a table for it.
         #expect(!Migrations.all.flatMap(\.statements).contains { $0.localizedCaseInsensitiveContains("rate_limit") })
     }
-
-    @Test("The shipped registry is exactly the baseline and the configuration migration")
-    func shippedRegistryContents() {
+    
+    @Test
+    func `The shipped registry is exactly the baseline and the configuration migration`() {
         #expect(Migrations.all.map(\.version) == [1, 2])
         #expect(Migrations.all.map(\.name) == ["baseline", "create_configuration"])
         // No account, token or one-time-code table ships.
@@ -97,9 +97,9 @@ struct MigrationPlannerTests {
             #expect(!sql.contains(table), "\(table)")
         }
     }
-
-    @Test("The configuration migration is version 2 and creates the config tables and triggers")
-    func configurationMigration() throws {
+    
+    @Test
+    func `The configuration migration is version 2 and creates the config tables and triggers`() throws {
         let migration = try #require(Migrations.all.first { $0.version == 2 })
         #expect(migration.name == "create_configuration")
         let sql = migration.statements.joined(separator: "\n")

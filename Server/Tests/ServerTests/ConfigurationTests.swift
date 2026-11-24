@@ -29,8 +29,8 @@ struct ConfigurationTests {
         ]
     }
     
-    @Test("Defaults apply when only the required variables are set")
-    func defaults() throws {
+    @Test
+    func `Defaults apply when only the required variables are set`() throws {
         let configuration = try AppConfiguration(environment: Self.completeEnvironment)
         
         #expect(configuration.host == "0.0.0.0")
@@ -47,8 +47,8 @@ struct ConfigurationTests {
         #expect(configuration.tls?.clientCertificateAuthorityPath == nil)
     }
     
-    @Test("Optional variables override the defaults")
-    func overrides() throws {
+    @Test
+    func `Optional variables override the defaults`() throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.host] = "127.0.0.1"
         environment[AppConfiguration.Variable.port] = "9090"
@@ -62,10 +62,9 @@ struct ConfigurationTests {
     }
     
     @Test(
-        "A missing or empty required variable throws an error that names it",
         arguments: [AppConfiguration.Variable.databaseURL]
     )
-    func missingRequiredVariable(variable: String) {
+    func `A missing or empty required variable throws an error that names it`(variable: String) {
         var absent = Self.completeEnvironment
         absent[variable] = nil
         #expect(throws: ConfigurationError.missing(variable: variable)) {
@@ -83,7 +82,6 @@ struct ConfigurationTests {
     }
     
     @Test(
-        "An invalid optional variable throws an error that names it",
         arguments: [
             (AppConfiguration.Variable.port, "0"),
             (AppConfiguration.Variable.port, "65536"),
@@ -92,7 +90,7 @@ struct ConfigurationTests {
             (AppConfiguration.Variable.serverEnvironment, "staging")
         ]
     )
-    func invalidOptionalVariable(variable: String, value: String) {
+    func `An invalid optional variable throws an error that names it`(variable: String, value: String) {
         var environment = Self.completeEnvironment
         environment[variable] = value
         
@@ -110,7 +108,6 @@ struct ConfigurationTests {
     }
     
     @Test(
-        "A malformed DATABASE_URL is rejected without quoting it",
         arguments: [
             "mysql://app:Pa55-w0rd-sample@db/appdb",
             "postgres://db.internal/appdb",
@@ -119,7 +116,7 @@ struct ConfigurationTests {
             "postgres://app:Pa55-w0rd-sample@db.internal/appdb?sslmode=verify-full"
         ]
     )
-    func malformedDatabaseURL(url: String) {
+    func `A malformed DATABASE_URL is rejected without quoting it`(url: String) {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.databaseURL] = url
         
@@ -137,8 +134,8 @@ struct ConfigurationTests {
         }
     }
     
-    @Test("DATABASE_URL defaults: port 5432, sslmode require, percent-decoded password, no password")
-    func databaseURLDefaults() throws {
+    @Test
+    func `DATABASE_URL defaults: port 5432, sslmode require, percent-decoded password, no password`() throws {
         let encoded = try DatabaseConfiguration(url: "postgresql://app:p%40ss%2Fword@db/appdb", variable: "URL")
         #expect(encoded.port == DatabaseConfiguration.defaultPort)
         #expect(encoded.tls == .require)
@@ -151,8 +148,8 @@ struct ConfigurationTests {
         #expect(preferred.tls == .prefer)
     }
     
-    @Test("No textual form of the configuration contains the password or a TLS path")
-    func secretsAreRedacted() throws {
+    @Test
+    func `No textual form of the configuration contains the password or a TLS path`() throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.tlsClientCAPath] = Self.sampleClientCAPath
         let configuration = try AppConfiguration(environment: environment)
@@ -175,8 +172,8 @@ struct ConfigurationTests {
     
     // MARK: Environment
     
-    @Test("SERVER_ENVIRONMENT accepts development and production; absent or empty means production")
-    func serverEnvironmentValues() throws {
+    @Test
+    func `SERVER_ENVIRONMENT accepts development and production; absent or empty means production`() throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = "development"
         #expect(try AppConfiguration(environment: environment).environment == .development)
@@ -187,9 +184,8 @@ struct ConfigurationTests {
     }
     
     // MARK: TLS
-
+    
     @Test(
-        "Production without both TLS paths fails start-up and names the missing one",
         arguments: [
             (nil, nil, AppConfiguration.Variable.tlsCertificateChainPath),
             ("", "", AppConfiguration.Variable.tlsCertificateChainPath),
@@ -197,7 +193,7 @@ struct ConfigurationTests {
             (nil, sampleKeyPath, AppConfiguration.Variable.tlsCertificateChainPath)
         ] as [(String?, String?, String)]
     )
-    func productionRequiresTLS(chainPath: String?, keyPath: String?, missing: String) {
+    func `Production without both TLS paths fails start-up and names the missing one`(chainPath: String?, keyPath: String?, missing: String) {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.tlsCertificateChainPath] = chainPath
         environment[AppConfiguration.Variable.tlsPrivateKeyPath] = keyPath
@@ -209,9 +205,9 @@ struct ConfigurationTests {
             try AppConfiguration(environment: environment)
         }
     }
-
-    @Test("Development without TLS paths parses and serves plain HTTP")
-    func developmentAllowsPlainHTTP() throws {
+    
+    @Test
+    func `Development without TLS paths parses and serves plain HTTP`() throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = "development"
         environment[AppConfiguration.Variable.tlsCertificateChainPath] = nil
@@ -220,15 +216,14 @@ struct ConfigurationTests {
         #expect(configuration.tls == nil)
         #expect(String(describing: configuration).contains("tls: disabled"))
     }
-
+    
     @Test(
-        "Development with only one TLS path fails rather than falling back to plain HTTP",
         arguments: [
             (sampleChainPath, nil, AppConfiguration.Variable.tlsPrivateKeyPath),
             (nil, sampleKeyPath, AppConfiguration.Variable.tlsCertificateChainPath)
         ] as [(String?, String?, String)]
     )
-    func developmentRejectsHalfTLS(chainPath: String?, keyPath: String?, missing: String) {
+    func `Development with only one TLS path fails rather than falling back to plain HTTP`(chainPath: String?, keyPath: String?, missing: String) {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = "development"
         environment[AppConfiguration.Variable.tlsCertificateChainPath] = chainPath
@@ -237,9 +232,9 @@ struct ConfigurationTests {
             try AppConfiguration(environment: environment)
         }
     }
-
-    @Test("Both TLS paths enable TLS in either environment, and the description says only that", arguments: ServerEnvironment.allCases)
-    func bothPathsEnableTLS(environmentValue: ServerEnvironment) throws {
+    
+    @Test(arguments: ServerEnvironment.allCases)
+    func `Both TLS paths enable TLS in either environment, and the description says only that`(environmentValue: ServerEnvironment) throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = environmentValue.rawValue
         let configuration = try AppConfiguration(environment: environment)
@@ -248,9 +243,9 @@ struct ConfigurationTests {
         #expect(text.contains("tls: enabled"))
         #expect(!text.contains(Self.sampleKeyPath))
     }
-
-    @Test("TLS_CLIENT_CA_PATH with both TLS paths requires client certificates, in either environment", arguments: ServerEnvironment.allCases)
-    func clientCARequiresCertificates(environmentValue: ServerEnvironment) throws {
+    
+    @Test(arguments: ServerEnvironment.allCases)
+    func `TLS_CLIENT_CA_PATH with both TLS paths requires client certificates, in either environment`(environmentValue: ServerEnvironment) throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = environmentValue.rawValue
         environment[AppConfiguration.Variable.tlsClientCAPath] = Self.sampleClientCAPath
@@ -260,25 +255,24 @@ struct ConfigurationTests {
         #expect(text.contains("clientCertificates: required"))
         #expect(!text.contains(Self.sampleClientCAPath))
     }
-
-    @Test("An empty TLS_CLIENT_CA_PATH counts as unset: TLS without client certificates")
-    func emptyClientCAIsUnset() throws {
+    
+    @Test
+    func `An empty TLS_CLIENT_CA_PATH counts as unset: TLS without client certificates`() throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.tlsClientCAPath] = ""
         let configuration = try AppConfiguration(environment: environment)
         #expect(configuration.tls?.clientCertificateAuthorityPath == nil)
         #expect(String(describing: configuration).contains("clientCertificates: off"))
     }
-
+    
     @Test(
-        "TLS_CLIENT_CA_PATH without the server chain and key fails start-up, naming the variable and never the path",
         arguments: [
             ("development", nil, nil),
             ("production", nil, nil),
             ("development", "", "")
         ] as [(String, String?, String?)]
     )
-    func clientCAWithoutServerTLSFails(serverEnvironment: String, chainPath: String?, keyPath: String?) {
+    func `TLS_CLIENT_CA_PATH without the server chain and key fails start-up, naming the variable and never the path`(serverEnvironment: String, chainPath: String?, keyPath: String?) {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = serverEnvironment
         environment[AppConfiguration.Variable.tlsCertificateChainPath] = chainPath
@@ -296,9 +290,9 @@ struct ConfigurationTests {
             #expect(!error.description.contains(Self.sampleClientCAPath))
         }
     }
-
-    @Test("compose.yaml and .env.example run the stack in development")
-    func composeUsesDevelopment() throws {
+    
+    @Test
+    func `compose.yaml and .env.example run the stack in development`() throws {
         let serverDirectory = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -319,43 +313,42 @@ struct ConfigurationTests {
             #expect(!example.contains("\n\(variable)="), "\(variable) must not be set")
         }
     }
-
+    
     // MARK: - API_DOCS_ENABLED
-
-    @Test("API docs default to on in development and off in production or when SERVER_ENVIRONMENT is unset")
-    func apiDocsDefaults() throws {
+    
+    @Test
+    func `API docs default to on in development and off in production or when SERVER_ENVIRONMENT is unset`() throws {
         var environment = Self.completeEnvironment
         let unset = try AppConfiguration(environment: environment)
         #expect(unset.environment == .production)
         #expect(unset.apiDocsEnabled == false)
         #expect(String(describing: unset).contains("apiDocs: disabled"))
-
+        
         environment[AppConfiguration.Variable.serverEnvironment] = "production"
         #expect(try AppConfiguration(environment: environment).apiDocsEnabled == false)
-
+        
         environment[AppConfiguration.Variable.serverEnvironment] = "development"
         let development = try AppConfiguration(environment: environment)
         #expect(development.apiDocsEnabled == true)
         #expect(String(describing: development).contains("apiDocs: enabled"))
-
+        
         // Empty counts as missing, as for every other variable.
         environment[AppConfiguration.Variable.apiDocsEnabled] = ""
         #expect(try AppConfiguration(environment: environment).apiDocsEnabled == true)
     }
-
-    @Test("An explicit API_DOCS_ENABLED wins in development", arguments: [true, false])
-    func apiDocsOverrideInDevelopment(enabled: Bool) throws {
+    
+    @Test(arguments: [true, false])
+    func `An explicit API_DOCS_ENABLED wins in development`(enabled: Bool) throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = "development"
         environment[AppConfiguration.Variable.apiDocsEnabled] = enabled ? "true" : "false"
         #expect(try AppConfiguration(environment: environment).apiDocsEnabled == enabled)
     }
-
+    
     @Test(
-        "Production keeps docs off with API_DOCS_ENABLED unset, empty or false, also when SERVER_ENVIRONMENT is unset",
         arguments: ["production", nil], [nil, "", "false"]
     )
-    func productionDocsOff(serverEnvironment: String?, value: String?) throws {
+    func `Production keeps docs off with API_DOCS_ENABLED unset, empty or false, also when SERVER_ENVIRONMENT is unset`(serverEnvironment: String?, value: String?) throws {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = serverEnvironment
         environment[AppConfiguration.Variable.apiDocsEnabled] = value
@@ -363,12 +356,11 @@ struct ConfigurationTests {
         #expect(configuration.environment == .production)
         #expect(configuration.apiDocsEnabled == false)
     }
-
+    
     @Test(
-        "Production refuses to start with API_DOCS_ENABLED=true, also when SERVER_ENVIRONMENT is unset",
         arguments: ["production", nil]
     )
-    func productionRefusesDocs(serverEnvironment: String?) {
+    func `Production refuses to start with API_DOCS_ENABLED=true, also when SERVER_ENVIRONMENT is unset`(serverEnvironment: String?) {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = serverEnvironment
         environment[AppConfiguration.Variable.apiDocsEnabled] = "true"
@@ -378,12 +370,11 @@ struct ConfigurationTests {
         }
         #expect(expected.description == "Invalid environment variable API_DOCS_ENABLED: must not be true in production")
     }
-
+    
     @Test(
-        "API_DOCS_ENABLED accepts only true or false",
         arguments: ["yes", "no", "1", "0", "TRUE", "False", " true", "on"]
     )
-    func apiDocsRejectsOtherValues(value: String) {
+    func `API_DOCS_ENABLED accepts only true or false`(value: String) {
         var environment = Self.completeEnvironment
         environment[AppConfiguration.Variable.serverEnvironment] = "development"
         environment[AppConfiguration.Variable.apiDocsEnabled] = value
@@ -392,9 +383,9 @@ struct ConfigurationTests {
             _ = try AppConfiguration(environment: environment)
         }
     }
-
-    @Test("compose.yaml passes API_DOCS_ENABLED through empty, and .env.example documents it")
-    func composePassesAPIDocsEnabled() throws {
+    
+    @Test
+    func `compose.yaml passes API_DOCS_ENABLED through empty, and .env.example documents it`() throws {
         let serverDirectory = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()

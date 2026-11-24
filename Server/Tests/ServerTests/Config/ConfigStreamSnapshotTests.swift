@@ -16,9 +16,9 @@ import Testing
 @Suite("Config stream snapshot and deltas")
 struct ConfigStreamSnapshotTests {
     private static let seed = #"{"theme":"dark","maxItems":20}"#
-
-    @Test("Frames encode as the contract's ConfigMessage text, keys sorted")
-    func frameText() throws {
+    
+    @Test
+    func `Frames encode as the contract's ConfigMessage text, keys sorted`() throws {
         let snapshot = try ConfigSnapshotRecord(version: 41, values: configEntries(Self.seed))
         #expect(try ConfigFrameEncoder.snapshot(snapshot) == #"{"type":"snapshot","values":{"maxItems":20,"theme":"dark"},"version":41}"#)
         let change = try ConfigChange(version: 42, changed: configEntries(#"{"maxItems":25}"#), removed: ["theme"])
@@ -28,9 +28,9 @@ struct ConfigStreamSnapshotTests {
         ))
         #expect(try ConfigFrameEncoder.heartbeat(version: 42) == #"{"type":"heartbeat","version":42}"#)
     }
-
-    @Test("The first frame is a snapshot with the store's version and values")
-    func snapshotIsFirst() async throws {
+    
+    @Test
+    func `The first frame is a snapshot with the store's version and values`() async throws {
         let store = try InMemoryConfigStore(version: 41, valuesJSON: Self.seed)
         let harness = try await ConfigStreamHarness(configStore: store)
         let user = try harness.enrollDevice()
@@ -44,9 +44,9 @@ struct ConfigStreamSnapshotTests {
             #expect(try snapshot.values == configEntries(Self.seed))
         }
     }
-
-    @Test("Two clients each receive the next version's delta within 1 s of a commit")
-    func deltaFanOut() async throws {
+    
+    @Test
+    func `Two clients each receive the next version's delta within 1 s of a commit`() async throws {
         let store = try InMemoryConfigStore(version: 41, valuesJSON: Self.seed)
         let notifier = ManualConfigChangeNotifier()
         let harness = try await ConfigStreamHarness(configStore: store, notifier: notifier)
@@ -73,7 +73,7 @@ struct ConfigStreamSnapshotTests {
                 let committed = ContinuousClock.now
                 try store.commit(changedJSON: #"{"maxItems":25}"#, removed: ["theme"])
                 notifier.wake()
-
+                
                 var recordings: [StreamRecording] = []
                 for try await recording in group {
                     recordings.append(recording)
@@ -94,9 +94,9 @@ struct ConfigStreamSnapshotTests {
             }
         }
     }
-
-    @Test("Frames at or below the session's version are skipped, and a skipped-ahead delta is preceded by the missing ones from the store")
-    func gapIsFilledFromStore() async throws {
+    
+    @Test
+    func `Frames at or below the session's version are skipped, and a skipped-ahead delta is preceded by the missing ones from the store`() async throws {
         let store = try InMemoryConfigStore(version: 41, valuesJSON: Self.seed)
         let harness = try await ConfigStreamHarness(configStore: store)
         let user = try harness.enrollDevice()
@@ -120,9 +120,9 @@ struct ConfigStreamSnapshotTests {
             #expect(try filled.changed == configEntries(#"{"maxItems":21}"#))
         }
     }
-
-    @Test("When the store's log cannot fill a gap, the stream closes with 1011 so the client takes a new snapshot")
-    func unfillableGapCloses() async throws {
+    
+    @Test
+    func `When the store's log cannot fill a gap, the stream closes with 1011 so the client takes a new snapshot`() async throws {
         let store = try InMemoryConfigStore(version: 41, valuesJSON: Self.seed)
         let harness = try await ConfigStreamHarness(configStore: store)
         let user = try harness.enrollDevice()
@@ -141,9 +141,9 @@ struct ConfigStreamSnapshotTests {
             #expect(recording.messages.map(\.version) == [41])
         }
     }
-
-    @Test("A store error while reading the snapshot closes the stream with 1011 before any frame")
-    func snapshotErrorCloses() async throws {
+    
+    @Test
+    func `A store error while reading the snapshot closes the stream with 1011 before any frame`() async throws {
         let store = try InMemoryConfigStore(version: 41, valuesJSON: Self.seed)
         let harness = try await ConfigStreamHarness(configStore: store)
         let user = try harness.enrollDevice()

@@ -67,9 +67,15 @@ struct TertiaryButtonStyle: ButtonStyle {
     }
     
     private func labelColor(isPressed: Bool) -> Color {
-        if !isEnabled { return .Button.Label.Tertiary.disabled }
-        if showShimmer { return .Button.Label.Tertiary.loading }
-        if isPressed { return .Button.Label.Tertiary.pressed }
+        if !isEnabled {
+            return .Button.Label.Tertiary.disabled
+        }
+        if showShimmer {
+            return .Button.Label.Tertiary.loading
+        }
+        if isPressed {
+            return .Button.Label.Tertiary.pressed
+        }
         return .Button.Label.Tertiary.default
     }
 }

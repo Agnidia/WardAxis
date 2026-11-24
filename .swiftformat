@@ -24,7 +24,7 @@
 --wrap-collections preserve
 --wrap-parameters preserve
 --wrap-return-type preserve
---wrap-conditions disabled
+--wrap-conditions preserve
 --closing-paren balanced
 
 # === Spacing (Observed: standard Swift spacing) ===

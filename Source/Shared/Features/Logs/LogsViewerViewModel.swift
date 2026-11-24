@@ -25,92 +25,96 @@ import WardAxisTelemetry
 @Observable @MainActor
 final class LogsViewerViewModel {
     // MARK: - Types
-
+    
     /// Mutually exclusive load states.
     enum LoadState: Sendable {
         case loading
         case loaded(entries: [LogEntry])
         case failed(LogReaderError)
-
+        
         /// `true` while a read is in flight.
         var isLoading: Bool {
-            if case .loading = self { return true }
+            if case .loading = self {
+                return true
+            }
             return false
         }
-
+        
         /// File-order entries when loaded, else `[]`.
         var entries: [LogEntry] {
-            if case let .loaded(entries) = self { return entries }
+            if case let .loaded(entries) = self {
+                return entries
+            }
             return []
         }
     }
-
+    
     // MARK: - Stored state
-
+    
     /// The four single-bit `Log.Level` values displayable in the filter bar,
     /// in canonical UI order.
     static let filterableLevels: [Log.Level] = [.error, .warning, .info, .debug]
-
+    
     /// Date-range options displayable in the date filter bar, in canonical
     /// UI order (narrowest → widest, with `.all` as escape hatch).
     static let filterableDateRanges: [LogDateRange] = [
         .tenMinutes, .thirtyMinutes, .oneHour, .oneDay, .all
     ]
-
+    
     /// Single source of truth for the load lifecycle.
     private(set) var state: LoadState = .loading
-
+    
     /// Multi-select filter. Invariant: never empty.
     private(set) var selectedLevels: Set<Log.Level>
-
+    
     /// Single-select time-window filter. `.all` = no date bound (default).
     /// Composes with `selectedLevels` by AND for `.parsed` entries.
     private(set) var selectedDateRange: LogDateRange = .all
-
+    
     /// Newest-first entries that pass the active filters (level AND date).
     /// `.raw` entries and `.parsed` entries with `nil` timestamps are
     /// always shown (lossless UX). Recomputed only on `state`,
     /// `selectedLevels`, or `selectedDateRange` mutation.
     private(set) var filteredEntries: [LogEntry] = []
-
+    
     /// Total entries currently loaded. Cached for the same reason as
     /// `filteredEntries`.
     private(set) var totalEntryCount: Int = .zero
-
+    
     /// Number of entries hidden by the active filter.
     private(set) var filteredOutCount: Int = .zero
-
+    
     /// `true` when at least one entry exists in the loaded set, regardless
     /// of filter. Drives empty-state UX (file empty vs filter excludes all).
     private(set) var hasAnyEntries: Bool = false
-
+    
     private let service: any LogReaderServiceProtocol
-
+    
     // MARK: - Init
-
+    
     /// - Parameter service: Reader service injected via initializer (no DI container required).
     init(service: any LogReaderServiceProtocol) {
         self.service = service
         selectedLevels = Self.defaultLevels()
     }
-
+    
     // MARK: - Derived state
-
+    
     /// `true` when the share button should be enabled — entries to share and
     /// no concurrent read.
     var isShareEnabled: Bool {
         !filteredEntries.isEmpty && !state.isLoading
     }
-
+    
     /// `true` when the clear button should be enabled — at least one entry
     /// in the loaded set (filter-independent, since clear wipes the file)
     /// and no concurrent read.
     var isClearEnabled: Bool {
         hasAnyEntries && !state.isLoading
     }
-
+    
     // MARK: - Filter actions
-
+    
     /// `true` when toggling `level` would not violate the "at least one
     /// selected" invariant. Used to disable the chip in the UI as a
     /// belt-and-suspenders check beyond the no-op guard in `toggle`.
@@ -118,7 +122,7 @@ final class LogsViewerViewModel {
         guard selectedLevels.contains(level) else { return true }
         return selectedLevels.count > 1
     }
-
+    
     /// Toggles `level` membership. Deselect is a no-op when it would empty
     /// the set. Insert is always allowed.
     func toggle(_ level: Log.Level) {
@@ -130,17 +134,17 @@ final class LogsViewerViewModel {
         }
         recomputeDerivedState()
     }
-
+    
     /// `true` when the filter is currently active on `level`.
     func isSelected(_ level: Log.Level) -> Bool {
         selectedLevels.contains(level)
     }
-
+    
     /// `true` when `range` is the currently selected time window.
     func isSelected(_ range: LogDateRange) -> Bool {
         selectedDateRange == range
     }
-
+    
     /// Selects a date range. Re-selecting the active range is a no-op so
     /// callers don't pay the recompute cost on idle taps.
     func select(_ range: LogDateRange) {
@@ -148,9 +152,9 @@ final class LogsViewerViewModel {
         selectedDateRange = range
         recomputeDerivedState()
     }
-
+    
     // MARK: - Load actions
-
+    
     /// Reads the log file. Transitions through `.loading → .loaded | .failed`.
     func load() async {
         state = .loading
@@ -165,29 +169,28 @@ final class LogsViewerViewModel {
         }
         recomputeDerivedState()
     }
-
+    
     /// Alias for `load()`. Distinct symbol so callers / accessibility tooling
     /// can differentiate "initial load" vs "user-initiated refresh".
     func refresh() async {
         await load()
     }
-
+    
     /// Background-polling refresh that never flashes a spinner. Skips when
     /// a manual load is in flight (so explicit retries win), and swallows
     /// transient I/O failures so the auto-refresh loop does not erase a
     /// good loaded state on a one-off read error.
     func refreshSilently() async {
-        guard !state.isLoading else { return }
-        guard let entries = try? await service.loadEntries() else { return }
+        guard !state.isLoading, let entries = try? await service.loadEntries() else { return }
         state = .loaded(entries: entries)
         recomputeDerivedState()
     }
-
+    
     /// Polling interval for the viewer's auto-refresh loop. Centralised so
     /// the VM owns the cadence and tests can reason about it without
     /// reaching into the view layer.
     static let autoRefreshInterval: Duration = .seconds(10)
-
+    
     /// Exports the currently filtered entries. The export reflects both
     /// the active level filter and the active date-range filter — i.e.
     /// the user shares exactly what they see.
@@ -216,7 +219,7 @@ final class LogsViewerViewModel {
         )
         openedConfiguration.fileLogLevel = .all
         Log.configuration = openedConfiguration
-
+        
         for category in Log.Category.allCases {
             let logger = Log(category: category)
             logger.error("Test log entry — category=\(category.rawValue) level=error")
@@ -224,13 +227,13 @@ final class LogsViewerViewModel {
             logger.info("Test log entry — category=\(category.rawValue) level=info")
             logger.debug("Test log entry — category=\(category.rawValue) level=debug")
         }
-
+        
         emitLogLevelExamples()
-
+        
         Log.configuration = savedConfiguration
         await load()
     }
-
+    
     /// Emits one entry per `Log.Level` value of interest (atomic bits,
     /// the `.base` / `.all` static helpers, and two composite OptionSet
     /// combinations) so the test burst documents the Level type alongside
@@ -252,7 +255,7 @@ final class LogsViewerViewModel {
             emit(message, at: level, on: logger)
         }
     }
-
+    
     /// Routes `message` to the matching single-bit method on `logger`.
     /// For composite levels, picks the highest-priority bit set
     /// (`.error` > `.warning` > `.info` > `.debug`).
@@ -286,27 +289,27 @@ final class LogsViewerViewModel {
         }
         await load()
     }
-
+    
     // MARK: - Defaults
-
+    
     /// Default filter selection — all four displayable levels selected.
     static func defaultLevels() -> Set<Log.Level> {
         Set(filterableLevels)
     }
-
+    
     // MARK: - Memoization
-
+    
     private func recomputeDerivedState() {
         let entries = state.entries
         totalEntryCount = entries.count
         hasAnyEntries = !entries.isEmpty
-
+        
         if entries.isEmpty {
             filteredEntries = []
             filteredOutCount = .zero
             return
         }
-
+        
         let now = Date()
         filteredEntries = entries.reversed().filter { entry in
             switch entry.kind {

@@ -8,10 +8,10 @@
 import Foundation
 import os
 
-extension Log {
-    public struct Level: OptionSet, Sendable, Hashable {
+public extension Log {
+    struct Level: OptionSet, Sendable, Hashable {
         public let rawValue: Int
-
+        
         public init(rawValue: Int) {
             self.rawValue = rawValue
         }
@@ -68,26 +68,26 @@ extension Log {
         }
     }
     
-    public typealias Status = Level
+    typealias Status = Level
     
     /// Whether a message may be stored as is outside the running process.
     ///
     /// `.private` messages show in Xcode and in Console only with private data enabled,
     /// and reach the log file only in debug builds.
-    public enum Privacy: Sendable {
+    enum Privacy: Sendable {
         case `public`
         case `private`
         
         public static let redactedPlaceholder = "<private>"
     }
     
-    public enum Environment: Sendable {
+    enum Environment: Sendable {
         case debug
         case release
         case test
     }
     
-    public struct Configuration: Sendable {
+    struct Configuration: Sendable {
         public enum DateDisplayStyle: Sendable, Hashable {
             case full
             case short
@@ -159,7 +159,7 @@ extension Log {
     
     /// One per component, so Console and `log stream --predicate 'category == "filter"'`
     /// can isolate a single trust boundary.
-    public enum Category: String, CaseIterable, Sendable {
+    enum Category: String, CaseIterable, Sendable {
         case application
         case ui
         case cache
@@ -172,7 +172,7 @@ extension Log {
         case ipc
         case dlp
         case pki
-
+        
         /// Emoji badge used when rendering log messages for this category.
         public var prefix: String {
             switch self {

@@ -38,7 +38,6 @@ struct LogsViewerView: View {
     }
 
 #if os(iOS) || os(macOS)
-    @ViewBuilder
     private var loadedViewer: some View {
         Group {
             if let vm = viewModel {

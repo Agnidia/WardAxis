@@ -34,69 +34,69 @@ extension DatabaseSuites {
                 ]
             )
         ]
-
+        
         private let logger: Logger = .init(label: "test.migrations")
-
-        @Test("The first run applies every shipped migration; the second applies none")
-        func shippedMigrationsApplyOnce() async throws {
+        
+        @Test
+        func `The first run applies every shipped migration; the second applies none`() async throws {
             try await withDatabase { client in
                 let runner = MigrationRunner(logger: logger)
-
+                
                 let firstRun = try await runner.run(on: client)
                 #expect(firstRun == Migrations.all)
-
+                
                 let secondRun = try await runner.run(on: client)
                 #expect(secondRun.isEmpty)
-
+                
                 #expect(try await recordedCount(on: client) == Migrations.all.count)
             }
         }
-
-        @Test("Statements run, and each migration is recorded once")
-        func statementsRunAndAreRecorded() async throws {
+        
+        @Test
+        func `Statements run, and each migration is recorded once`() async throws {
             try await withDatabase { client in
                 let runner = MigrationRunner(migrations: Self.testMigrations, logger: logger)
-
+                
                 #expect(try await runner.run(on: client) == Self.testMigrations)
                 #expect(try await runner.run(on: client).isEmpty)
                 #expect(try await recordedCount(on: client) == Self.testMigrations.count)
-
+                
                 // The table exists only if migration 2's statements ran.
                 try await client.query("INSERT INTO migration_test_widgets (id) VALUES (1)", logger: logger)
             }
         }
-
-        @Test("Concurrent runners apply each migration exactly once")
-        func concurrentRunnersApplyOnce() async throws {
+        
+        @Test
+        func `Concurrent runners apply each migration exactly once`() async throws {
             try await withDatabase { client in
                 let runner = MigrationRunner(migrations: Self.testMigrations, logger: logger)
-
+                
                 let appliedCounts = try await withThrowingTaskGroup(of: Int.self) { group in
                     for _ in 0..<4 {
                         group.addTask { try await runner.run(on: client).count }
                     }
                     return try await group.reduce(into: []) { $0.append($1) }
                 }
-
+                
                 #expect(appliedCounts.reduce(0, +) == Self.testMigrations.count)
                 #expect(try await recordedCount(on: client) == Self.testMigrations.count)
             }
         }
-
-        @Test("A database version unknown to the code stops the run")
-        func databaseAheadStopsTheRun() async throws {
+        
+        @Test
+        func `A database version unknown to the code stops the run`() async throws {
             try await withDatabase { client in
                 try await MigrationRunner(migrations: Self.testMigrations, logger: logger).run(on: client)
-
+                
                 let olderBinary = MigrationRunner(migrations: [Self.testMigrations[0]], logger: logger)
                 await #expect(throws: MigrationError.databaseAhead(version: 2)) {
                     try await olderBinary.run(on: client)
                 }
             }
         }
-
+        
         // MARK: - Helpers
-
+        
         /// Runs `body` with a running client against a reset schema.
         private func withDatabase(_ body: @Sendable (PostgresClient) async throws -> Void) async throws {
             try await TestDatabase.withClient(logger: logger) { client in
@@ -107,7 +107,7 @@ extension DatabaseSuites {
                 try await resetSchema(on: client)
             }
         }
-
+        
         private func resetSchema(on client: PostgresClient) async throws {
             try await client.query("DROP TABLE IF EXISTS migration_test_widgets", logger: logger)
             // The shipped migrations create these; without the drop, a second run of the
@@ -124,7 +124,7 @@ extension DatabaseSuites {
             )
             try await client.query("DROP TABLE IF EXISTS schema_migrations", logger: logger)
         }
-
+        
         private func recordedCount(on client: PostgresClient) async throws -> Int {
             let rows = try await client.query("SELECT count(*) FROM schema_migrations", logger: logger)
             for try await count in rows.decode(Int.self) {

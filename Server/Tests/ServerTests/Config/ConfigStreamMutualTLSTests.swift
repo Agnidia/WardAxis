@@ -20,8 +20,8 @@ import Testing
 /// a device CA, and a stream held past its lifetime.
 @Suite("Config stream mutual TLS")
 struct ConfigStreamMutualTLSTests {
-    @Test("A client without a certificate fails the handshake and never holds a slot")
-    func noCertificateFailsHandshake() async throws {
+    @Test
+    func `A client without a certificate fails the handshake and never holds a slot`() async throws {
         let harness = try await ConfigStreamHarness(configStore: InMemoryConfigStore(version: 41))
         let anonymous = try harness.anonymousClient()
         try await harness.application().test(.live) { client in
@@ -31,9 +31,9 @@ struct ConfigStreamMutualTLSTests {
             #expect(harness.hub.subscriberCount == 0)
         }
     }
-
-    @Test("A client certificate from another CA fails the handshake, whatever identity headers it sends")
-    func foreignCertificateFailsHandshake() async throws {
+    
+    @Test
+    func `A client certificate from another CA fails the handshake, whatever identity headers it sends`() async throws {
         let harness = try await ConfigStreamHarness(configStore: InMemoryConfigStore(version: 41))
         let enrolled = try harness.enrollDevice()
         let foreign = try harness.foreignDevice()
@@ -53,9 +53,9 @@ struct ConfigStreamMutualTLSTests {
             #expect(recording.messages.first?.isSnapshot == true)
         }
     }
-
-    @Test("A device-CA certificate connects without any Authorization header and gets the snapshot first")
-    func deviceCertificateGetsSnapshot() async throws {
+    
+    @Test
+    func `A device-CA certificate connects without any Authorization header and gets the snapshot first`() async throws {
         let store = try InMemoryConfigStore(version: 41, valuesJSON: #"{"theme":"dark"}"#)
         let harness = try await ConfigStreamHarness(configStore: store)
         let device = try harness.enrollDevice()
@@ -69,21 +69,21 @@ struct ConfigStreamMutualTLSTests {
                 return
             }
             #expect(snapshot.version == 41)
-            #expect(snapshot.values == (try configEntries(#"{"theme":"dark"}"#)))
+            #expect(try snapshot.values == configEntries(#"{"theme":"dark"}"#))
             try await waitUntil("the slot is released") { harness.hub.subscriberCount == 0 }
         }
     }
-
-    @Test("Two certificates from the device CA hold separate slots")
-    func slotsArePerCertificate() async throws {
+    
+    @Test
+    func `Two certificates from the device CA hold separate slots`() async throws {
         let harness = try await ConfigStreamHarness(configStore: InMemoryConfigStore(version: 41))
         let first = try harness.enrollDevice()
         let second = try harness.enrollDevice()
         #expect(first.slot != second.slot)
     }
-
-    @Test("Without TLS_CLIENT_CA_PATH, GET /v1/config/stream answers 404 over TLS, and a handshake is refused without an upgrade")
-    func routeAbsentWithoutClientCA() async throws {
+    
+    @Test
+    func `Without TLS_CLIENT_CA_PATH, GET /v1/config/stream answers 404 over TLS, and a handshake is refused without an upgrade`() async throws {
         let harness = try await ConfigStreamHarness(configStore: InMemoryConfigStore(version: 41))
         let logs = LogCapture()
         try await harness.application(listener: .serverTLSOnly, logger: logs.makeLogger()).test(.live) { client in
@@ -98,7 +98,7 @@ struct ConfigStreamMutualTLSTests {
             }
             #expect(plain.status == .notFound)
             #expect(try decodeJSON(ErrorBody.self, from: #require(plain.body)).code == "not_found")
-
+            
             // No WebSocket route exists, so the library refuses the handshake as it refuses
             // every one it does not upgrade: a bare 400.
             let handshake = try await client.rawWebSocketHandshake(headers: [.authorization: "Bearer sample-token"], tlsConfiguration: tls)
@@ -109,9 +109,9 @@ struct ConfigStreamMutualTLSTests {
         #expect(notices.count == 1)
         #expect(notices.first?.level == .notice)
     }
-
-    @Test("The lifetime cap closes an open stream with 1000 lifetime and releases its slot")
-    func lifetimeCapClosesStream() async throws {
+    
+    @Test
+    func `The lifetime cap closes an open stream with 1000 lifetime and releases its slot`() async throws {
         var policy = ConfigStreamHarness.quietPolicy
         policy.maximumConnectionLifetime = .milliseconds(400)
         let harness = try await ConfigStreamHarness(policy: policy, configStore: InMemoryConfigStore(version: 41))
@@ -126,15 +126,15 @@ struct ConfigStreamMutualTLSTests {
             #expect(elapsed >= .milliseconds(350))
             #expect(elapsed < .seconds(3))
             try await waitUntil("the slot is released") { harness.hub.subscriberCount == 0 }
-
+            
             // The device reconnects with a new handshake and gets a new snapshot.
             let again = try await client.openConfigStream(as: device) { $0.count == 1 }
             #expect(again.messages.first?.isSnapshot == true)
         }
     }
-
-    @Test("Each stream's lifetime lies between the maximum less the jitter and the maximum")
-    func lifetimeJitterBounds() {
+    
+    @Test
+    func `Each stream's lifetime lies between the maximum less the jitter and the maximum`() {
         var policy = ConfigStreamPolicy.standard
         for _ in 0..<200 {
             let lifetime = policy.connectionLifetime()
@@ -148,11 +148,11 @@ struct ConfigStreamMutualTLSTests {
             #expect(policy.connectionLifetime() >= .zero)
         }
     }
-
+    
     // MARK: Loader
-
-    @Test("A device CA bundle makes the listener require a verified client certificate without a host name check")
-    func loaderRequiresClientCertificates() async throws {
+    
+    @Test
+    func `A device CA bundle makes the listener require a verified client certificate without a host name check`() async throws {
         let server = try TestAuthority(name: "Server CA")
         let devices = try [TestAuthority(name: "Device CA 1"), TestAuthority(name: "Device CA 2")]
         let mutual = try await TestServerFiles.serverConfiguration(serverAuthority: server, clientCAs: devices)
@@ -165,16 +165,16 @@ struct ConfigStreamMutualTLSTests {
         #expect(roots.count == 2)
         #expect(ServerTLS.requiresClientCertificates(mutual))
         #expect(mutual.minimumTLSVersion == .tlsv12)
-
+        
         let serverOnly = try await TestServerFiles.serverConfiguration(serverAuthority: server, clientCAs: nil)
         #expect(!ServerTLS.requiresClientCertificates(serverOnly))
         var optional = mutual
         optional.certificateVerification = .optionalVerification
         #expect(!ServerTLS.requiresClientCertificates(optional))
     }
-
-    @Test("A missing, malformed or empty device CA file fails start-up naming TLS_CLIENT_CA_PATH and never its path")
-    func loaderRejectsBadClientCA() async throws {
+    
+    @Test
+    func `A missing, malformed or empty device CA file fails start-up naming TLS_CLIENT_CA_PATH and never its path`() async throws {
         let server = try TestAuthority(name: "Server CA")
         try await TestServerFiles.with(serverAuthority: server, clientCAs: nil) { files, directory in
             let missing = directory.appendingPathComponent("missing.pem").path

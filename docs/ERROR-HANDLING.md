@@ -149,9 +149,9 @@ Inject `any AlertManagerProtocol` from `AppContainer` into the view model's init
 Force the failure path with the mock scenario:
 
 ```swift
-@Test("load() shows an error banner when the log reader fails")
+@Test
 @MainActor
-func loadShowsBannerOnFailure() async {
+func `load() shows an error banner when the log reader fails`() async {
     let alertManager = MockAlertManager()
     let model = LogSummaryViewModel(
         logReader: MockLogReaderService(scenario: .failure(.readFailed(underlying: "test"))),

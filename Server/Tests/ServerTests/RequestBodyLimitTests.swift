@@ -18,8 +18,8 @@ import Testing
 struct RequestBodyLimitTests {
     private static let limit: Int = RequestBodyLimitMiddleware.defaultLimit
     
-    @Test("A body one byte over the limit with Content-Length answers 413 with a request ID")
-    func declaredLengthOverLimit() async throws {
+    @Test
+    func `A body one byte over the limit with Content-Length answers 413 with a request ID`() async throws {
         let application = try makeTestApplication()
         try await application.test(.router) { client in
             // The router test client sets Content-Length from the body. The limit runs
@@ -35,9 +35,9 @@ struct RequestBodyLimitTests {
             }
         }
     }
-
-    @Test("A chunked body without Content-Length that grows past the limit answers 413")
-    func streamedBodyOverLimit() async throws {
+    
+    @Test
+    func `A chunked body without Content-Length that grows past the limit answers 413`() async throws {
         let request = Self.streamedRequest(chunks: 5, chunkSize: 16 * 1024)
         var nextWasCalled = false
         
@@ -51,8 +51,8 @@ struct RequestBodyLimitTests {
         #expect(!nextWasCalled)
     }
     
-    @Test("A chunked body within the limit reaches the route in full")
-    func streamedBodyWithinLimit() async throws {
+    @Test
+    func `A chunked body within the limit reaches the route in full`() async throws {
         let request = Self.streamedRequest(chunks: 3, chunkSize: 1024)
         
         let response = try await Self.limitChain(request) { request, _ in
@@ -64,8 +64,8 @@ struct RequestBodyLimitTests {
         #expect(response.status == .ok)
     }
     
-    @Test("A body at the limit passes the middleware and reaches routing")
-    func bodyAtLimitPasses() async throws {
+    @Test
+    func `A body at the limit passes the middleware and reaches routing`() async throws {
         let application = try makeTestApplication()
         try await application.test(.router) { client in
             try await client.execute(

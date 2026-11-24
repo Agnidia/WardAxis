@@ -5,10 +5,10 @@
 //  Copyright © 2026 Agnidia. All rights reserved.
 //
 
-import WardAxisAPIServer
 import Foundation
 import Hummingbird
 import Logging
+import WardAxisAPIServer
 
 /// Turns every error thrown inside the router into an `ErrorResponse` body.
 ///
@@ -18,9 +18,9 @@ import Logging
 /// the error's type and the request ID, never its description.
 package struct ErrorHandlingMiddleware: RouterMiddleware {
     package typealias Context = AppRequestContext
-
+    
     package init() {}
-
+    
     package func handle(
         _ request: Request,
         context: Context,
@@ -43,7 +43,7 @@ package struct ErrorHandlingMiddleware: RouterMiddleware {
             return Self.response(for: apiError, requestID: context.requestID)
         }
     }
-
+    
     /// Maps `error` to the response it gets, and returns the error that caused it.
     package static func classify(_ error: any Error) -> (APIError, cause: any Error) {
         if let apiError = error as? APIError {
@@ -55,7 +55,7 @@ package struct ErrorHandlingMiddleware: RouterMiddleware {
         }
         return (.internalError, error)
     }
-
+    
     package static func response(for error: APIError, requestID: String?) -> Response {
         let body = Components.Schemas.ErrorResponse(code: error.code, message: error.message, requestId: requestID)
         let headers: HTTPFields = [.contentType: "application/json; charset=utf-8", .cacheControl: "no-store"]

@@ -18,7 +18,7 @@ struct ConfigChangeRelayTests {
         policy.catchUpBatchSize = batchSize
         return policy
     }
-
+    
     /// Runs the relay for the duration of `body`, then cancels it.
     private static func withRelay(
         store: InMemoryConfigStore,
@@ -34,7 +34,7 @@ struct ConfigChangeRelayTests {
             try await body()
         }
     }
-
+    
     private static func versions(_ subscription: ConfigSubscription, count: Int) async throws -> [Int64] {
         try await withTimeout(.seconds(2), "\(count) relayed frames") {
             var versions: [Int64] = []
@@ -49,9 +49,9 @@ struct ConfigChangeRelayTests {
             return versions
         }
     }
-
-    @Test("A wake-up publishes the changes after the start version, in order, and nothing from before")
-    func wakeUpPublishesInOrder() async throws {
+    
+    @Test
+    func `A wake-up publishes the changes after the start version, in order, and nothing from before`() async throws {
         let store = try InMemoryConfigStore(version: 5)
         try store.commit(changedJSON: #"{"a":1}"#)
         let notifier = ManualConfigChangeNotifier()
@@ -65,9 +65,9 @@ struct ConfigChangeRelayTests {
             #expect(try await Self.versions(subscription, count: 2) == [7, 8])
         }
     }
-
-    @Test("Without any notification the poll relays a change")
-    func pollRelaysWithoutNotification() async throws {
+    
+    @Test
+    func `Without any notification the poll relays a change`() async throws {
         let store = try InMemoryConfigStore(version: 0)
         let notifier = ManualConfigChangeNotifier()
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
@@ -78,9 +78,9 @@ struct ConfigChangeRelayTests {
             #expect(try await Self.versions(subscription, count: 1) == [1])
         }
     }
-
-    @Test("A read error loses nothing: the next trigger relays from the same version")
-    func readErrorIsRetried() async throws {
+    
+    @Test
+    func `A read error loses nothing: the next trigger relays from the same version`() async throws {
         let store = try InMemoryConfigStore(version: 0)
         let notifier = ManualConfigChangeNotifier()
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
@@ -97,9 +97,9 @@ struct ConfigChangeRelayTests {
             #expect(try await Self.versions(subscription, count: 2) == [1, 2])
         }
     }
-
-    @Test("At start the relay retries until the store answers, as it does while migrations run")
-    func startRetriesUntilStoreAnswers() async throws {
+    
+    @Test
+    func `At start the relay retries until the store answers, as it does while migrations run`() async throws {
         let store = try InMemoryConfigStore(version: 3)
         store.setFailing(true)
         let notifier = ManualConfigChangeNotifier()
@@ -111,9 +111,9 @@ struct ConfigChangeRelayTests {
             try await waitUntil("the relay listens") { notifier.listenerCount == 1 }
         }
     }
-
-    @Test("The relay marks the hub ready only once it has read its start version")
-    func readinessFollowsStartVersion() async throws {
+    
+    @Test
+    func `The relay marks the hub ready only once it has read its start version`() async throws {
         let store = try InMemoryConfigStore(version: 3)
         store.setFailing(true)
         let notifier = ManualConfigChangeNotifier()
@@ -125,9 +125,9 @@ struct ConfigChangeRelayTests {
             try await waitUntil("the relay is ready") { hub.isRelayReady }
         }
     }
-
-    @Test("A client admitted while the relay starts gets every version after its snapshot, with no gap and no later commit needed")
-    func startWindowLosesNoVersion() async throws {
+    
+    @Test
+    func `A client admitted while the relay starts gets every version after its snapshot, with no gap and no later commit needed`() async throws {
         let store = try InMemoryConfigStore(version: 5, valuesJSON: #"{"a":0}"#)
         let gated = GatedConfigStore(base: store)
         let notifier = ManualConfigChangeNotifier()
@@ -150,16 +150,16 @@ struct ConfigChangeRelayTests {
                 try await waitUntil("the stream holds its slot") { harness.hub.subscriberCount == 1 }
                 try store.commit(changedJSON: #"{"a":1}"#)
                 gated.gate.open()
-
+                
                 let recording = try #require(try await group.next())
                 #expect(recording.messages.first?.isSnapshot == true)
                 #expect(recording.messages.map(\.version) == [6, 7])
             }
         }
     }
-
-    @Test("A backlog larger than one batch is relayed completely, in order")
-    func backlogIsRelayedInBatches() async throws {
+    
+    @Test
+    func `A backlog larger than one batch is relayed completely, in order`() async throws {
         let store = try InMemoryConfigStore(version: 0)
         let notifier = ManualConfigChangeNotifier()
         let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
@@ -173,9 +173,9 @@ struct ConfigChangeRelayTests {
             #expect(try await Self.versions(subscription, count: 5) == [1, 2, 3, 4, 5])
         }
     }
-
-    @Test("Retry delays grow exponentially, stay within the cap and never drop below half the step")
-    func backoffBounds() {
+    
+    @Test
+    func `Retry delays grow exponentially, stay within the cap and never drop below half the step`() {
         let backoff = RetryBackoff(initial: .milliseconds(100), maximum: .seconds(1))
         for _ in 0..<50 {
             let first = backoff.delay(forAttempt: 1)

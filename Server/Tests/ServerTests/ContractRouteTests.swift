@@ -20,9 +20,9 @@ struct ContractRouteTests {
     private static let mountedOperations: [String: String] = [
         "streamConfig": "GET /v1/config/stream"
     ]
-
-    @Test("The spec scan finds an operation under every path of the contract")
-    func scanCoversEveryPath() throws {
+    
+    @Test
+    func `The spec scan finds an operation under every path of the contract`() throws {
         let spec = try OpenAPISecurityScanner.shippedSpec()
         // The contract's only two-space keys that start with a slash are its paths.
         let paths = spec.split(separator: "\n")
@@ -32,9 +32,9 @@ struct ContractRouteTests {
         #expect(!paths.isEmpty)
         #expect(Set(operations.map(\.path)) == Set(paths))
     }
-
-    @Test("Every contract operation is a registered route under /v1 when client certificates are required")
-    func everyOperationHasARoute() throws {
+    
+    @Test
+    func `Every contract operation is a registered route under /v1 when client certificates are required`() throws {
         let operations = try OpenAPISecurityScanner.operations(in: OpenAPISecurityScanner.shippedSpec())
         #expect(Set(operations.map(\.operationID)) == Set(Self.mountedOperations.keys))
         let routes = try Set(
@@ -46,9 +46,9 @@ struct ContractRouteTests {
             #expect(routes.contains(expected), "\(expected)")
         }
     }
-
-    @Test("Every contract operation requires mutual TLS and nothing else; no bearer scheme remains")
-    func everyOperationIsMutualTLS() throws {
+    
+    @Test
+    func `Every contract operation requires mutual TLS and nothing else; no bearer scheme remains`() throws {
         let spec = try OpenAPISecurityScanner.shippedSpec()
         for operation in OpenAPISecurityScanner.operations(in: spec) {
             #expect(operation.security == .schemes(["mutualTLS"]), "\(operation.operationID)")
@@ -56,18 +56,18 @@ struct ContractRouteTests {
         #expect(spec.contains("    mutualTLS:\n      type: mutualTLS\n"))
         #expect(!spec.lowercased().contains("bearer"))
     }
-
-    @Test("The contract's servers path is /v1, the prefix the router serves every route under")
-    func serverPathIsTheRouterPrefix() throws {
+    
+    @Test
+    func `The contract's servers path is /v1, the prefix the router serves every route under`() throws {
         let spec = try OpenAPISecurityScanner.shippedSpec()
         #expect(OpenAPISecurityScanner.serverPath(in: spec) == "/v1")
         #expect(try APIBasePath.resolve() == "/v1")
         let operations = OpenAPISecurityScanner.operations(in: spec)
         #expect(operations.allSatisfy { $0.requestPath == "/v1" + $0.path && !$0.path.hasPrefix("/v1/") })
     }
-
-    @Test("The base path accepts a rooted path without a trailing slash and refuses every other form")
-    func basePathValidation() throws {
+    
+    @Test
+    func `The base path accepts a rooted path without a trailing slash and refuses every other form`() throws {
         #expect(try APIBasePath.validate("/v1") == "/v1")
         #expect(try APIBasePath.validate("/api/v1") == "/api/v1")
         for invalid in ["", "/", "v1", "/v1/", "//v1", "/api//v1"] {
@@ -76,9 +76,9 @@ struct ContractRouteTests {
             }
         }
     }
-
-    @Test("Without client-certificate verification GET /v1/config/stream answers 404 not_found, with or without an Authorization header")
-    func configStreamAbsentWithoutClientCertificates() async throws {
+    
+    @Test
+    func `Without client-certificate verification GET /v1/config/stream answers 404 not_found, with or without an Authorization header`() async throws {
         let application = try makeTestApplication(clientCertificates: .off)
         try await application.test(.router) { client in
             for headers: HTTPFields in [[:], [.authorization: "Bearer sample-token"], [.upgrade: "websocket"]] {
@@ -88,9 +88,9 @@ struct ContractRouteTests {
             }
         }
     }
-
-    @Test("A mounted stream route on a connection without TLS refuses before the upgrade with 500, never serving the feed")
-    func configStreamWithoutPeerCertificateFailsClosed() async throws {
+    
+    @Test
+    func `A mounted stream route on a connection without TLS refuses before the upgrade with 500, never serving the feed`() async throws {
         // A composition error (route mounted, listener verifies nothing): the admission
         // check is the second gate and must hold on its own.
         let application = try makeTestApplication(clientCertificates: .required)

@@ -24,8 +24,8 @@ struct SettingsViewModelTests {
     
     // MARK: - Initial state
     
-    @Test("initial state — hasEntries / isBusy / clearedNotice / shareError / preparedShareURL are all empty")
-    func initialStateIsEmpty() {
+    @Test
+    func `initial state — hasEntries / isBusy / clearedNotice / shareError / preparedShareURL are all empty`() {
         let (viewModel, _) = makeViewModel()
         #expect(!viewModel.hasEntries)
         #expect(!viewModel.isBusy)
@@ -36,22 +36,22 @@ struct SettingsViewModelTests {
     
     // MARK: - refreshHasEntries
     
-    @Test("refreshHasEntries reflects non-empty service result as hasEntries == true")
-    func refreshHasEntriesTrueWhenServiceHasEntries() async {
+    @Test
+    func `refreshHasEntries reflects non-empty service result as hasEntries == true`() async {
         let (viewModel, _) = makeViewModel(scenario: .sampleEntries)
         await viewModel.refreshHasEntries()
         #expect(viewModel.hasEntries)
     }
     
-    @Test("refreshHasEntries reflects empty service result as hasEntries == false")
-    func refreshHasEntriesFalseWhenServiceEmpty() async {
+    @Test
+    func `refreshHasEntries reflects empty service result as hasEntries == false`() async {
         let (viewModel, _) = makeViewModel(scenario: .empty)
         await viewModel.refreshHasEntries()
         #expect(!viewModel.hasEntries)
     }
     
-    @Test("refreshHasEntries swallows service errors and treats failure as no entries")
-    func refreshHasEntriesSwallowsErrors() async {
+    @Test
+    func `refreshHasEntries swallows service errors and treats failure as no entries`() async {
         let (viewModel, _) = makeViewModel(
             scenario: .failure(.readFailed(underlying: "simulated"))
         )
@@ -61,8 +61,8 @@ struct SettingsViewModelTests {
     
     // MARK: - prepareShareURL
     
-    @Test("prepareShareURL publishes a temp .txt URL when the service has entries")
-    func prepareShareURLPublishesTempURL() async throws {
+    @Test
+    func `prepareShareURL publishes a temp .txt URL when the service has entries`() async throws {
         let (viewModel, mock) = makeViewModel(scenario: .sampleEntries)
         await viewModel.prepareShareURL()
         
@@ -74,8 +74,8 @@ struct SettingsViewModelTests {
         #expect(viewModel.shareError == nil)
     }
     
-    @Test("prepareShareURL exports an empty body when the service returns no entries")
-    func prepareShareURLWorksWithEmptyService() async {
+    @Test
+    func `prepareShareURL exports an empty body when the service returns no entries`() async {
         let (viewModel, mock) = makeViewModel(scenario: .empty)
         await viewModel.prepareShareURL()
         
@@ -84,8 +84,8 @@ struct SettingsViewModelTests {
         #expect(exported?.isEmpty == true)
     }
     
-    @Test("prepareShareURL populates shareError and resets isBusy when the service throws")
-    func prepareShareURLPublishesErrorOnFailure() async {
+    @Test
+    func `prepareShareURL populates shareError and resets isBusy when the service throws`() async {
         let (viewModel, _) = makeViewModel(
             scenario: .failure(.readFailed(underlying: "boom"))
         )
@@ -98,8 +98,8 @@ struct SettingsViewModelTests {
     
     // MARK: - clearAll
     
-    @Test("clearAll calls service.clearEntries exactly once and publishes a ClearedNotice")
-    func clearAllPublishesNotice() async {
+    @Test
+    func `clearAll calls service.clearEntries exactly once and publishes a ClearedNotice`() async {
         let (viewModel, mock) = makeViewModel(scenario: .sampleEntries)
         await viewModel.refreshHasEntries()
         #expect(viewModel.hasEntries)
@@ -113,8 +113,8 @@ struct SettingsViewModelTests {
         #expect(!viewModel.isBusy, "isBusy must reset after success")
     }
     
-    @Test("clearAll publishes shareError and resets isBusy when the underlying service throws")
-    func clearAllPublishesErrorOnFailure() async {
+    @Test
+    func `clearAll publishes shareError and resets isBusy when the underlying service throws`() async {
         let mock = ThrowingClearMock()
         let viewModel = SettingsViewModel(logReader: mock)
         
@@ -127,8 +127,8 @@ struct SettingsViewModelTests {
     
     // MARK: - clearAll resets preparedShareURL
     
-    @Test("clearAll discards any previously prepared share URL")
-    func clearAllResetsPreparedShareURL() async {
+    @Test
+    func `clearAll discards any previously prepared share URL`() async {
         let (viewModel, _) = makeViewModel(scenario: .sampleEntries)
         await viewModel.prepareShareURL()
         #expect(viewModel.preparedShareURL != nil)

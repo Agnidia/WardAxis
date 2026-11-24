@@ -84,16 +84,28 @@ struct SecondaryButtonStyle: ButtonStyle {
     }
     
     private func borderColor(isPressed: Bool) -> Color {
-        if !isEnabled { return .Button.Background.Secondary.Border.disabled }
-        if showShimmer { return .Button.Background.Secondary.Border.loading }
-        if isPressed { return .Button.Background.Secondary.Border.pressed }
+        if !isEnabled {
+            return .Button.Background.Secondary.Border.disabled
+        }
+        if showShimmer {
+            return .Button.Background.Secondary.Border.loading
+        }
+        if isPressed {
+            return .Button.Background.Secondary.Border.pressed
+        }
         return .Button.Background.Secondary.Border.default
     }
     
     private func labelColor(isPressed: Bool) -> Color {
-        if !isEnabled { return .Button.Label.Secondary.disabled }
-        if showShimmer { return .Button.Label.Secondary.loading }
-        if isPressed { return .Button.Label.Secondary.pressed }
+        if !isEnabled {
+            return .Button.Label.Secondary.disabled
+        }
+        if showShimmer {
+            return .Button.Label.Secondary.loading
+        }
+        if isPressed {
+            return .Button.Label.Secondary.pressed
+        }
         return .Button.Label.Secondary.default
     }
 }
