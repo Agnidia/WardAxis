@@ -12,34 +12,20 @@ import Testing
 @Suite("RoutePresentation")
 struct RoutePresentationTests {
     // MARK: - Per-case defaults
-
-    @Test(".splash defaults to .fullScreenCover")
-    func splashIsFullScreenCover() {
-        #expect(Route.splash.defaultPresentation == .fullScreenCover)
-    }
-
-    @Test(".settings defaults to .sheet")
-    func settingsIsSheet() {
+    
+    @Test
+    func `.settings defaults to .sheet`() {
         #expect(Route.settings.defaultPresentation == .sheet)
     }
-
-    @Test(".permissions defaults to .sheet")
-    func permissionsIsSheet() {
-        #expect(Route.permissions.defaultPresentation == .sheet)
-    }
-
-    @Test("push routes default to .push")
-    func pushRoutesDefaultToPush() {
+    
+    @Test
+    func `push routes default to .push`() {
         let pushRoutes: [Route] = [
-            .main,
             .home,
             .help,
-            .commonActions,
-            .logs,
-            .componentsGallery,
-            .alertsTest
+            .logs
         ]
-
+        
         for route in pushRoutes {
             #expect(
                 route.defaultPresentation == .push,

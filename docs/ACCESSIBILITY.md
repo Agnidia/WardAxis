@@ -40,7 +40,7 @@ enum Home: String, AccessibilityProtocol, CaseIterable, Sendable {
 }
 ```
 
-Existing enums: `Permissions`, `Onboarding`, `MainTab`, `Home`, `Logs`. Shared state strings are in `AccessibilityID.State` (`disabled`, `loading`, `selected`).
+Existing enums: `Home`, `Logs`.
 
 Add both keys to `Resources/Localizable.xcstrings`:
 

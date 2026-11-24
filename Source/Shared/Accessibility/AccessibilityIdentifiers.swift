@@ -30,7 +30,7 @@ extension AccessibilityProtocol {
         let key = "accessibility.\(id).label"
         return String(localized: String.LocalizationValue(key))
     }
-
+    
     var hint: String {
         let key = "accessibility.\(id).hint"
         return String(localized: String.LocalizationValue(key))
@@ -49,117 +49,54 @@ extension AccessibilityProtocol {
 /// Usage:
 /// ```swift
 /// // Icon-only button (needs label)
-/// Button(action: close) {
-///     Image(systemName: "xmark")
+/// Button(action: share) {
+///     Image(systemName: "square.and.arrow.up")
 /// }
-/// .accessibilityIdentifier(AccessibilityID.ARPreview.closeButton.id)
-/// .accessibilityLabel(AccessibilityID.ARPreview.closeButton.label)
-/// .accessibilityHint(AccessibilityID.ARPreview.closeButton.hint)
+/// .accessibilityIdentifier(AccessibilityID.Logs.shareButton.id)
+/// .accessibilityLabel(AccessibilityID.Logs.shareButton.label)
+/// .accessibilityHint(AccessibilityID.Logs.shareButton.hint)
 ///
 /// // Button with visible text (no label needed)
-/// Button("Continue") { }
-/// .accessibilityIdentifier(AccessibilityID.Auth.continueButton.id)
-/// .accessibilityHint(AccessibilityID.Auth.continueButton.hint)
+/// Button(L.Main.Tab.settings) { }
+/// .accessibilityIdentifier(AccessibilityID.Home.settingsButton.id)
+/// .accessibilityHint(AccessibilityID.Home.settingsButton.hint)
 /// ```
 enum AccessibilityID: Sendable {
-    // MARK: - Common State Strings
-
-    /// Common accessibility state strings.
-    enum State {
-        static var disabled: String {
-            String(localized: "accessibility.state.disabled", defaultValue: "Disabled")
-        }
-
-        static var loading: String {
-            String(localized: "accessibility.state.loading", defaultValue: "Loading")
-        }
-
-        static var selected: String {
-            String(localized: "accessibility.state.selected", defaultValue: "Selected")
-        }
-    }
-
-    /// Common accessibility error formatting.
-    static func error(message: String) -> String {
-        String(localized: "Error: \(message)")
-    }
-
-    // MARK: - Permissions
-
-    enum Permissions: String, AccessibilityProtocol, CaseIterable, Sendable {
-        case allowButton = "permissions.allow"
-        case icon = "permissions.icon"
-        case title = "permissions.title"
-        case description = "permissions.description"
-
-        var id: String {
-            rawValue
-        }
-
-        /// Dynamic allow button label for specific permission.
-        static func allowLabel(permission: String) -> String {
-            String(localized: "Allow \(permission) access")
-        }
-    }
-
-    // MARK: - Onboarding
-
-    enum Onboarding: String, AccessibilityProtocol, CaseIterable, Sendable {
-        case getStartedButton = "onboarding.getStarted"
-        case featureRow = "onboarding.feature"
-        case stepIndicator = "onboarding.step"
-
-        var id: String {
-            rawValue
-        }
-    }
-
-    // MARK: - Main Tabs
-
-    enum MainTab: String, AccessibilityProtocol, CaseIterable, Sendable {
-        case home = "main.tab.home"
-        case settings = "main.tab.settings"
-
-        var id: String {
-            rawValue
-        }
-    }
-
     // MARK: - Home
-
+    
     enum Home: String, AccessibilityProtocol, CaseIterable, Sendable {
         case settingsButton = "home.settings"
-
+        
         var id: String {
             rawValue
         }
     }
-
+    
     // MARK: - Logs Viewer
-
+    
     enum Logs: String, AccessibilityProtocol, CaseIterable, Sendable {
         case panel = "logs.panel"
         case refreshButton = "logs.refreshButton"
         case shareButton = "logs.shareButton"
         case clearButton = "logs.clearButton"
         case testButton = "logs.testButton"
-
+        
         case settingsShareButton = "logs.settings.shareButton"
         case settingsClearButton = "logs.settings.clearButton"
         case bodyShareButton = "logs.body.shareButton"
         case bodyClearButton = "logs.body.clearButton"
-
+        
         case filterError = "logs.filter.error"
         case filterWarning = "logs.filter.warning"
         case filterInfo = "logs.filter.info"
         case filterDebug = "logs.filter.debug"
-
+        
         case filterDateRange10min = "logs.filter.dateRange.10min"
         case filterDateRange30min = "logs.filter.dateRange.30min"
         case filterDateRange1h = "logs.filter.dateRange.1h"
         case filterDateRange1d = "logs.filter.dateRange.1d"
         case filterDateRangeAll = "logs.filter.dateRange.all"
-
+        
         var id: String {
             rawValue
         }

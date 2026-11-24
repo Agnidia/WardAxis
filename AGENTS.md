@@ -177,7 +177,7 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
   - Entry point: `Application.swift`
   - Core: `Core/Container/` (`AppContainer`), `Core/Error/` (`AppError`)
   - Views: `Views/RootView.swift` (root view, tab container)
-  - Features: `Features/<Name>/`, view and view model side by side. Folders: AlertsTest (DEBUG only), CommonActions, Gallery (DEBUG only), Help, Home, Logs, Permissions, Settings, Splash
+  - Features: `Features/<Name>/`, view and view model side by side. Folders: Help, Home, Logs, Settings, Splash
   - Navigation: `Navigation/` (`AppCoordinator`, `Route`, `RoutePresentation`, `RouteResolver`)
   - Services: `Services/Alert/` (`AlertManager`, `AlertManagerProtocol`, `InAppAlert`)
   - Mocks: `Mocks/` (`MockConfigurationService`, `MockLogReaderService`, `MockTelemetryService`). `MockAlertManager` and `MockHapticFeedbackService` sit next to their implementations
@@ -187,7 +187,7 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
   - Localization: `Localization/LocalizedStrings.swift` (the `L` enum)
   - Other: `Extensions/Foundation/`, `Extensions/SwiftUI/`, `ViewModifiers/`, `Helpers/` (`SizeClassAdaptiveView`), `Closure/`
 - **`Source/iOS/`** - iOS-only view modifiers (keyboard)
-- **`Source/macOS/`** - AppKit and macOS-only extensions (`NSWindow`, `NSScreen`, `NSColor`, toolbar placement)
+- **`Source/macOS/`** - AppKit and macOS-only extensions (`NSWindow` titlebar, `NSScreen`, keyboard type)
 
 ### Local packages (`Packages/`)
 
@@ -201,7 +201,7 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 
 - **`Resources/`** - `Assets.xcassets`, `Colors.xcassets`, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Info.plist`, `entitlement.entitlements`, `PrivacyInfo.xcprivacy`
 - **`Configurations/`** - `base.xcconfig`, `debug.xcconfig`, `release.xcconfig`, `sign.xcconfig`, `app/`, `tests/`
-- **`Tests/UnitTests/`** - Swift Testing suites: `Core/`, `Benchmark/`, `Extensions/`, `Features/Settings/`, `Logger/`, `Navigation/`
+- **`Tests/UnitTests/`** - Swift Testing suites: `Core/`, `Features/Settings/`, `Logger/`, `Navigation/`
 - **`Tests/UITests/`** - XCUITest
 - **`Server/`** - Management server (Hummingbird 2, PostgreSQL); see [Server/README.md](Server/README.md)
 

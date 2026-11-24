@@ -12,8 +12,6 @@ The shared design system for the WardAxis app. All parts are pure SwiftUI and bu
 | Alerts | `Source/Shared/Services/Alert/`, `Source/Shared/Controls/AlertPresenter.swift` |
 | Accessibility modifiers | `Source/Shared/Accessibility/` (see [ACCESSIBILITY.md](ACCESSIBILITY.md)) |
 
-The DEBUG-only Components Gallery (`Route.componentsGallery`, opened from Home) shows the shared controls at run time.
-
 ---
 
 ## Colors

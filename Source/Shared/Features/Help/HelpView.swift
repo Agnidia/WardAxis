@@ -64,7 +64,6 @@ struct HelpView: View {
         .padding(.vertical, CGFloat.spacing.s)
     }
     
-    @ViewBuilder
     private func faqRow(_ item: FAQItem) -> some View {
 #if os(tvOS)
         // tvOS has no DisclosureGroup; the focus engine reads a static pair well.
@@ -105,15 +104,11 @@ struct HelpView: View {
         [
             FAQItem(
                 question: "How do I get started?",
-                answer: "Tap the Home tab and explore the available features. Each section demonstrates different aspects of the app."
+                answer: "Open the Home tab. It shows the protection status and links to Help and Settings."
             ),
             FAQItem(
                 question: "How do I change settings?",
                 answer: "Open the Settings tab or tap the gear icon in the Home screen toolbar to access app settings."
-            ),
-            FAQItem(
-                question: "How do I enable permissions?",
-                answer: "Navigate to the Permissions demo from the Home screen. Tap the Allow button for each permission you want to grant."
             ),
             FAQItem(
                 question: "How do I contact support?",

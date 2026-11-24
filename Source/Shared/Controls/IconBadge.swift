@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - Icon Badge
 
-/// Circular icon badge for onboarding, permissions, and feature highlights.
+/// Circular icon badge for empty states, status and feature highlights.
 ///
 /// Displays an icon centered inside a tinted circle. Use convenience static
 /// initialisers (`.small`, `.medium`, `.large`, `.hero`) for the standard sizes.

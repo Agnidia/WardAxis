@@ -22,17 +22,9 @@ extension Route {
     /// `AppCoordinator.navigate(to:presentation:)`.
     var defaultPresentation: RoutePresentation {
         switch self {
-        case .splash:
-            .fullScreenCover
-        case .settings, .permissions:
+        case .settings:
             .sheet
-        case .main,
-             .home,
-             .help,
-             .commonActions,
-             .logs,
-             .componentsGallery,
-             .alertsTest:
+        case .home, .help, .logs:
             .push
         }
     }

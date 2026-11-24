@@ -244,13 +244,13 @@ enum ButtonBackgroundType: Sendable {
     case clear
 }
 
-/// Icon badge container sizes for onboarding, permissions, and feature highlights
+/// Icon badge container sizes for empty states, status and feature highlights
 enum IconBadgeSize {
     /// 44pt - Standard touch target badge
     static let s: CGFloat = 44
     /// 80pt - Medium emphasis badge
     static let m: CGFloat = 80
-    /// 120pt - Large emphasis badge (onboarding, permissions)
+    /// 120pt - Large emphasis badge (empty and status screens)
     static let l: CGFloat = 120
     /// 160pt - Hero badge (welcome, splash)
     static let xl: CGFloat = 160

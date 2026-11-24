@@ -23,14 +23,7 @@ enum Route: Hashable, Sendable {
 Add the case to `defaultPresentation` in [`RoutePresentation.swift`](../Source/Shared/Navigation/RoutePresentation.swift). The switch is exhaustive, so the build fails until you do:
 
 ```swift
-case .main,
-     .home,
-     .help,
-     .commonActions,
-     .logs,
-     .componentsGallery,
-     .alertsTest,
-     .about:
+case .home, .help, .logs, .about:
     .push
 ```
 

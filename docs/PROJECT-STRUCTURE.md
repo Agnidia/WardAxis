@@ -45,7 +45,7 @@ WardAxis/
 | `Core/Error/` | `AppError` |
 | `Navigation/` | `AppCoordinator`, `Route`, `RoutePresentation`, `RouteResolver` |
 | `Views/` | `RootView.swift`: root view, splash-to-main switch, tab view |
-| `Features/<Name>/` | View and view model side by side. Folders: `AlertsTest` (DEBUG only), `CommonActions`, `Gallery` (DEBUG only), `Help`, `Home`, `Logs`, `Permissions`, `Settings`, `Splash` |
+| `Features/<Name>/` | View and view model side by side. Folders: `Help`, `Home`, `Logs`, `Settings`, `Splash` |
 | `Services/Alert/` | `AlertManagerProtocol`, `AlertManager` (and `MockAlertManager`), `InAppAlert` |
 | `Mocks/` | `MockConfigurationService`, `MockLogReaderService`, `MockTelemetryService` |
 | `Logger/` | Log reading and viewer parts: `Models/` (`LogEntry`, `LogDateRange`), `Service/` (`LogReaderService`, `LogEntryParser`, `LogReaderError`), `UI/` (rows, filter bars, unavailable view). See the [Logger README](../Source/Shared/Logger/README.md) |
@@ -69,7 +69,7 @@ Platform-specific extensions only. Before you add code here, check whether `Sour
 | Folder | Content |
 |---|---|
 | `Source/iOS/Extensions/ViewModifiers/` | Keyboard modifiers |
-| `Source/macOS/Extensions/` | `NSWindow`, `NSScreen`, `NSColor`, `URL` icon, `CGRect`, toolbar placement, keyboard type |
+| `Source/macOS/Extensions/` | `NSWindow` titlebar, `NSScreen` frame, keyboard type |
 
 ---
 
@@ -120,8 +120,6 @@ Edit build settings here, not in the Xcode UI.
 | Folder | Purpose |
 |---|---|
 | `Tests/UnitTests/Core/` | `AppContainer` factories; host app configuration (`Info.plist`, bundle ID) |
-| `Tests/UnitTests/Benchmark/` | `WarmupStopRule` and its tests |
-| `Tests/UnitTests/Extensions/` | Shared extension tests |
 | `Tests/UnitTests/Features/Settings/` | `SettingsViewModel` |
 | `Tests/UnitTests/Logger/` | Log parser, `LogReaderService`, `LogsViewerViewModel` |
 | `Tests/UnitTests/Navigation/` | `AppCoordinator`, `RoutePresentation`, `RouteResolver` |

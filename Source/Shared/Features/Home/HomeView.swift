@@ -72,13 +72,7 @@ struct HomeView: View {
                 .labelBold()
             
             VStack(spacing: CGFloat.spacing.s) {
-                featureButton(title: L.Main.Home.permissionsDemo, route: .permissions, icon: "lock.shield")
-                featureButton(title: L.Main.Home.commonActions, route: .commonActions, icon: "square.grid.2x2")
                 featureButton(title: L.Main.Home.helpCenter, route: .help, icon: "questionmark.circle")
-#if DEBUG
-                featureButton(title: "Components Gallery", route: .componentsGallery, icon: "rectangle.grid.2x2")
-                featureButton(title: "Alerts & Toasts", route: .alertsTest, icon: "bell.badge")
-#endif
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

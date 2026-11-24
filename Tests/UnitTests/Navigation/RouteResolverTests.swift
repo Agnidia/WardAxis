@@ -13,24 +13,18 @@ import Testing
 @Suite("RouteResolver")
 @MainActor
 struct RouteResolverTests {
-    // MARK: - Smoke: every Route case resolves to a non-EmptyView (except .main)
-
-    @Test("RouteResolver resolves every Route case without trapping")
-    func resolvesEveryRoute() {
+    // MARK: - Smoke: every Route case resolves
+    
+    @Test
+    func `RouteResolver resolves every Route case without trapping`() {
         let resolver = RouteResolver()
         let routes: [Route] = [
-            .splash,
-            .main,
             .home,
             .settings,
             .help,
-            .permissions,
-            .commonActions,
-            .logs,
-            .componentsGallery,
-            .alertsTest
+            .logs
         ]
-
+        
         for route in routes {
             // The act of calling view(for:) is itself the contract — exercising
             // the @ViewBuilder switch covers every case. SwiftUI's `some View`

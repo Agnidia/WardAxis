@@ -17,34 +17,10 @@ struct RouteResolver {
     @ViewBuilder
     func view(for route: Route) -> some View {
         switch route {
-        case .splash:
-            SplashView()
-        case .main:
-            EmptyView()
-        case .home:
-            HomeView()
-        case .settings:
-            SettingsView()
-        case .help:
-            HelpView()
-        case .permissions:
-            PermissionsView()
-        case .commonActions:
-            CommonActionsView()
-        case .logs:
-            LogsViewerView()
-        case .componentsGallery:
-#if DEBUG
-            ComponentsGalleryView()
-#else
-            EmptyView()
-#endif
-        case .alertsTest:
-#if DEBUG
-            AlertsTestView()
-#else
-            EmptyView()
-#endif
+        case .home: HomeView()
+        case .settings: SettingsView()
+        case .help: HelpView()
+        case .logs: LogsViewerView()
         }
     }
 }

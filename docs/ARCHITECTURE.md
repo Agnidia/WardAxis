@@ -65,16 +65,10 @@ Main methods: `navigate(to:presentation:)`, `push(_:in:)`, `pop(in:)`, `popToRoo
 
 ```swift
 enum Route: Hashable, Sendable {
-    case splash
-    case main
     case home
     case settings
     case help
-    case permissions
-    case commonActions
     case logs
-    case componentsGallery
-    case alertsTest
 }
 ```
 
@@ -82,9 +76,9 @@ enum Route: Hashable, Sendable {
 
 | Concern | File | Rule |
 |---|---|---|
-| Presentation policy | [`RoutePresentation.swift`](../Source/Shared/Navigation/RoutePresentation.swift) | `defaultPresentation`: `.splash` is a full-screen cover, `.settings` and `.permissions` are sheets, all others push. Callers can override it at `navigate(to:presentation:)` |
-| View construction | [`RouteResolver.swift`](../Source/Shared/Navigation/RouteResolver.swift) | The only place that maps a `Route` to a view. `componentsGallery` and `alertsTest` resolve to their views in DEBUG and to `EmptyView` in Release |
-| Deep links | `AppCoordinator.handleDeepLink(_:)` | Hosts `settings`, `home` (tab switch), `help`, `permissions` (navigate). Other hosts return `false` |
+| Presentation policy | [`RoutePresentation.swift`](../Source/Shared/Navigation/RoutePresentation.swift) | `defaultPresentation`: `.settings` is a sheet, all others push. Callers can override it at `navigate(to:presentation:)` |
+| View construction | [`RouteResolver.swift`](../Source/Shared/Navigation/RouteResolver.swift) | The only place that maps a `Route` to a view |
+| Deep links | `AppCoordinator.handleDeepLink(_:)` | Hosts `settings`, `home` (tab switch), `help` (navigate). Other hosts return `false` |
 
 Call site:
 

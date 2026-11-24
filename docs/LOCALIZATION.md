@@ -18,7 +18,7 @@ Build settings (`Configurations/base.xcconfig`): `LOCALIZATION_PREFERS_STRING_CA
 
 ## The `L` enum
 
-`L` is a `@MainActor` namespace, organized by feature. Top-level groups: `Splash`, `Permissions`, `Main` (`Tab`, `Home`), `Common`, `Settings` (`Logs`), `Help`.
+`L` is a `@MainActor` namespace, organized by feature. Top-level groups: `Splash`, `Main` (`Tab`, `Home`), `Common`, `Settings` (`Logs`), `Help`.
 
 ```swift
 @MainActor
@@ -43,11 +43,11 @@ enum L {
 }
 ```
 
-An accessor returns `LocalizedStringKey` for SwiftUI `Text`, `Button` and `Label`. It returns `String` when the caller needs a plain string, for example an interpolated value:
+An accessor returns `LocalizedStringKey` for SwiftUI `Text`, `Button` and `Label`. An accessor with arguments interpolates them into the key; the catalog entry holds the matching format (`settings.logs.entryCount %lld %lld`). Return `String` only when the caller needs a plain string:
 
 ```swift
-static func allowButton(permission: String) -> String {
-    String(localized: "Allow \(permission)", comment: "Allow permission button")
+static func entryCount(_ total: Int, _ hidden: Int) -> LocalizedStringKey {
+    "settings.logs.entryCount \(total) \(hidden)"
 }
 ```
 
@@ -61,7 +61,7 @@ Button(L.Common.done) { dismiss() }
 Label(L.Main.Tab.home, systemImage: "house")
 
 // Interpolated
-Text(L.Permissions.allowButton(permission: "Camera"))
+Text(L.Settings.Logs.entryCount(total, hidden))
 ```
 
 Never:
@@ -70,8 +70,6 @@ Never:
 Text("Welcome")                // hardcoded
 Text(NSLocalizedString(...))   // bypasses the L enum
 ```
-
-`HomeView` still has two hardcoded feature button titles ("Components Gallery", "Alerts & Toasts"). Both open DEBUG-only screens. Move them to `L` before those buttons ship.
 
 ---
 

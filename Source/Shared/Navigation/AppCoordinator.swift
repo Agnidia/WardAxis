@@ -28,55 +28,53 @@ import WardAxisTelemetry
 @Observable
 final class AppCoordinator {
     // MARK: - Navigation State
-
+    
     /// Push path of the Home tab.
     var navigationPath = NavigationPath()
-
+    
     /// Push path of the Settings tab, so a route pushed from settings lands on
     /// the stack the user sees.
     var settingsNavigationPath = NavigationPath()
-
+    
     /// Tabs whose screen holds unsaved changes. Leaving such a tab is blocked
     /// until the tab confirms; see ``blockedTabSwitch``.
-    var tabsWithUnsavedChanges: Set<Tab> = []
-
+    var tabsWithUnsavedChanges: Set<Tab> = .init()
+    
     /// The tab a blocked ``switchTab(to:)`` asked for. The dirty tab observes it,
     /// asks the user, then calls ``completeBlockedTabSwitch()`` or
     /// ``cancelBlockedTabSwitch()``.
     private(set) var blockedTabSwitch: Tab?
-
+    
     /// Currently selected tab.
     var selectedTab: Tab = .home
-
+    
     /// Route presented as a sheet modal.
     var presentedSheet: Route?
-
+    
     /// Route presented as a full screen cover.
     var presentedFullScreenCover: Route?
-
+    
     /// Current app phase (splash vs main content).
     var appPhase: AppPhase = .splash
-
+    
     private let logger = Log(category: .ui)
-
+    
     // MARK: - Tab Enum
-
+    
     /// Available tabs in the main tab view. `Tab.title` / `Tab.systemImage`
     /// drive the tab-bar appearance (TabView Label) and are intentionally
     /// distinct from `Route` — routes are pure values without UI metadata.
     enum Tab: String, CaseIterable, Sendable {
         case home
         case settings
-
+        
         var title: LocalizedStringKey {
             switch self {
-            case .home:
-                L.Main.Tab.home
-            case .settings:
-                L.Main.Tab.settings
+            case .home: L.Main.Tab.home
+            case .settings: L.Main.Tab.settings
             }
         }
-
+        
         var systemImage: String {
             switch self {
             case .home: "house"
@@ -84,23 +82,23 @@ final class AppCoordinator {
             }
         }
     }
-
+    
     // MARK: - App Phase
-
+    
     /// Application phase for root view switching.
     enum AppPhase: Sendable {
         case splash
         case main
     }
-
+    
     // MARK: - Initialization
-
+    
     init() {
         logger.debug("AppCoordinator initialized")
     }
-
+    
     // MARK: - Navigation Methods
-
+    
     /// Navigate to a route using its default presentation, or an override.
     ///
     /// - Parameters:
@@ -111,17 +109,14 @@ final class AppCoordinator {
     func navigate(to route: Route, presentation override: RoutePresentation? = nil) {
         let policy = override ?? route.defaultPresentation
         logger.debug("Navigating to: \(route.id) via \(String(describing: policy))")
-
+        
         switch policy {
-        case .push:
-            push(route)
-        case .sheet:
-            presentedSheet = route
-        case .fullScreenCover:
-            presentedFullScreenCover = route
+        case .push: push(route)
+        case .sheet: presentedSheet = route
+        case .fullScreenCover: presentedFullScreenCover = route
         }
     }
-
+    
     /// Push a route onto a tab's navigation stack.
     ///
     /// - Parameters:
@@ -132,7 +127,7 @@ final class AppCoordinator {
         logger.debug("Pushing route: \(route.id) on \(tab.rawValue)")
         updatePath(of: tab) { $0.append(route) }
     }
-
+    
     /// Pop the top route from a tab's navigation stack (the selected tab by default).
     func pop(in tab: Tab? = nil) {
         let tab = tab ?? selectedTab
@@ -140,7 +135,7 @@ final class AppCoordinator {
         logger.debug("Popping route on \(tab.rawValue)")
         updatePath(of: tab) { $0.removeLast() }
     }
-
+    
     /// Pop to the root of a tab's navigation stack (the selected tab by default).
     func popToRoot(in tab: Tab? = nil) {
         let tab = tab ?? selectedTab
@@ -148,7 +143,7 @@ final class AppCoordinator {
         logger.debug("Popping to root on \(tab.rawValue)")
         updatePath(of: tab) { $0 = NavigationPath() }
     }
-
+    
     /// The push path of `tab`.
     func path(of tab: Tab) -> NavigationPath {
         switch tab {
@@ -156,14 +151,14 @@ final class AppCoordinator {
         case .settings: settingsNavigationPath
         }
     }
-
+    
     private func updatePath(of tab: Tab, _ change: (inout NavigationPath) -> Void) {
         switch tab {
         case .home: change(&navigationPath)
         case .settings: change(&settingsNavigationPath)
         }
     }
-
+    
     /// Present a route as a sheet modal.
     ///
     /// - Parameter route: The route to present.
@@ -171,7 +166,7 @@ final class AppCoordinator {
         logger.debug("Presenting sheet: \(route.id)")
         presentedSheet = route
     }
-
+    
     /// Present a route as a full screen cover.
     ///
     /// - Parameter route: The route to present.
@@ -179,7 +174,7 @@ final class AppCoordinator {
         logger.debug("Presenting full screen: \(route.id)")
         presentedFullScreenCover = route
     }
-
+    
     /// Dismiss the currently presented modal.
     func dismiss() {
         logger.debug("Dismissing modal")
@@ -189,7 +184,7 @@ final class AppCoordinator {
             presentedFullScreenCover = nil
         }
     }
-
+    
     /// Switch to a specific tab.
     ///
     /// While the selected tab has unsaved changes the switch does not happen: it is
@@ -206,7 +201,7 @@ final class AppCoordinator {
         logger.debug("Switching to tab: \(tab.rawValue)")
         selectedTab = tab
     }
-
+    
     /// Marks whether `tab` holds unsaved changes.
     func setUnsavedChanges(_ hasChanges: Bool, in tab: Tab) {
         if hasChanges {
@@ -215,7 +210,7 @@ final class AppCoordinator {
             tabsWithUnsavedChanges.remove(tab)
         }
     }
-
+    
     /// Performs the blocked switch after the dirty tab discarded its changes.
     func completeBlockedTabSwitch() {
         guard let tab = blockedTabSwitch else { return }
@@ -224,18 +219,18 @@ final class AppCoordinator {
         logger.debug("Switching to tab: \(tab.rawValue)")
         selectedTab = tab
     }
-
+    
     /// Drops the blocked switch; the user keeps editing.
     func cancelBlockedTabSwitch() {
         blockedTabSwitch = nil
     }
-
+    
     /// Transition app phase from splash to main.
     func completeSplash() {
         logger.debug("Completing splash, transitioning to main")
         appPhase = .main
     }
-
+    
     /// Reset coordinator to initial state (e.g., on logout).
     func reset() {
         logger.info("Resetting coordinator state")
@@ -248,9 +243,9 @@ final class AppCoordinator {
         presentedFullScreenCover = nil
         appPhase = .splash
     }
-
+    
     // MARK: - Deep Linking
-
+    
     /// Handle a deep link URL.
     ///
     /// - Parameter url: The URL to handle.
@@ -258,22 +253,18 @@ final class AppCoordinator {
     @discardableResult
     func handleDeepLink(_ url: URL) -> Bool {
         logger.info("Handling deep link: \(url.absoluteString)")
-
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let host = components.host
+        
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false), let host = components.host
         else {
             return false
         }
-
+        
         switch host {
         case "settings":
             switchTab(to: .settings)
             return true
         case "help":
             navigate(to: .help)
-            return true
-        case "permissions":
-            navigate(to: .permissions)
             return true
         case "home":
             switchTab(to: .home)

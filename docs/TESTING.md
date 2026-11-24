@@ -10,8 +10,6 @@ Unit tests use **Swift Testing**. UI tests use **XCUITest**. App mocks live in `
 Tests/
 ├── UnitTests/
 │   ├── Core/                 # AppContainer factories, host app configuration
-│   ├── Benchmark/            # WarmupStopRule
-│   ├── Extensions/           # Shared extensions
 │   ├── Features/Settings/    # SettingsViewModel
 │   ├── Logger/               # Log parser, LogReaderService, LogsViewerViewModel
 │   └── Navigation/           # AppCoordinator, RoutePresentation, RouteResolver
@@ -106,7 +104,7 @@ Put `@MainActor` on the suite when every test touches main-actor state. `AppCont
 ### Parameterized tests
 
 ```swift
-@Test("Push routes default to .push", arguments: [Route.help, .commonActions, .logs])
+@Test("Push routes default to .push", arguments: [Route.home, .help, .logs])
 func pushRoutes(route: Route) {
     #expect(route.defaultPresentation == .push)
 }
@@ -183,7 +181,7 @@ Why app mocks sit in the app target:
 
 ## UI tests
 
-XCUITest in `Tests/UITests/`. Today the target has one test, `previewUITests.testLaunchPerformance`. It skips unless it runs on a simulator.
+XCUITest in `Tests/UITests/`. Today the target has one test, `LaunchUITests.testLaunchPerformance`. It skips unless it runs on a simulator.
 
 Drive new UI tests through the identifiers in `AccessibilityIdentifiers.swift`, and apply the identifier in the view first. For example, `HomeView` applies `AccessibilityID.Home.settingsButton` (`home.settings`). The UI test target cannot import the app module, so the test repeats the identifier string:
 

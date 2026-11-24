@@ -53,11 +53,6 @@
           "inclusions": [
             "UnitTests/Core/AppContainerTests.swift",
             "UnitTests/Core/HostConfigurationTests.swift",
-            "UnitTests/Benchmark/WarmupStopRule.swift",
-            "UnitTests/Benchmark/WarmupStopRuleTests.swift",
-            "UnitTests/Extensions/ColorCompareTests.swift",
-            "UnitTests/Extensions/DecodableDictionaryTests.swift",
-            "UnitTests/Extensions/FileOperationsTests.swift",
             "UnitTests/Features/Settings/SettingsViewModelTests.swift",
             "UnitTests/Logger/LogEntryParserTests.swift",
             "UnitTests/Logger/LogReaderServiceTests.swift",
@@ -65,12 +60,11 @@
             "UnitTests/Navigation/AppCoordinatorTests.swift",
             "UnitTests/Navigation/RoutePresentationTests.swift",
             "UnitTests/Navigation/RouteResolverTests.swift",
-            "UnitTests/previewUnitTests.swift",
           ],
         }, {
           "target": "UITests",
           "inclusions": [
-            "UITests/previewUITests.swift",
+            "UITests/LaunchUITests.swift",
           ],
         },
       ],
@@ -122,10 +116,10 @@
       ],
       "package-product-members": [
         {
-          "product-name": "WardAxisTelemetry",
+          "product-name": "WardAxisManagement",
           "build-phase": { "build-phase": "frameworks" },
         }, {
-          "product-name": "WardAxisManagement",
+          "product-name": "WardAxisTelemetry",
           "build-phase": { "build-phase": "frameworks" },
         },
       ],
@@ -167,6 +161,6 @@
       ],
     },
   ],
-  "last-upgrade": "26.4",
+  "last-upgrade": "27.2",
   "last-swift-update": "14.2",
 }
