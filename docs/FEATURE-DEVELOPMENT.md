@@ -186,8 +186,8 @@ import Testing
 @Suite("AboutViewModel")
 @MainActor
 struct AboutViewModelTests {
-    @Test("load() counts the log entries")
-    func loadCountsEntries() async {
+    @Test
+    func `load() counts the log entries`() async {
         let model = AboutViewModel(logReader: MockLogReaderService(scenario: .sampleEntries))
 
         await model.load()
@@ -195,8 +195,8 @@ struct AboutViewModelTests {
         #expect(model.logEntryCount > 0)
     }
 
-    @Test("load() keeps zero when the reader fails")
-    func loadFailureKeepsZero() async {
+    @Test
+    func `load() keeps zero when the reader fails`() async {
         let model = AboutViewModel(logReader: MockLogReaderService(scenario: .failure(.readFailed(underlying: "test"))))
 
         await model.load()

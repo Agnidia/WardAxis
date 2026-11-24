@@ -90,8 +90,8 @@ struct SettingsViewModelTests {
         return (viewModel, mock)
     }
 
-    @Test("initial state is empty")
-    func initialStateIsEmpty() {
+    @Test
+    func `initial state is empty`() {
         let (viewModel, _) = makeViewModel()
         #expect(!viewModel.hasEntries)
         #expect(!viewModel.isBusy)
@@ -101,11 +101,13 @@ struct SettingsViewModelTests {
 
 Put `@MainActor` on the suite when every test touches main-actor state. `AppContainer` and the view models are `@MainActor`.
 
+Name a test with a raw identifier, not with a `@Test("…")` display name. SwiftFormat (`swiftTestingTestCaseNames`) converts a display name into a raw identifier. A raw identifier cannot contain a backslash, so write `Unicode escape`, not `\u escape`.
+
 ### Parameterized tests
 
 ```swift
-@Test("Push routes default to .push", arguments: [Route.home, .help, .logs])
-func pushRoutes(route: Route) {
+@Test(arguments: [Route.home, .help, .logs])
+func `Push routes default to .push`(route: Route) {
     #expect(route.defaultPresentation == .push)
 }
 ```
@@ -113,8 +115,8 @@ func pushRoutes(route: Route) {
 ### Throwing tests
 
 ```swift
-@Test("A failing log reader throws its error")
-func failingReaderThrows() async {
+@Test
+func `A failing log reader throws its error`() async {
     let service = MockLogReaderService(scenario: .failure(.writeFailed(underlying: "disk full")))
     await #expect(throws: LogReaderError.self) {
         _ = try await service.loadEntries()
@@ -129,9 +131,9 @@ func failingReaderThrows() async {
 Tests do not build real services. Use the testing factory:
 
 ```swift
-@Test("AppContainer.testing() wires every service slot to a mock")
+@Test
 @MainActor
-func wiresAllServiceSlots() {
+func `AppContainer.testing() wires every service slot to a mock`() {
     let container = AppContainer.testing()
 
     #expect(container.alertManager is MockAlertManager)
