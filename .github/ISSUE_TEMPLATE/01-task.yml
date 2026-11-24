@@ -1,0 +1,93 @@
+name: Roadmap task
+description: One task ID from a roadmap phase file.
+title: "feat(scope): ID-000 Summary"
+type: Task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One issue per task ID. Search the open issues first; most roadmap tasks already exist.
+        Keep the section headings: `/megatask` reads **Dependencies** to build its order.
+  - type: input
+    id: task-id
+    attributes:
+      label: Task ID
+      description: The ID from `roadmap/0N-*.md`.
+      placeholder: NET-024
+    validations:
+      required: true
+  - type: dropdown
+    id: distribution
+    attributes:
+      label: Distribution
+      options:
+        - Shipped (App Store)
+        - Lab-only
+      default: 0
+    validations:
+      required: true
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Platforms
+      multiple: true
+      options:
+        - macOS
+        - iOS/iPadOS
+        - tvOS
+        - Server
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What the task delivers and why. Link the roadmap section.
+      placeholder: "Roadmap: roadmap/01-network-security.md § 1.1"
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      value: |
+        Given
+        When
+        Then
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Keep "Depends on" and "Blocks" on separate lines. Write "none" when there is no dependency.
+      value: |
+        - Depends on: #
+        - Blocks: #
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: A maintainer adds the matching P0–P2 label at triage.
+      options:
+        - P0
+        - P1
+        - P2
+      default: 2
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Complexity
+      options:
+        - low
+        - medium
+        - high
+      default: 1
