@@ -48,14 +48,15 @@ private final class KeyboardResponder: ObservableObject {
     }
 }
 
+@MainActor
 private extension Notification {    
     /// Extracts the keyboard height from the notification's userInfo dictionary.
-    @MainActor
     var keyboardHeight: CGFloat {
         (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height ?? 0
     }
 }
 
+@MainActor
 extension View {    
     /// A view modifier that adjusts the view's bottom padding to accommodate the keyboard height.
     ///
@@ -63,7 +64,6 @@ extension View {
     ///   - minHeight: The minimum height before applying the keyboard avoidance behavior.
     ///   - padding: Additional bottom padding to apply when the keyboard is shown.
     /// - Returns: A view modified to adapt to the keyboard height.
-    @MainActor
     func adaptToKeyboard(minHeigh: CGFloat = .zero, padding: CGFloat = .padding.m) -> some View {
         modifier(KeyboardAdaptive(minHeigh: minHeigh, padding: padding))
     }

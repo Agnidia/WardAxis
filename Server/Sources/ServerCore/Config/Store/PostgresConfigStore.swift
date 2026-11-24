@@ -5,10 +5,10 @@
 //  Copyright © 2026 Agnidia. All rights reserved.
 //
 
-import WardAxisAPIServer
 import Foundation
 import Logging
 import PostgresNIO
+import WardAxisAPIServer
 
 /// ``ConfigStore`` on the migration 6 tables.
 ///
@@ -18,12 +18,12 @@ package struct PostgresConfigStore: ConfigStore {
     private let client: PostgresClient
     /// Keep at `notice` or above: below it the driver logs bind values.
     private let logger: Logger
-
+    
     package init(client: PostgresClient, logger: Logger) {
         self.client = client
         self.logger = logger
     }
-
+    
     package func snapshot() async throws -> ConfigSnapshotRecord {
         // One statement, so the version and the entries come from one MVCC snapshot.
         let rows = try await client.query(
@@ -41,7 +41,7 @@ package struct PostgresConfigStore: ConfigStore {
         guard let record else { throw ConfigStoreError.missingVersion }
         return record
     }
-
+    
     package func currentVersion() async throws -> Int64 {
         let rows = try await client.query("SELECT version FROM config_version", logger: logger)
         var current: Int64?
@@ -51,7 +51,7 @@ package struct PostgresConfigStore: ConfigStore {
         guard let current else { throw ConfigStoreError.missingVersion }
         return current
     }
-
+    
     package func changes(after version: Int64, limit: Int) async throws -> [ConfigChange] {
         let rows = try await client.query(
             """
@@ -69,7 +69,7 @@ package struct PostgresConfigStore: ConfigStore {
         }
         return changes
     }
-
+    
     private static func entries(fromJSON text: String) throws -> Components.Schemas.ConfigEntries {
         try JSONDecoder().decode(Components.Schemas.ConfigEntries.self, from: Data(text.utf8))
     }

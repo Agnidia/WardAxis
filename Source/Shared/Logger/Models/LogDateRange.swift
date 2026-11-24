@@ -19,7 +19,7 @@ enum LogDateRange: String, CaseIterable, Sendable {
     case oneHour
     case oneDay
     case all
-
+    
     /// Seconds back from `now` that pass the filter. `nil` for `.all`
     /// (no bound).
     var lookback: TimeInterval? {
@@ -31,12 +31,11 @@ enum LogDateRange: String, CaseIterable, Sendable {
         case .all: nil
         }
     }
-
+    
     /// Lossless predicate. `nil` timestamps and `.all` always pass —
     /// matches the policy applied to `.raw` entries by the view model.
     func contains(_ timestamp: Date?, now: Date = Date()) -> Bool {
-        guard let lookback else { return true }
-        guard let timestamp else { return true }
+        guard let lookback, let timestamp else { return true }
         return now.timeIntervalSince(timestamp) <= lookback
     }
 }

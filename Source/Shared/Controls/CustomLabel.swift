@@ -42,8 +42,6 @@ struct CustomLabel: View {
             titleView(title)
         } else if let icon {
             imageView(icon)
-        } else {
-            EmptyView()
         }
     }
     

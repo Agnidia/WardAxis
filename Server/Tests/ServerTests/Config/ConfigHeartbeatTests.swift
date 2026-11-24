@@ -24,9 +24,9 @@ struct ConfigHeartbeatTests {
         policy.idleTimeout = .milliseconds(300)
         return policy
     }()
-
-    @Test("The production policy: heartbeat 30 s, idle close 90 s, ping 45 s, lifetime 12 to 15 min, cap 5")
-    func productionDefaults() {
+    
+    @Test
+    func `The production policy: heartbeat 30 s, idle close 90 s, ping 45 s, lifetime 12 to 15 min, cap 5`() {
         let policy = ConfigStreamPolicy.standard
         #expect(policy.heartbeatInterval == .seconds(30))
         #expect(policy.idleTimeout == .seconds(90))
@@ -36,9 +36,9 @@ struct ConfigHeartbeatTests {
         #expect(policy.relayPollInterval == .seconds(30))
         #expect(policy.maxConnectionsPerClient == 5)
     }
-
-    @Test("A client that answers pings gets heartbeats with the current version and stays open past the idle timeout")
-    func heartbeatsCarryCurrentVersion() async throws {
+    
+    @Test
+    func `A client that answers pings gets heartbeats with the current version and stays open past the idle timeout`() async throws {
         let store = try InMemoryConfigStore(version: 41)
         let notifier = ManualConfigChangeNotifier()
         let harness = try await ConfigStreamHarness(policy: Self.fastPolicy, configStore: store, notifier: notifier)
@@ -70,9 +70,9 @@ struct ConfigHeartbeatTests {
             }
         }
     }
-
-    @Test("The server closes a connection that answers no ping once the idle timeout passes")
-    func silentClientIsClosed() async throws {
+    
+    @Test
+    func `The server closes a connection that answers no ping once the idle timeout passes`() async throws {
         var policy = ConfigStreamHarness.quietPolicy
         policy.idleTimeout = .milliseconds(300)
         let harness = try await ConfigStreamHarness(policy: policy, configStore: InMemoryConfigStore(version: 41))
@@ -93,9 +93,9 @@ struct ConfigHeartbeatTests {
             }
         }
     }
-
-    @Test("An upgraded connection outlives the HTTP idle timeout")
-    func httpIdleTimeoutDoesNotCloseStreams() async throws {
+    
+    @Test
+    func `An upgraded connection outlives the HTTP idle timeout`() async throws {
         let harness = try await ConfigStreamHarness(configStore: InMemoryConfigStore(version: 41))
         let user = try harness.enrollDevice()
         let openAfterWait = NIOLockedValueBox(false)
@@ -109,12 +109,11 @@ struct ConfigHeartbeatTests {
         }
         #expect(openAfterWait.withLockedValue { $0 })
     }
-
+    
     @Test(
-        "A connection that sends nothing, or only part of a request head, is closed at the HTTP idle timeout",
         arguments: ["", "GET /v1/config/stream HTTP/1.1\r\nHost: localhost\r\n"]
     )
-    func incompleteFirstRequestIsClosed(sent: String) async throws {
+    func `A connection that sends nothing, or only part of a request head, is closed at the HTTP idle timeout`(sent: String) async throws {
         let harness = try await ConfigStreamHarness(configStore: InMemoryConfigStore(version: 41))
         // Plain TCP: the deadline sits below TLS, and a raw socket can stall at any byte.
         try await harness.application(listener: .plain, httpIdleTimeout: .milliseconds(300)).test(.live) { client in
@@ -127,9 +126,9 @@ struct ConfigHeartbeatTests {
             #expect(ContinuousClock.now - started >= .milliseconds(250))
         }
     }
-
-    @Test("Graceful shutdown closes a connection that has sent no request at once, not at the 30 s first-request deadline")
-    func shutdownClosesSilentConnection() async throws {
+    
+    @Test
+    func `Graceful shutdown closes a connection that has sent no request at once, not at the 30 s first-request deadline`() async throws {
         let harness = try await ConfigStreamHarness(configStore: InMemoryConfigStore(version: 41))
         let silent = NIOLockedValueBox<RawConnection?>(nil)
         let started = ContinuousClock.now

@@ -26,8 +26,8 @@ import X509
 /// private temporary directory that the test removes. No key or certificate is committed.
 @Suite("TLS listener")
 struct TLSListenerTests {
-    @Test("GET /v1/health over TLS 1.2 and TLS 1.3, with full certificate verification, answers 200", arguments: [TLSVersion.tlsv12, .tlsv13])
-    func healthOverTLS(version: TLSVersion) async throws {
+    @Test(arguments: [TLSVersion.tlsv12, .tlsv13])
+    func `GET /v1/health over TLS 1.2 and TLS 1.3, with full certificate verification, answers 200`(version: TLSVersion) async throws {
         try await TestCertificate.withFiles { certificate in
             try await Self.withTLSServer(certificate.files) { port in
                 let response = try await TestClient.withClient(
@@ -41,9 +41,9 @@ struct TLSListenerTests {
             }
         }
     }
-
-    @Test("A plaintext HTTP request to the TLS port gets no HTTP response")
-    func plaintextRequestFails() async throws {
+    
+    @Test
+    func `A plaintext HTTP request to the TLS port gets no HTTP response`() async throws {
         try await TestCertificate.withFiles { certificate in
             try await Self.withTLSServer(certificate.files) { port in
                 _ = try await TestClient.withClient(host: "localhost", port: port, configuration: .init(timeout: .seconds(5))) { client in
@@ -54,9 +54,9 @@ struct TLSListenerTests {
             }
         }
     }
-
-    @Test("A client limited to TLS 1.1 is refused with a protocol-version alert, while TLS 1.2 completes the handshake")
-    func tls11ClientIsRefused() async throws {
+    
+    @Test
+    func `A client limited to TLS 1.1 is refused with a protocol-version alert, while TLS 1.2 completes the handshake`() async throws {
         try await TestCertificate.withFiles { certificate in
             try await Self.withTLSServer(certificate.files) { port in
                 try await TLSHandshake.run(port: port, configuration: certificate.clientConfiguration(minimum: .tlsv12, maximum: .tlsv12))
@@ -68,9 +68,9 @@ struct TLSListenerTests {
             }
         }
     }
-
-    @Test("A TLS 1.2 client that offers only RSA key-exchange and CBC suites cannot complete the handshake")
-    func weakOnlySuitesAreRefused() async throws {
+    
+    @Test
+    func `A TLS 1.2 client that offers only RSA key-exchange and CBC suites cannot complete the handshake`() async throws {
         // ECDHE-ECDSA-*-SHA is CBC and would work with the test's ECDSA certificate, so only the server's suite list stops it.
         let weakOnly = "AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA:AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA"
         try await TestCertificate.withFiles { certificate in
@@ -85,11 +85,11 @@ struct TLSListenerTests {
             }
         }
     }
-
+    
     // MARK: Loader
-
-    @Test("The loader sets TLS 1.2 as the floor, forward-secret AEAD suites and HTTP/1.1 only")
-    func loaderSettings() async throws {
+    
+    @Test
+    func `The loader sets TLS 1.2 as the floor, forward-secret AEAD suites and HTTP/1.1 only`() async throws {
         try await TestCertificate.withFiles { certificate in
             let configuration = try ServerTLS.configuration(for: certificate.files)
             #expect(configuration.minimumTLSVersion == .tlsv12)
@@ -99,9 +99,9 @@ struct TLSListenerTests {
             #expect(configuration.certificateChain.count == 1)
         }
     }
-
-    @Test("A missing, malformed or mismatched file fails with the variable's name and never its path")
-    func loaderRejectsBadFiles() async throws {
+    
+    @Test
+    func `A missing, malformed or mismatched file fails with the variable's name and never its path`() async throws {
         try await TestCertificate.withFiles { certificate in
             let directory = certificate.directory
             let missing = directory.appendingPathComponent("missing.pem").path
@@ -109,7 +109,7 @@ struct TLSListenerTests {
             try Data("not a PEM file\n".utf8).write(to: garbage)
             let otherKey = directory.appendingPathComponent("other-key.pem")
             try Data(P256.Signing.PrivateKey().pemRepresentation.utf8).write(to: otherKey)
-
+            
             let chainVariable = AppConfiguration.Variable.tlsCertificateChainPath
             let keyVariable = AppConfiguration.Variable.tlsPrivateKeyPath
             let cases: [(TLSFiles, String)] = [
@@ -134,7 +134,7 @@ struct TLSListenerTests {
             }
         }
     }
-
+    
     /// Runs the production application core with TLS on an ephemeral port.
     private static func withTLSServer(_ files: TLSFiles, _ body: @escaping @Sendable (Int) async throws -> Void) async throws {
         let dependencies = ServerDependencies.testing()
@@ -156,11 +156,11 @@ struct TLSListenerTests {
 /// and the CA that signed the leaf.
 private struct TestCertificate: Sendable {
     struct FileNotCreated: Error {}
-
+    
     let directory: URL
     let files: TLSFiles
     let authority: NIOSSLCertificate
-
+    
     /// A client that trusts only the test CA and checks the host name `localhost`.
     func clientConfiguration(minimum: TLSVersion, maximum: TLSVersion) -> TLSConfiguration {
         var configuration = TLSConfiguration.makeClientConfiguration()
@@ -170,14 +170,14 @@ private struct TestCertificate: Sendable {
         configuration.maximumTLSVersion = maximum
         return configuration
     }
-
+    
     /// Creates the files, runs `body`, then deletes the directory whatever `body` does.
     static func withFiles<Value>(_ body: (TestCertificate) async throws -> Value) async throws -> Value {
         let fileManager = FileManager.default
         let directory = fileManager.temporaryDirectory.appendingPathComponent("server-tls-\(UUID().uuidString)", isDirectory: true)
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         defer { try? fileManager.removeItem(at: directory) }
-
+        
         let authorityKey = P256.Signing.PrivateKey()
         let authority = try makeAuthority(key: authorityKey)
         let leafKey = P256.Signing.PrivateKey()
@@ -195,7 +195,7 @@ private struct TestCertificate: Sendable {
         )
         return try await body(certificate)
     }
-
+    
     private static func makeAuthority(key: P256.Signing.PrivateKey) throws -> Certificate {
         let name = try DistinguishedName {
             CommonName("WardAxis test CA")
@@ -217,7 +217,7 @@ private struct TestCertificate: Sendable {
             issuerPrivateKey: Certificate.PrivateKey(key)
         )
     }
-
+    
     private static func makeLeaf(key: P256.Signing.PrivateKey, authority: Certificate, authorityKey: P256.Signing.PrivateKey) throws -> Certificate {
         let now = Date()
         return try Certificate(
@@ -268,35 +268,35 @@ private enum TLSHandshake {
         defer { channel.close(promise: nil) }
         try await outcome.futureResult.get()
     }
-
+    
     /// Completes `outcome` once: on the handshake event, the first error, or a close.
     private final class OutcomeHandler: ChannelInboundHandler {
         typealias InboundIn = ByteBuffer
-
+        
         private let outcome: EventLoopPromise<Void>
         private var completed: Bool = false
-
+        
         init(outcome: EventLoopPromise<Void>) {
             self.outcome = outcome
         }
-
+        
         func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
             if case TLSUserEvent.handshakeCompleted = event {
                 complete(.success(()))
             }
             context.fireUserInboundEventTriggered(event)
         }
-
+        
         func errorCaught(context: ChannelHandlerContext, error: any Error) {
             complete(.failure(error))
             context.close(promise: nil)
         }
-
+        
         func channelInactive(context: ChannelHandlerContext) {
             complete(.failure(ChannelError.eof))
             context.fireChannelInactive()
         }
-
+        
         private func complete(_ result: Result<Void, any Error>) {
             guard !completed else { return }
             completed = true

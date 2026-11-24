@@ -11,25 +11,25 @@ import Testing
 
 @Suite("Telemetry consent")
 struct TelemetryServiceTests {
-    @Test("Without a consent source every event is dropped")
-    func defaultIsOptOut() {
+    @Test
+    func `Without a consent source every event is dropped`() {
         let sink = RecordingSink()
         let service = TelemetryService(sink: sink.record)
         service.track(.screenViewed("Home"))
         #expect(sink.events.isEmpty)
     }
-
-    @Test("Consented events reach the sink in order")
-    func consentedEventsAreForwarded() {
+    
+    @Test
+    func `Consented events reach the sink in order`() {
         let sink = RecordingSink()
         let service = TelemetryService(hasConsent: { true }, sink: sink.record)
         service.track(.tabSelected("home"))
         service.track(.actionTapped("refresh"))
         #expect(sink.events == [.tabSelected("home"), .actionTapped("refresh")])
     }
-
-    @Test("Revoking consent stops the next event without rebuilding the service")
-    func revocationTakesEffectImmediately() {
+    
+    @Test
+    func `Revoking consent stops the next event without rebuilding the service`() {
         let consent = Mutex(true)
         let sink = RecordingSink()
         let service = TelemetryService(hasConsent: { consent.withLock { $0 } }, sink: sink.record)
@@ -42,11 +42,11 @@ struct TelemetryServiceTests {
 
 private final class RecordingSink: Sendable {
     private let storage = Mutex<[TelemetryEvent]>([])
-
+    
     var events: [TelemetryEvent] {
         storage.withLock { $0 }
     }
-
+    
     var record: @Sendable (TelemetryEvent) -> Void {
         { event in self.storage.withLock { $0.append(event) } }
     }

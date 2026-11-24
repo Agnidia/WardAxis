@@ -25,27 +25,27 @@ import WardAxisTelemetry
 @Observable @MainActor
 final class AppContainer {
     // MARK: - Services
-
+    
     /// In-app alert presentation manager.
     ///
     /// `AlertPresenterModifier` needs the concrete `AlertManager` for `@Bindable`;
     /// the slot stays `any AlertManagerProtocol` and `RootView` casts once.
     let alertManager: any AlertManagerProtocol
-
+    
     /// Reads, exports, and clears the on-device log file.
     let logReaderService: any LogReaderServiceProtocol
-
+    
     /// Haptic feedback service (no-op on macOS).
     let hapticFeedback: any HapticFeedbackServiceProtocol
-
+    
     /// Opt-in usage telemetry; drops every event until the user consents.
     let telemetry: any TelemetryServiceProtocol
-
+    
     /// The live configuration from the management server, cached for offline launches.
     let configurationService: any ConfigurationServiceProtocol
-
+    
     // MARK: - Initialization
-
+    
     private init(
         alertManager: any AlertManagerProtocol,
         logReaderService: any LogReaderServiceProtocol,
@@ -59,9 +59,9 @@ final class AppContainer {
         self.telemetry = telemetry
         self.configurationService = configurationService
     }
-
+    
     // MARK: - Factories
-
+    
     /// Builds the production container with real service implementations.
     static func production() -> AppContainer {
         AppContainer(
@@ -86,7 +86,7 @@ final class AppContainer {
             configurationService: configurationService
         )
     }
-
+    
     /// Builds a container suitable for unit tests. All services are mocked.
     static func testing() -> AppContainer {
         AppContainer(
@@ -109,11 +109,11 @@ final class AppContainer {
 #if DEBUG
             // No assertionFailure: @Entry evaluates the default at process start,
             // including the test host launch, which would crash the test runner.
-            return testing()
+            testing()
 #else
             // Never touches the user's files and never connects: no server URL, no
             // cache, no identity.
-            return AppContainer(
+            AppContainer(
                 alertManager: AlertManager(),
                 logReaderService: LogReaderService(),
                 hapticFeedback: HapticFeedbackService(),

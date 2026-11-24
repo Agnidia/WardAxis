@@ -19,7 +19,7 @@ package struct TLSFiles: Sendable, Equatable {
     /// The device CA bundle (one or more PEM certificates) that every client certificate
     /// must chain to; `nil` means the listener asks for no client certificate.
     package let clientCertificateAuthorityPath: String?
-
+    
     package init(certificateChainPath: String, privateKeyPath: String, clientCertificateAuthorityPath: String? = nil) {
         self.certificateChainPath = certificateChainPath
         self.privateKeyPath = privateKeyPath
@@ -32,7 +32,7 @@ package enum ServerTLS {
     /// TLS 1.2 suites with forward secrecy and an AEAD cipher only, the set App Transport
     /// Security accepts. TLS 1.3 negotiates its own suites, which are all of that kind.
     package static let cipherSuites: String = "ECDHE+AESGCM:ECDHE+CHACHA20"
-
+    
     /// Loads the chain, the key and the optional device CA bundle, and checks them with one
     /// TLS context, so a bad file fails start-up before the listener binds.
     ///
@@ -47,7 +47,7 @@ package enum ServerTLS {
     package static func configuration(for files: TLSFiles) throws(ConfigurationError) -> TLSConfiguration {
         let chainVariable = AppConfiguration.Variable.tlsCertificateChainPath
         let keyVariable = AppConfiguration.Variable.tlsPrivateKeyPath
-
+        
         guard let chainPEM = FileManager.default.contents(atPath: files.certificateChainPath) else {
             throw .invalid(variable: chainVariable, reason: "must name a readable file")
         }
@@ -60,7 +60,7 @@ package enum ServerTLS {
         guard !chain.isEmpty else {
             throw .invalid(variable: chainVariable, reason: "must hold a PEM certificate chain")
         }
-
+        
         guard let keyPEM = FileManager.default.contents(atPath: files.privateKeyPath) else {
             throw .invalid(variable: keyVariable, reason: "must name a readable file")
         }
@@ -70,7 +70,7 @@ package enum ServerTLS {
         } catch {
             throw .invalid(variable: keyVariable, reason: "must hold an unencrypted PEM private key")
         }
-
+        
         var configuration = TLSConfiguration.makeServerConfiguration(
             certificateChain: chain.map { .certificate($0) },
             privateKey: .privateKey(key)
@@ -93,11 +93,11 @@ package enum ServerTLS {
         }
         return configuration
     }
-
+    
     /// Whether `configuration` makes every handshake present a verified client certificate.
     /// The config stream is mounted only when this is `true`.
     package static func requiresClientCertificates(_ configuration: TLSConfiguration) -> Bool {
-        guard case .certificates(let roots) = configuration.trustRoots, !roots.isEmpty else {
+        guard case let .certificates(roots) = configuration.trustRoots, !roots.isEmpty else {
             return false
         }
         // `.none` includes optional verification, which admits a client with no certificate.
@@ -108,7 +108,7 @@ package enum ServerTLS {
             return false
         }
     }
-
+    
     private static func loadClientCertificateAuthorities(at path: String) throws(ConfigurationError) -> [NIOSSLCertificate] {
         let variable = AppConfiguration.Variable.tlsClientCAPath
         guard let pem = FileManager.default.contents(atPath: path) else {

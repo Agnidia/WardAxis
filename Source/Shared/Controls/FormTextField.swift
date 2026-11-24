@@ -135,7 +135,6 @@ struct FormTextField: View {
     
     // MARK: - Computed Properties
     
-    @ViewBuilder
     private var fieldView: some View {
         textField
             .bodyLarge()

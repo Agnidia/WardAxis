@@ -5,10 +5,10 @@
 //  Copyright © 2026 Agnidia. All rights reserved.
 //
 
-import WardAxisAPIClient
-import WardAxisAPIFixtures
 import Foundation
 import Testing
+import WardAxisAPIClient
+import WardAxisAPIFixtures
 
 /// The golden frames against the generated `ConfigMessage`: each one decodes to its case
 /// and version and re-encodes to the same bytes. The server and the app run the same
@@ -16,25 +16,25 @@ import Testing
 @Suite("Golden ConfigMessage frames")
 struct GoldenFrameFixtureTests {
     private typealias Message = Components.Schemas.ConfigMessage
-
-    @Test("The product ships exactly the snapshot, delta and heartbeat frames")
-    func frameSet() throws {
+    
+    @Test
+    func `The product ships exactly the snapshot, delta and heartbeat frames`() throws {
         #expect(GoldenConfigFrame.allCases.map(\.rawValue) == ["snapshot", "delta", "heartbeat"])
         for frame in GoldenConfigFrame.allCases {
             #expect(try !frame.data().isEmpty, "\(frame)")
         }
     }
-
-    @Test("Each frame is in canonical form: one line, ASCII only, no slash", arguments: GoldenConfigFrame.allCases)
-    func canonicalForm(frame: GoldenConfigFrame) throws {
+    
+    @Test(arguments: GoldenConfigFrame.allCases)
+    func `Each frame is in canonical form: one line, ASCII only, no slash`(frame: GoldenConfigFrame) throws {
         let bytes = try frame.data()
         #expect(bytes.allSatisfy { $0 >= 0x20 && $0 < 0x7F }, "control or non-ASCII byte")
         #expect(!bytes.contains(UInt8(ascii: "/")))
         #expect(!bytes.contains(UInt8(ascii: " ")), "whitespace outside a string")
     }
-
-    @Test("Each frame decodes to its own case and version", arguments: GoldenConfigFrame.allCases)
-    func decodesToItsCase(frame: GoldenConfigFrame) throws {
+    
+    @Test(arguments: GoldenConfigFrame.allCases)
+    func `Each frame decodes to its own case and version`(frame: GoldenConfigFrame) throws {
         let message = try JSONDecoder().decode(Message.self, from: frame.data())
         switch (frame, message) {
         case let (.snapshot, .snapshot(snapshot)):
@@ -51,18 +51,18 @@ struct GoldenFrameFixtureTests {
             Issue.record("\(frame) decoded as \(message)")
         }
     }
-
-    @Test("Each frame re-encodes byte for byte with sorted keys", arguments: GoldenConfigFrame.allCases)
-    func reencodesByteForByte(frame: GoldenConfigFrame) throws {
+    
+    @Test(arguments: GoldenConfigFrame.allCases)
+    func `Each frame re-encodes byte for byte with sorted keys`(frame: GoldenConfigFrame) throws {
         let bytes = try frame.data()
         let message = try JSONDecoder().decode(Message.self, from: bytes)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         #expect(try String(decoding: encoder.encode(message), as: UTF8.self) == String(decoding: bytes, as: UTF8.self))
     }
-
-    @Test("The snapshot carries one value of every JSON kind, each decoded as that kind")
-    func snapshotValueKinds() throws {
+    
+    @Test
+    func `The snapshot carries one value of every JSON kind, each decoded as that kind`() throws {
         guard case let .snapshot(snapshot) = try JSONDecoder().decode(Message.self, from: GoldenConfigFrame.snapshot.data()) else {
             Issue.record("The snapshot frame is not a snapshot")
             return
@@ -74,7 +74,7 @@ struct GoldenFrameFixtureTests {
         #expect(values["kind.integer"].flatMap { $0 as? Int } == 42)
         #expect(values["kind.number"].flatMap { $0 as? Double } == 1.5)
         #expect(values["kind.string"].flatMap { $0 as? String } == "dark")
-        #expect(values["kind.array"].flatMap { $0 as? [(any Sendable)?] }?.count == 3)
-        #expect(values["kind.object"].flatMap { $0 as? [String: (any Sendable)?] }?.keys.sorted() == ["nested"])
+        #expect(values["kind.array"].flatMap { $0 as? [any Sendable?] }?.count == 3)
+        #expect(values["kind.object"].flatMap { $0 as? [String: any Sendable?] }?.keys.sorted() == ["nested"])
     }
 }

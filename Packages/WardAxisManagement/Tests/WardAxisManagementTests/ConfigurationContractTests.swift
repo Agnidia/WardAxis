@@ -16,17 +16,17 @@ import WardAxisManagementTestSupport
 @Suite("Configuration contract")
 struct ConfigurationContractTests {
     /// A missing fixtures bundle traps in `Bundle.module`; run-e2e.sh checks the bundle after each build.
-    @Test("Every golden frame is in the fixtures bundle", arguments: GoldenConfigFrame.allCases)
-    func aFixturesBundleIsLinked(frame: GoldenConfigFrame) throws {
+    @Test(arguments: GoldenConfigFrame.allCases)
+    func `Every golden frame is in the fixtures bundle`(frame: GoldenConfigFrame) throws {
         let data = try frame.data()
-
+        
         #expect(!data.isEmpty)
     }
-
-    @Test("The snapshot golden frame decodes with every value kind intact")
-    func snapshotFrame() throws {
+    
+    @Test
+    func `The snapshot golden frame decodes with every value kind intact`() throws {
         let frame = try ConfigurationFrameDecoder().decode(GoldenConfigFrame.snapshot.data())
-
+        
         #expect(frame == .snapshot(ManagedConfiguration(version: GoldenConfigFrame.snapshot.expectedVersion, values: [
             "kind.array": .array([.integer(1), .string("two"), .bool(true)]),
             "kind.bool": .bool(true),
@@ -37,18 +37,18 @@ struct ConfigurationContractTests {
             "kind.string": .string("dark")
         ])))
     }
-
-    @Test("The delta golden frame decodes its changed and removed keys")
-    func deltaFrame() throws {
+    
+    @Test
+    func `The delta golden frame decodes its changed and removed keys`() throws {
         let frame = try ConfigurationFrameDecoder().decode(GoldenConfigFrame.delta.data())
-
+        
         #expect(frame == .delta(version: GoldenConfigFrame.delta.expectedVersion, changed: ["kind.integer": .integer(43)], removed: ["kind.null"]))
     }
-
-    @Test("The heartbeat golden frame keeps a version above 2^53 exact")
-    func heartbeatFrame() throws {
+    
+    @Test
+    func `The heartbeat golden frame keeps a version above 2^53 exact`() throws {
         let frame = try ConfigurationFrameDecoder().decode(GoldenConfigFrame.heartbeat.data())
-
+        
         #expect(frame == .heartbeat(version: GoldenConfigFrame.heartbeat.expectedVersion))
     }
 }
