@@ -3,8 +3,8 @@
   "default-configuration": "Release",
   "configurations": [
     { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "debug.xcconfig" } },
-    { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "release.xcconfig" } },
     { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "lab.xcconfig" } },
+    { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "release.xcconfig" } },
   ],
   "localizations": {
     "development": "en",
@@ -53,6 +53,7 @@
           "target": "UnitTests",
           "inclusions": [
             "UnitTests/Core/AppContainerTests.swift",
+            "UnitTests/Core/EmbeddedBundlesTests.swift",
             "UnitTests/Core/EntitlementsTests.swift",
             "UnitTests/Core/HostConfigurationTests.swift",
             "UnitTests/Core/LabExclusionTests.swift",
@@ -72,12 +73,120 @@
         },
       ],
     }, {
+      "kind": "folder",
+      "path": "Extensions/NetworkFilter",
+      "target-membership": [
+        "NetworkFilter",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "NetworkFilter",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "Extensions/TransparentProxy",
+      "target-membership": [
+        "TransparentProxy",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "TransparentProxy",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "Extensions/DNSProxy",
+      "target-membership": [
+        "DNSProxy",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "DNSProxy",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "Extensions/URLFilter",
+      "target-membership": [
+        "URLFilter",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "URLFilter",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "Extensions/PacketTunnel",
+      "target-membership": [
+        "PacketTunnel",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "PacketTunnel",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "Extensions/SafariWebExtension",
+      "target-membership": [
+        "SafariWebExtension",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "SafariWebExtension",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "Extensions/MailExtension",
+      "target-membership": [
+        "MailExtension",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "MailExtension",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    },
+    { "kind": "folder", "path": "Services/Agent", "target-membership": [ "Agent" ] },
+    {
       "kind": "group",
       "name": "Products",
       "children": [
         { "path": "<PRODUCTS>/WardAxis.app", "id": "A5C24CE329B20A4200B8D860", "type": "wrapper.application", "index": false },
         { "path": "<PRODUCTS>/UnitTests.xctest", "id": "A5C24CF929B20A4500B8D860", "type": "wrapper.cfbundle", "index": false },
         { "path": "<PRODUCTS>/UITests.xctest", "id": "A5C24D0329B20A4500B8D860", "type": "wrapper.cfbundle", "index": false },
+        { "path": "<PRODUCTS>/NetworkFilter.systemextension", "id": "4C4AFAC97C1B6C41C53F1239", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/TransparentProxy.systemextension", "id": "81CDE310E1A9B0194F142913", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/DNSProxy.systemextension", "id": "A59D494939EC23390A0EDDA8", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/URLFilter.appex", "id": "248347AD5556DF8742AB5135", "type": "wrapper.extensionkit-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed ExtensionKit Extensions", "platforms": [ "ios", "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/PacketTunnel.appex", "id": "27130B1A6FCC49AB7A40E026", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed Foundation Extensions", "platforms": [ "ios", "tvos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/SafariWebExtension.appex", "id": "3846850F0826784ECB0C32E4", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed Foundation Extensions", "platforms": [ "ios", "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/MailExtension.appex", "id": "7D677553A131A9220B24F3FE", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed Foundation Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/Agent.app", "id": "1676C2658B2BEB0FFC50B4CC", "type": "wrapper.application", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed Login Items", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
       ],
     },
   ],
@@ -89,8 +198,18 @@
       "product-type": "application",
       "specialized-configurations": [
         { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "app/app-debug.xcconfig" } },
-        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "app/app-release.xcconfig" } },
         { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "app/app-lab.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "app/app-release.xcconfig" } },
+      ],
+      "dependencies": [
+        { "target": "NetworkFilter", "platforms": [ "macos" ] },
+        { "target": "TransparentProxy", "platforms": [ "macos" ] },
+        { "target": "DNSProxy", "platforms": [ "macos" ] },
+        { "target": "URLFilter", "platforms": [ "ios", "macos" ] },
+        { "target": "PacketTunnel", "platforms": [ "ios", "tvos" ] },
+        { "target": "SafariWebExtension", "platforms": [ "ios", "macos" ] },
+        { "target": "MailExtension", "platforms": [ "macos" ] },
+        { "target": "Agent", "platforms": [ "macos" ] },
       ],
       "build-phases": [
         {
@@ -117,6 +236,26 @@
         "compile-sources",
         "frameworks",
         "resources",
+        {
+          "kind": "copy",
+          "name": "Embed System Extensions",
+          "bundle-base-path": "build-products-directory",
+          "relative-path": "$(SYSTEM_EXTENSIONS_FOLDER_PATH)",
+        }, {
+          "kind": "copy",
+          "name": "Embed ExtensionKit Extensions",
+          "bundle-base-path": "build-products-directory",
+          "relative-path": "$(EXTENSIONS_FOLDER_PATH)",
+        }, {
+          "kind": "copy",
+          "name": "Embed Foundation Extensions",
+          "bundle-base-path": "plugins-directory",
+        }, {
+          "kind": "copy",
+          "name": "Embed Login Items",
+          "bundle-base-path": "build-products-directory",
+          "relative-path": "$(CONTENTS_FOLDER_PATH)/Library/LoginItems",
+        },
       ],
       "package-product-members": [
         {
@@ -127,6 +266,174 @@
           "build-phase": { "build-phase": "frameworks" },
         },
       ],
+    }, {
+      "name": "NetworkFilter",
+      "id": "976ACEF1521BF346789DF90F",
+      "product": "Products/NetworkFilter.systemextension",
+      "product-type": "system-extension",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/NetworkFilter.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/NetworkFilter.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/NetworkFilter.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
+    }, {
+      "name": "TransparentProxy",
+      "id": "5BB44BDE72F82A7EB7166739",
+      "product": "Products/TransparentProxy.systemextension",
+      "product-type": "system-extension",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/TransparentProxy.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/TransparentProxy.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/TransparentProxy.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
+    }, {
+      "name": "DNSProxy",
+      "id": "EAE09F6FBB41C26B62F87565",
+      "product": "Products/DNSProxy.systemextension",
+      "product-type": "system-extension",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/DNSProxy.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/DNSProxy.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/DNSProxy.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
+    }, {
+      "name": "URLFilter",
+      "id": "69329A3026A1B641D821E53F",
+      "product": "Products/URLFilter.appex",
+      "product-type": "extensionkit-extension",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/URLFilter.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/URLFilter.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/URLFilter.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
+    }, {
+      "name": "PacketTunnel",
+      "id": "0F651312506551CD459D39A8",
+      "product": "Products/PacketTunnel.appex",
+      "product-type": "app-extension",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/PacketTunnel.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/PacketTunnel.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/PacketTunnel.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY": "Apple Development",
+        "CODE_SIGN_STYLE": "Automatic",
+        "DEVELOPMENT_TEAM": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER": "",
+      },
+    }, {
+      "name": "SafariWebExtension",
+      "id": "597874FAAC30742E25042E6A",
+      "product": "Products/SafariWebExtension.appex",
+      "product-type": "app-extension",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/SafariWebExtension.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/SafariWebExtension.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/SafariWebExtension.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
+    }, {
+      "name": "MailExtension",
+      "id": "BC5ABDCAC7A554267D5256AC",
+      "product": "Products/MailExtension.appex",
+      "product-type": "app-extension",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/MailExtension.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/MailExtension.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/MailExtension.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
+    }, {
+      "name": "Agent",
+      "id": "7E076D75CD4103AEC490D65C",
+      "product": "Products/Agent.app",
+      "product-type": "application",
+      "specialized-configurations": [
+        { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/Agent.xcconfig" } },
+        { "name": "Lab", "file": { "anchor": "Configurations", "relative-path": "extensions/Agent.xcconfig" } },
+        { "name": "Release", "file": { "anchor": "Configurations", "relative-path": "extensions/Agent.xcconfig" } },
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
     }, {
       "name": "UnitTests",
       "id": "A5C24CF829B20A4500B8D860",
@@ -163,6 +470,12 @@
         "frameworks",
         "resources",
       ],
+      "build-settings": {
+        "CODE_SIGN_IDENTITY[config=Lab]": "Apple Development",
+        "CODE_SIGN_STYLE[config=Lab]": "Automatic",
+        "DEVELOPMENT_TEAM[config=Lab]": "DMP42GVPJ3",
+        "PROVISIONING_PROFILE_SPECIFIER[config=Lab]": "",
+      },
     },
   ],
   "last-upgrade": "27.2",

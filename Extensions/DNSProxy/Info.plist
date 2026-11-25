@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NetworkExtension</key>
+	<dict>
+		<!-- Must start with the App Group (ADR 0002 D3): the system then lets only
+		     members of the group reach this Mach service. -->
+		<key>NEMachServiceName</key>
+		<string>$(APP_GROUP_ID).dnsproxy</string>
+		<key>NEProviderClasses</key>
+		<dict>
+			<key>com.apple.networkextension.dns-proxy</key>
+			<string>$(PRODUCT_MODULE_NAME).DNSProxyProvider</string>
+		</dict>
+	</dict>
+	<key>NSSystemExtensionUsageDescription</key>
+	<string>WardAxis uses this extension to filter DNS queries by your organization's policy.</string>
+</dict>
+</plist>
