@@ -22,3 +22,8 @@ API_BASE_URL = https:/$()/api.invalid
 // The module name stays fixed: the Swift module is the same code as the App Store app.
 PRODUCT_NAME = WardAxis Lab
 PRODUCT_MODULE_NAME = $(APP_NAME)
+
+//Signing
+// The lab Developer ID profile has no Network Extensions or System Extension
+// capability yet, so the lab app keeps the sandbox, App Group and Keychain set only.
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = Configurations/Entitlements/App-Lab.entitlements
