@@ -31,7 +31,7 @@ Every bundle ID is a child of `APP_BUNDLE_ID` (`com.agnidia.wardaxis`). Each one
 | Content filter | `NETWORK_FILTER_BUNDLE_ID` | `….networkfilter` | System extension | macOS |
 | Transparent proxy | `TRANSPARENT_PROXY_BUNDLE_ID` | `….transparentproxy` | System extension | macOS |
 | DNS proxy | `DNS_PROXY_BUNDLE_ID` | `….dnsproxy` | System extension | macOS |
-| URL filter | `URL_FILTER_BUNDLE_ID` | `….urlfilter` | App extension | macOS, iOS |
+| URL filter | `URL_FILTER_BUNDLE_ID` | `….urlfilter` | ExtensionKit app extension ([ADR 0005](0005-extension-shells.md)) | macOS, iOS |
 | Packet tunnel | `PACKET_TUNNEL_BUNDLE_ID` | `….packettunnel` | App extension | iOS, tvOS |
 | Safari Web Extension | `SAFARI_EXTENSION_BUNDLE_ID` | `….safari` | App extension | macOS, iOS |
 | Mail extension | `MAIL_EXTENSION_BUNDLE_ID` | `….mail` | MailKit app extension | macOS |
@@ -109,8 +109,9 @@ The export options file names no team, so `DEVELOPMENT_TEAM` stays the one sourc
 
 | Check | Scope | Evidence |
 |---|---|---|
+| `EmbeddedBundlesTests` (unit test, all platforms) | The running test host: the exact set of embedded bundles, their entry points, the App Group prefix of each Mach service ([ADR 0005](0005-extension-shells.md)) | `Tests/UnitTests/Core/EmbeddedBundlesTests.swift` |
 | `EntitlementsTests` (unit test, macOS) | The running test host: App Sandbox on, exact App Group, Keychain group order, `system-extension.install`, exact NetworkExtension provider set ([ADR 0004](0004-network-extension-entitlements.md)), no lab or runtime-weakening entitlement | `Tests/UnitTests/Core/EntitlementsTests.swift` |
-| `scripts/verify-entitlements.py` | An archive or exported app and every nested bundle: bundle-ID namespace, group membership, Keychain group order, App Sandbox on macOS, NetworkExtension provider types per bundle and platform, `system-extension.install` on the macOS app only, no `-systemextension` value, no `get-task-allow`, no temporary exception, no Developer ID authority | Run on each archive before upload |
+| `scripts/verify-entitlements.py` | An archive or exported app and every nested bundle: the exact nested-bundle set per platform ([ADR 0005](0005-extension-shells.md) D3), bundle-ID namespace, group membership, Keychain group order, App Sandbox on macOS, NetworkExtension provider types per bundle and platform, `system-extension.install` on the macOS app only, no `-systemextension` value, no `get-task-allow`, no temporary exception, no Developer ID authority | Run on each archive before upload |
 
 The unit test cannot check temporary exceptions or `get-task-allow`: Xcode adds them to every test host. The script checks them on the archive.
 
