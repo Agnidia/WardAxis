@@ -40,6 +40,7 @@ The `docs/` directory holds the long-form reference. Read these instead of guess
 | [docs/DESIGN.md](docs/DESIGN.md) | Design tokens (colors, spacing, typography), controls |
 | [Source/Shared/Logger/README.md](Source/Shared/Logger/README.md) | Logger module reference and the `FileLogHandler` singleton decision |
 | [Server/README.md](Server/README.md) | Running and configuring the management server |
+| [docs/LAB.md](docs/LAB.md) | Lab-only Developer ID build, EndpointSecurity entitlement request status |
 | [docs/adr/](docs/adr/) | Recorded architecture decisions |
 | [roadmap/README.md](roadmap/README.md) | Product scope and phase plan |
 
@@ -168,7 +169,7 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 ### Xcode project
 
 - `WardAxis.xcodeproj` uses the Xcode 26.4+ JSON project format: the project file is `WardAxis.xcodeproj/project.xcproj`.
-- Scheme `WardAxis`. Targets `WardAxis` (one multiplatform app: macOS, iOS/iPadOS, tvOS), `UnitTests`, `UITests`. Test plan: `WardAxis.xcodeproj/testPlan.xctestplan`.
+- Schemes `WardAxis` (App Store) and `WardAxisLab` (lab-only, macOS, configuration `Lab`, Developer ID; see [docs/LAB.md](docs/LAB.md)). Targets `WardAxis` (one multiplatform app: macOS, iOS/iPadOS, tvOS), `UnitTests`, `UITests`. Test plan: `WardAxis.xcodeproj/testPlan.xctestplan`.
 - `Source/`, `Resources/`, `Configurations/` and `Tests/` are synchronized folders.
 
 ### Source code
@@ -238,7 +239,7 @@ rg -n "logger\.(debug|info|warning|error)\(" Source Packages/*/Sources
 
 ### Signing
 
-- `APP_BUNDLE_ID` in `Configurations/base.xcconfig` is `com.agnidia.wardaxis`. Test bundles add `.tests` and `.uitests`.
+- `APP_BUNDLE_ID` in `Configurations/base.xcconfig` is `com.agnidia.wardaxis`. Test bundles add `.tests` and `.uitests`. The `Lab` configuration moves it to `com.agnidia.wardaxis.lab`; no App Store bundle ID contains the `lab` segment ([ADR 0003](docs/adr/0003-lab-build-signing.md)).
 - `DEVELOPMENT_TEAM` in `Configurations/sign.xcconfig` is an individual development team until the Agnidia organization enrollment at the start of Phase 5 (ORG-001, issue #192).
 - Every new target takes its bundle ID from a `*_BUNDLE_ID` setting in `Configurations/base.xcconfig` and its App Group and Keychain group membership from [ADR 0002](docs/adr/0002-app-store-signing-identifiers.md) D5. List the private Keychain group first.
 - Run `python3 -I scripts/verify-entitlements.py <archive>` on every archive before an App Store upload; never upload one that fails.

@@ -52,6 +52,8 @@ Do not commit a personal team ID. Change `sign.xcconfig` locally only when you m
 
 The scheme, the group membership per component and the rationale are in [ADR 0002](adr/0002-app-store-signing-identifiers.md).
 
+The lab-only Developer ID build (`WardAxisLab` scheme) has its own setup: see [LAB.md](LAB.md).
+
 ### App Store archive
 
 An iOS or tvOS device build needs the App ID and the App Group registered on the team. The first archive with `-allowProvisioningUpdates` registers them through automatic signing.

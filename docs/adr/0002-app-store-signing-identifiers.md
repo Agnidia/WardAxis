@@ -4,6 +4,8 @@
 
 Accepted on 2026-11-24 (PRE-002, #2).
 
+Amended on 2026-11-25 (PRE-003, #3): the lab build uses the disjoint root `com.agnidia.wardaxis.lab`, and the `lab` segment is reserved. See [D1](#d1-bundle-ids) and [ADR 0003](0003-lab-build-signing.md).
+
 ## Context
 
 WardAxis ships one app with up to eight embedded components on macOS, iOS and tvOS ([roadmap](../../roadmap/README.md#repository-layout)). The components share policy data and some secrets. The identifiers fix three trust boundaries:
@@ -38,7 +40,7 @@ Every bundle ID is a child of `APP_BUNDLE_ID` (`com.agnidia.wardaxis`). Each one
 
 Rationale: the OS ties an embedded bundle to its host by the bundle-ID prefix, and App Store validation rejects an extension outside the host's namespace. One flat level keeps the IDs short and lets `scripts/verify-entitlements.py` reject any bundle outside the root.
 
-The lab build (PRE-003) uses Developer ID signing and its own scheme. It never uses an App Store profile, and no App Store target carries a lab entitlement.
+The lab build (PRE-003) uses Developer ID signing, its own scheme and its own root `com.agnidia.wardaxis.lab`. It never uses an App Store profile, and no App Store target carries a lab entitlement. No App Store bundle ID contains the `lab` segment; `scripts/verify-entitlements.py` rejects one that does. See [ADR 0003](0003-lab-build-signing.md).
 
 ### D2: One App ID for all platforms (Universal Purchase)
 

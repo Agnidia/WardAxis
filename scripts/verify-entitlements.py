@@ -32,6 +32,8 @@ FORBIDDEN_KEYS = (
 )
 # App Review rejects new temporary exceptions; Xcode adds some only to test hosts.
 FORBIDDEN_PREFIXES = ("com.apple.security.temporary-exception.",)
+# Reserved for the Developer ID lab build (ADR 0003); never part of an App Store bundle ID.
+LAB_SEGMENT = "lab"
 
 
 def fail(message: str) -> None:
@@ -95,9 +97,9 @@ def check_bundle(bundle: Path, root_id: str, is_macos: bool) -> list[str]:
     name = bundle.name
     values = entitlements(bundle)
 
-    for authority in authorities(bundle):
-        if authority.startswith("Developer ID"):
-            problems.append(f"{name}: signed by a Developer ID identity")
+    # The chain lists the Developer ID leaf and its intermediate CA; report the bundle once.
+    if any(authority.startswith("Developer ID") for authority in authorities(bundle)):
+        problems.append(f"{name}: signed by a Developer ID identity")
 
     for key in values:
         if key in FORBIDDEN_KEYS or key.startswith(FORBIDDEN_PREFIXES):
@@ -111,6 +113,8 @@ def check_bundle(bundle: Path, root_id: str, is_macos: bool) -> list[str]:
     bundle_id = info_plist(bundle).get("CFBundleIdentifier", "")
     if bundle_id != root_id and not bundle_id.startswith(f"{root_id}."):
         problems.append(f"{name}: bundle ID {bundle_id} is outside {root_id}")
+    if LAB_SEGMENT in bundle_id.split("."):
+        problems.append(f"{name}: bundle ID {bundle_id} is in the lab namespace")
 
     allowed_app_groups = {f"group.{root_id}", f"{team}.{root_id}"}
     for group in values.get("com.apple.security.application-groups", []):

@@ -1,0 +1,24 @@
+//
+//  app-lab.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "../lab.xcconfig"
+#include "app.xcconfig"
+
+//API
+// Same as Release: https only. `/$()/` stops xcconfig from reading `//` as a comment.
+// Host only: the app appends the contract's servers path (/v1); a path here is rejected.
+API_BASE_URL = https:/$()/api.invalid
+
+//Packaging
+// A distinct bundle name keeps a lab build apart from the shipped app in Finder and in
+// the Full Disk Access list, so a tester does not grant FDA to the wrong binary.
+// The module name stays fixed: the Swift module is the same code as the App Store app.
+PRODUCT_NAME = WardAxis Lab
+PRODUCT_MODULE_NAME = $(APP_NAME)
