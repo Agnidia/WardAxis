@@ -97,9 +97,9 @@ def check_bundle(bundle: Path, root_id: str, is_macos: bool) -> list[str]:
     name = bundle.name
     values = entitlements(bundle)
 
-    for authority in authorities(bundle):
-        if authority.startswith("Developer ID"):
-            problems.append(f"{name}: signed by a Developer ID identity")
+    # The chain lists the Developer ID leaf and its intermediate CA; report the bundle once.
+    if any(authority.startswith("Developer ID") for authority in authorities(bundle)):
+        problems.append(f"{name}: signed by a Developer ID identity")
 
     for key in values:
         if key in FORBIDDEN_KEYS or key.startswith(FORBIDDEN_PREFIXES):
