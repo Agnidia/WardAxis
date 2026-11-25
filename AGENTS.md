@@ -169,8 +169,9 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 ### Xcode project
 
 - `WardAxis.xcodeproj` uses the Xcode 26.4+ JSON project format: the project file is `WardAxis.xcodeproj/project.xcproj`.
-- Schemes `WardAxis` (App Store) and `WardAxisLab` (lab-only, macOS, configuration `Lab`, Developer ID; see [docs/LAB.md](docs/LAB.md)). Targets `WardAxis` (one multiplatform app: macOS, iOS/iPadOS, tvOS), `UnitTests`, `UITests`. Test plan: `WardAxis.xcodeproj/testPlan.xctestplan`.
-- `Source/`, `Resources/`, `Configurations/` and `Tests/` are synchronized folders.
+- Schemes `WardAxis` (App Store) and `WardAxisLab` (lab-only, macOS, configuration `Lab`, Developer ID; see [docs/LAB.md](docs/LAB.md)). Targets `WardAxis` (one multiplatform app: macOS, iOS/iPadOS, tvOS), the embedded shells `NetworkFilter`, `TransparentProxy`, `DNSProxy`, `URLFilter`, `PacketTunnel`, `SafariWebExtension`, `MailExtension`, `Agent` ([ADR 0005](docs/adr/0005-extension-shells.md)), `UnitTests`, `UITests`. Test plan: `WardAxis.xcodeproj/testPlan.xctestplan`.
+- `Source/`, `Resources/`, `Configurations/`, `Tests/`, each `Extensions/<Target>/` and `Services/Agent/` are synchronized folders.
+- A new embedded bundle needs an amendment to ADR 0005 first: `EmbeddedBundlesTests` and `scripts/verify-entitlements.py` (`EXPECTED_NESTED`) accept only the reviewed set.
 
 ### Source code
 
@@ -200,8 +201,11 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 
 ### Other folders
 
+- **`Extensions/`** - One folder per extension shell: provider or handler, `Info.plist` (the Safari extension also has `Resources/manifest.json`)
+- **`Services/Agent/`** - macOS login item shell
+- **`AppStore/`** - App Store listing in the `asc` layout (metadata, screenshots, changelog), publishing steps and open submission items; see [AppStore/README.md](AppStore/README.md)
 - **`Resources/`** - `Assets.xcassets`, `Colors.xcassets`, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Info.plist`, `PrivacyInfo.xcprivacy`
-- **`Configurations/`** - `base.xcconfig`, `debug.xcconfig`, `release.xcconfig`, `sign.xcconfig`, `app/`, `tests/`, `Entitlements/` (one entitlements file per target and SDK; [ADR 0004](docs/adr/0004-network-extension-entitlements.md))
+- **`Configurations/`** - `base.xcconfig`, `debug.xcconfig`, `release.xcconfig`, `sign.xcconfig`, `app/`, `extensions/` (one file per shell target), `tests/`, `Entitlements/` (one entitlements file per target and SDK; [ADR 0004](docs/adr/0004-network-extension-entitlements.md), [ADR 0005](docs/adr/0005-extension-shells.md))
 - **`Tests/UnitTests/`** - Swift Testing suites: `Core/`, `Features/Settings/`, `Logger/`, `Navigation/`
 - **`Tests/UITests/`** - XCUITest
 - **`Server/`** - Management server (Hummingbird 2, PostgreSQL); see [Server/README.md](Server/README.md)

@@ -1,0 +1,22 @@
+//
+//  DNSProxy.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "extension.xcconfig"
+
+//Packaging
+PRODUCT_BUNDLE_IDENTIFIER = $(DNS_PROXY_BUNDLE_ID)
+INFOPLIST_FILE = Extensions/DNSProxy/Info.plist
+// App Store validation requires the bundle name to equal the bundle ID (ITMS 90939).
+PRODUCT_NAME = $(PRODUCT_BUNDLE_IDENTIFIER)
+INFOPLIST_KEY_CFBundleDisplayName = WardAxis DNS Proxy
+SUPPORTED_PLATFORMS = macosx
+
+//Signing
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = Configurations/Entitlements/DNSProxy.entitlements

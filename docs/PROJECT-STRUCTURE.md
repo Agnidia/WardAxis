@@ -8,6 +8,9 @@ WardAxis/
 │   ├── Shared/              # Cross-platform code
 │   ├── iOS/                 # iOS-only extensions
 │   └── macOS/               # macOS-only extensions
+├── Extensions/              # Extension shells, one folder per target
+├── Services/Agent/          # macOS login item shell
+├── AppStore/                # App Store listing (asc layout) and publishing steps
 ├── Packages/                # Local SwiftPM packages (WardAxis*)
 ├── Resources/               # Assets, plists, String Catalogs, entitlements
 ├── Configurations/          # xcconfig build settings
@@ -25,13 +28,14 @@ WardAxis/
 └── README.md
 ```
 
-`WardAxis.xcodeproj/project.xcproj` is the Xcode 26.4+ JSON project file. `Source/`, `Resources/`, `Configurations/` and `Tests/` are synchronized folders:
+`WardAxis.xcodeproj/project.xcproj` is the Xcode 26.4+ JSON project file. `Source/`, `Resources/`, `Configurations/`, `Tests/`, each `Extensions/<Target>/` and `Services/Agent/` are synchronized folders:
 
 | Folder | Membership |
 |---|---|
 | `Source/` | Every file joins the `WardAxis` target |
 | `Resources/` | Only the files in the `WardAxis` inclusion list (asset catalogs, String Catalogs, privacy manifest) |
 | `Tests/` | Only the files in the `UnitTests` or `UITests` inclusion list. Add each new test file there |
+| `Extensions/<Target>/`, `Services/Agent/` | Every file joins the target of the same name, except `Info.plist` (read through `INFOPLIST_FILE`) |
 | `Configurations/` | No target; referenced by the project configurations |
 
 ---
@@ -73,6 +77,23 @@ Platform-specific extensions only. Before you add code here, check whether `Sour
 
 ---
 
+## `Extensions/` and `Services/`
+
+Packaging shells for the embedded components ([ADR 0005](adr/0005-extension-shells.md)). Each one refuses to work until its phase adds real logic.
+
+| Folder | Target | Kind | Platforms |
+|---|---|---|---|
+| `Extensions/NetworkFilter/` | `NetworkFilter` | System extension (`NEFilterDataProvider`) | macOS |
+| `Extensions/TransparentProxy/` | `TransparentProxy` | System extension (`NETransparentProxyProvider`) | macOS |
+| `Extensions/DNSProxy/` | `DNSProxy` | System extension (`NEDNSProxyProvider`) | macOS |
+| `Extensions/URLFilter/` | `URLFilter` | ExtensionKit extension (`NEURLFilterControlProvider`) | macOS, iOS |
+| `Extensions/PacketTunnel/` | `PacketTunnel` | App extension (`NEPacketTunnelProvider`) | iOS, tvOS |
+| `Extensions/SafariWebExtension/` | `SafariWebExtension` | Safari Web Extension; `Resources/manifest.json` | macOS, iOS |
+| `Extensions/MailExtension/` | `MailExtension` | MailKit app extension | macOS |
+| `Services/Agent/` | `Agent` | Login item app | macOS |
+
+---
+
 ## `Packages/`
 
 | Package | Targets | Tests |
@@ -111,6 +132,7 @@ Edit build settings here, not in the Xcode UI.
 | `sign.xcconfig` | Signing style and the interim `DEVELOPMENT_TEAM` |
 | `app/app.xcconfig` | App target: bundle ID, Info.plist, entitlements file per SDK, App Sandbox, Hardened Runtime |
 | `app/app-debug.xcconfig` / `app/app-release.xcconfig` / `app/app-lab.xcconfig` | `API_BASE_URL` per configuration |
+| `extensions/` | One file per shell target for Debug, Release and Lab: bundle ID, platforms, entitlements per SDK. `extension.xcconfig` holds the shared settings; in Lab the shells build unsigned and the lab app embeds none |
 | `tests/` | `UnitTests` and `UITests` targets: bundle IDs, test host |
 | `Entitlements/` | One entitlements file per target and SDK: App Sandbox (macOS), NetworkExtension provider types, `system-extension.install` (macOS app only), App Group, Keychain groups (private first, then shared). `App-Lab.entitlements` is the lab app's ([ADR 0004](adr/0004-network-extension-entitlements.md)) |
 | `export/app-store.plist` | Export options for App Store Connect (automatic signing, no team ID) |
@@ -122,7 +144,7 @@ Edit build settings here, not in the Xcode UI.
 
 | Folder | Purpose |
 |---|---|
-| `Tests/UnitTests/Core/` | `AppContainer` factories; host app configuration (`Info.plist`, bundle ID); signed entitlements (macOS) |
+| `Tests/UnitTests/Core/` | `AppContainer` factories; host app configuration (`Info.plist`, bundle ID); signed entitlements (macOS); embedded bundles |
 | `Tests/UnitTests/Features/Settings/` | `SettingsViewModel` |
 | `Tests/UnitTests/Logger/` | Log parser, `LogReaderService`, `LogsViewerViewModel` |
 | `Tests/UnitTests/Navigation/` | `AppCoordinator`, `RoutePresentation`, `RouteResolver` |

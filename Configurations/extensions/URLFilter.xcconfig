@@ -1,0 +1,24 @@
+//
+//  URLFilter.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "extension.xcconfig"
+
+//Packaging
+PRODUCT_BUNDLE_IDENTIFIER = $(URL_FILTER_BUNDLE_ID)
+INFOPLIST_FILE = Extensions/URLFilter/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = WardAxis URL Filter
+SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator
+TARGETED_DEVICE_FAMILY = 1,2
+
+//Signing
+// One file per SDK and no unconditional value (ADR 0004 D4): an SDK without a file fails to sign.
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = Configurations/Entitlements/URLFilter-macOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = Configurations/Entitlements/URLFilter-iOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*] = Configurations/Entitlements/URLFilter-iOS.entitlements

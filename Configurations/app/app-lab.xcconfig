@@ -27,3 +27,8 @@ PRODUCT_MODULE_NAME = $(APP_NAME)
 // The lab Developer ID profile has no Network Extensions or System Extension
 // capability yet, so the lab app keeps the sandbox, App Group and Keychain set only.
 CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = Configurations/Entitlements/App-Lab.entitlements
+
+//Embedding
+// The lab app embeds no shell (ADR 0005 D6): an embed phase cannot vary per
+// configuration, but this filter removes the products from it.
+EXCLUDED_SOURCE_FILE_NAMES = *.systemextension *.appex Agent.app

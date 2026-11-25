@@ -63,6 +63,15 @@ NE_ALLOWED: dict[str, dict[str, frozenset[str]]] = {
     },
 }
 
+# The exact set of nested bundles per platform (ADR 0005), keyed like NE_ALLOWED.
+# A missing shell means a provider the app configures is not in the package; an
+# extra one is code that no ADR reviewed.
+EXPECTED_NESTED: dict[str, frozenset[str]] = {
+    "macos": frozenset({".agent", ".dnsproxy", ".mail", ".networkfilter", ".safari", ".transparentproxy", ".urlfilter"}),
+    "ios": frozenset({".packettunnel", ".safari", ".urlfilter"}),
+    "tvos": frozenset({".packettunnel"}),
+}
+
 
 def fail(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
@@ -109,10 +118,14 @@ def entitlements(bundle: Path) -> dict:
     return value
 
 
-def authorities(bundle: Path) -> list[str]:
+def signature_details(bundle: Path) -> tuple[list[str], str | None]:
+    """Return the signing authorities and the team ID of the code signature."""
     result = codesign(["-dvv", str(bundle)])
     lines = result.stderr.decode("utf-8", errors="replace").splitlines()
-    return [line.removeprefix("Authority=") for line in lines if line.startswith("Authority=")]
+    authorities = [line.removeprefix("Authority=") for line in lines if line.startswith("Authority=")]
+    teams = [line.removeprefix("TeamIdentifier=") for line in lines if line.startswith("TeamIdentifier=")]
+    team = teams[0] if len(teams) == 1 and teams[0] != "not set" else None
+    return authorities, team
 
 
 def nested_bundles(app: Path) -> list[Path]:
@@ -157,7 +170,8 @@ def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     values = entitlements(bundle)
 
     # The chain lists the Developer ID leaf and its intermediate CA; report the bundle once.
-    if any(authority.startswith("Developer ID") for authority in authorities(bundle)):
+    authorities, signature_team = signature_details(bundle)
+    if any(authority.startswith("Developer ID") for authority in authorities):
         problems.append(f"{name}: signed by a Developer ID identity")
 
     for key in values:
@@ -167,9 +181,19 @@ def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     if platform == "macos" and values.get("com.apple.security.app-sandbox") is not True:
         problems.append(f"{name}: App Sandbox is off")
 
-    team = values.get("com.apple.developer.team-identifier")
+    # macOS authorizes a team-prefixed App Group by the signature's team. A bundle
+    # signed without a profile has no team-identifier entitlement, so trust the signature.
+    team = signature_team
+    if team is None:
+        problems.append(f"{name}: code signature has no team identifier")
+    entitlement_team = values.get("com.apple.developer.team-identifier")
+    if entitlement_team is not None and entitlement_team != team:
+        problems.append(f"{name}: team-identifier entitlement {entitlement_team} does not match the signature team {team}")
     app_identifier = values.get("com.apple.application-identifier") or values.get("application-identifier")
     bundle_id = info_plist(bundle).get("CFBundleIdentifier", "")
+    # App Store validation rejects a system extension whose file name is not its bundle ID (ITMS 90939).
+    if bundle.suffix == ".systemextension" and bundle.name != f"{bundle_id}.systemextension":
+        problems.append(f"{name}: system extension must be named {bundle_id}.systemextension")
     if bundle_id != root_id and not bundle_id.startswith(f"{root_id}."):
         problems.append(f"{name}: bundle ID {bundle_id} is outside {root_id}")
     if LAB_SEGMENT in bundle_id.split("."):
@@ -197,6 +221,15 @@ def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     return problems
 
 
+def check_nested_set(bundles: list[Path], root_id: str, platform: str) -> list[str]:
+    suffixes = [str(info_plist(bundle).get("CFBundleIdentifier", "")).removeprefix(root_id) for bundle in bundles]
+    problems = [f"nested bundle {suffix or '(app ID)'} appears more than once" for suffix in sorted(set(suffixes)) if suffixes.count(suffix) > 1]
+    expected = EXPECTED_NESTED[platform]
+    problems += [f"nested bundle {suffix} is missing" for suffix in sorted(expected - set(suffixes))]
+    problems += [f"nested bundle {suffix} is not expected on {platform}" for suffix in sorted(set(suffixes) - expected)]
+    return problems
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print(__doc__, file=sys.stderr)
@@ -211,6 +244,7 @@ def main() -> int:
     bundles = nested_bundles(app)
     for bundle in bundles:
         problems.extend(check_bundle(bundle, root_id, platform))
+    problems.extend(check_nested_set(bundles[1:], root_id, platform))
 
     for problem in problems:
         print(f"error: {problem}", file=sys.stderr)

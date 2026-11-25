@@ -1,0 +1,29 @@
+//
+//  extension.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+// Settings every embedded bundle shares. A target file includes this one and
+// adds its identity, platforms and entitlements.
+
+//Packaging
+// The host app copies the bundle; installing it on its own would ship code that
+// no host owns.
+SKIP_INSTALL = YES
+
+//Signing
+ENABLE_HARDENED_RUNTIME = YES
+// Automatic signing registers the App Groups the entitlements file lists on the
+// shell's App ID; without it, the profile lacks the group and signing fails.
+REGISTER_APP_GROUPS = YES
+// macOS defaults to NO, so a shell with only unrestricted entitlements would ship
+// with no profile and no application identifier tying it to its App ID.
+PROVISIONING_PROFILE_REQUIRED = YES
+// Lab still builds the shells as app dependencies but never embeds them
+// (ADR 0005 D6); no lab profile exists for their IDs, so they stay unsigned.
+CODE_SIGNING_ALLOWED[config=Lab] = NO
