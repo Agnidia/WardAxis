@@ -17,7 +17,7 @@ Apple approves a restricted entitlement per team. Record every change of status 
 
 | Entitlement | Requested | Status | Apple reference | Updated |
 |---|---|---|---|---|
-| `com.apple.developer.endpoint-security.client` | — | To submit | — | 2026-11-25 |
+| `com.apple.developer.endpoint-security.client` | 2026-11-25 | Submitted | — | 2026-11-25 |
 
 Status values: `To submit`, `Submitted`, `Approved`, `Rejected`.
 

@@ -14,7 +14,7 @@
 
 - [x] PRE-001 — Create GitHub repository; select Apache-2.0 or MIT license; configure issue templates and milestones. Development uses a paid individual Apple Developer account; organization enrollment is [ORG-001](05-enterprise-management.md#50-prerequisite-organization-enrollment) at the start of Phase 5.
 - [ ] PRE-002 — Configure App Store signing: bundle-identifier scheme for the app, each extension, the Safari Web Extension and the Mail extension; App Group and Keychain access-group identifiers; App Store Connect app records with Universal Purchase for macOS, iOS and tvOS; Xcode automatic signing for App Store schemes.
-- [ ] PRE-003 — **Lab-only.** Request the restricted EndpointSecurity entitlement from Apple; track approval as an external dependency. Configure a separate Developer ID scheme for the lab build.
+- [x] PRE-003 — **Lab-only.** Request the restricted EndpointSecurity entitlement from Apple; track approval as an external dependency. Configure a separate Developer ID scheme for the lab build.
 - [ ] PRE-004 — Enable NetworkExtension capabilities per [TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment): content filter, DNS proxy and app proxy as system extensions on macOS; URL filter on macOS and iOS; packet tunnel on iOS and tvOS. Add `com.apple.developer.system-extension.install` and the App Sandbox to every macOS target.
 - [ ] PRE-005 — Create Swift 6.4 packages (Swift 6 language mode) and a multiplatform Xcode app target with minimum versions macOS 26, iOS 26 and tvOS 26. Add extension targets as empty shells.
 - [ ] PRE-006 — Prepare test devices: a disposable macOS VM or dedicated Mac, an iPhone or iPad that can be supervised, and an Apple TV. Validate system extension approval and enrollment behavior on each.
@@ -49,7 +49,7 @@ Do not disable SIP or system security controls on the development machine to mak
 - [ ] All App Store schemes build sandboxed with no root-requiring or lab entitlements.
 - [ ] Internal TestFlight upload succeeds for all three platforms.
 - [ ] Privacy policy draft, consent copy and privacy manifests committed.
-- [ ] Lab-only: entitlement request submitted; status recorded.
+- [x] Lab-only: entitlement request submitted; status recorded.
 - [ ] Test environment is recoverable; disable/removal procedure exists.
 - [ ] ADR and threat-model templates committed.
 - [ ] Initial schemas and synthetic adapters have fixture tests.
