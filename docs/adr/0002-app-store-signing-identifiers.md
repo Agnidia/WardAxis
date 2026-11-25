@@ -109,8 +109,8 @@ The export options file names no team, so `DEVELOPMENT_TEAM` stays the one sourc
 
 | Check | Scope | Evidence |
 |---|---|---|
-| `EntitlementsTests` (unit test, macOS) | The running test host: App Sandbox on, exact App Group, Keychain group order, no lab or runtime-weakening entitlement | `Tests/UnitTests/Core/EntitlementsTests.swift` |
-| `scripts/verify-entitlements.py` | An archive or exported app and every nested bundle: bundle-ID namespace, group membership, Keychain group order, App Sandbox on macOS, no `get-task-allow`, no temporary exception, no Developer ID authority | Run on each archive before upload |
+| `EntitlementsTests` (unit test, macOS) | The running test host: App Sandbox on, exact App Group, Keychain group order, `system-extension.install`, exact NetworkExtension provider set ([ADR 0004](0004-network-extension-entitlements.md)), no lab or runtime-weakening entitlement | `Tests/UnitTests/Core/EntitlementsTests.swift` |
+| `scripts/verify-entitlements.py` | An archive or exported app and every nested bundle: bundle-ID namespace, group membership, Keychain group order, App Sandbox on macOS, NetworkExtension provider types per bundle and platform, `system-extension.install` on the macOS app only, no `-systemextension` value, no `get-task-allow`, no temporary exception, no Developer ID authority | Run on each archive before upload |
 
 The unit test cannot check temporary exceptions or `get-task-allow`: Xcode adds them to every test host. The script checks them on the archive.
 

@@ -83,6 +83,6 @@ The ES entitlement belongs to the ES system extension only, never to the app ([A
 
 1. Register an explicit App ID for the ES system extension under the lab root, for example `com.agnidia.wardaxis.lab.endpointsecurity`. Take the real ID from the `*_BUNDLE_ID` setting that the extension target adds to `Configurations/base.xcconfig`.
 2. Create a Developer ID profile for that App ID. On the "Additional Entitlements" step, select the EndpointSecurity client entitlement. The step appears only after approval.
-3. Add the System Extension capability (`com.apple.developer.system-extension.install`) to the app App ID `com.agnidia.wardaxis.lab`, then regenerate `WardAxis Lab Developer ID`. The app profile never carries the ES entitlement.
-4. Add the ES entitlement only to the lab-only entitlements file of the ES system-extension target. Never add it to `Resources/entitlement.entitlements`.
+3. Add the System Extension capability (`com.apple.developer.system-extension.install`) to the app App ID `com.agnidia.wardaxis.lab`, then regenerate `WardAxis Lab Developer ID`. Add the same key to `Configurations/Entitlements/App-Lab.entitlements`. The app profile never carries the ES entitlement.
+4. Add the ES entitlement only to the lab-only entitlements file of the ES system-extension target. Never add it to an app entitlements file in `Configurations/Entitlements/`.
 5. Update the status table above.

@@ -200,8 +200,8 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 
 ### Other folders
 
-- **`Resources/`** - `Assets.xcassets`, `Colors.xcassets`, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Info.plist`, `entitlement.entitlements`, `PrivacyInfo.xcprivacy`
-- **`Configurations/`** - `base.xcconfig`, `debug.xcconfig`, `release.xcconfig`, `sign.xcconfig`, `app/`, `tests/`
+- **`Resources/`** - `Assets.xcassets`, `Colors.xcassets`, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Info.plist`, `PrivacyInfo.xcprivacy`
+- **`Configurations/`** - `base.xcconfig`, `debug.xcconfig`, `release.xcconfig`, `sign.xcconfig`, `app/`, `tests/`, `Entitlements/` (one entitlements file per target and SDK; [ADR 0004](docs/adr/0004-network-extension-entitlements.md))
 - **`Tests/UnitTests/`** - Swift Testing suites: `Core/`, `Features/Settings/`, `Logger/`, `Navigation/`
 - **`Tests/UITests/`** - XCUITest
 - **`Server/`** - Management server (Hummingbird 2, PostgreSQL); see [Server/README.md](Server/README.md)

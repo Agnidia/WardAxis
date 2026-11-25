@@ -55,7 +55,7 @@ A restricted entitlement reaches a signature only through a manually generated p
 
 ### D4: The ES entitlement comes after approval, on a lab-only target
 
-No target carries `com.apple.developer.endpoint-security.client` until Apple approves the request ([LAB.md](../LAB.md#entitlement-requests)). Then it goes into a lab-only entitlements file of the ES system-extension target, signed with that extension's own Developer ID profile. The app App ID gains only the System Extension capability, so the app can install the extension but cannot be an ES client. `Resources/entitlement.entitlements` never carries it. The app keeps the App Sandbox and the Hardened Runtime in the lab build too: the ES client is a separate process and the app needs no extra privilege.
+No target carries `com.apple.developer.endpoint-security.client` until Apple approves the request ([LAB.md](../LAB.md#entitlement-requests)). Then it goes into a lab-only entitlements file of the ES system-extension target, signed with that extension's own Developer ID profile. The app App ID gains only the System Extension capability, so the app can install the extension but cannot be an ES client. No app entitlements file in `Configurations/Entitlements/` carries it. The app keeps the App Sandbox and the Hardened Runtime in the lab build too: the ES client is a separate process and the app needs no extra privilege.
 
 ### D5: Exclusion layers
 

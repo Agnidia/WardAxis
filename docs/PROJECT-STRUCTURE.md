@@ -94,7 +94,6 @@ The app target links `WardAxisTelemetry` and `WardAxisManagement`. `WardAxisMana
 | `Localizable.xcstrings` | App String Catalog |
 | `InfoPlist.xcstrings` | Localized `Info.plist` values |
 | `Info.plist` | `APIBaseURL` (from `API_BASE_URL`), scene manifest, `ITSAppUsesNonExemptEncryption` |
-| `entitlement.entitlements` | App Group, `keychain-access-groups` (private group first, then shared) |
 | `PrivacyInfo.xcprivacy` | Privacy manifest |
 | `Preview Content/` | Preview assets (development only) |
 
@@ -110,9 +109,10 @@ Edit build settings here, not in the Xcode UI.
 | `debug.xcconfig` / `release.xcconfig` | Per-configuration flags (optimization, `DEBUG` condition) |
 | `lab.xcconfig` | Lab-only `Lab` configuration on top of Release: `.lab` bundle-ID root, macOS only, `WARDAXIS_LAB`, manual Developer ID signing ([ADR 0003](adr/0003-lab-build-signing.md)) |
 | `sign.xcconfig` | Signing style and the interim `DEVELOPMENT_TEAM` |
-| `app/app.xcconfig` | App target: bundle ID, Info.plist, entitlements, App Sandbox, Hardened Runtime |
+| `app/app.xcconfig` | App target: bundle ID, Info.plist, entitlements file per SDK, App Sandbox, Hardened Runtime |
 | `app/app-debug.xcconfig` / `app/app-release.xcconfig` / `app/app-lab.xcconfig` | `API_BASE_URL` per configuration |
 | `tests/` | `UnitTests` and `UITests` targets: bundle IDs, test host |
+| `Entitlements/` | One entitlements file per target and SDK: App Sandbox (macOS), NetworkExtension provider types, `system-extension.install` (macOS app only), App Group, Keychain groups (private first, then shared). `App-Lab.entitlements` is the lab app's ([ADR 0004](adr/0004-network-extension-entitlements.md)) |
 | `export/app-store.plist` | Export options for App Store Connect (automatic signing, no team ID) |
 | `export/developer-id.plist` | Export options for the lab build (Developer ID, manual profile); never uploaded |
 
