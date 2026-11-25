@@ -13,7 +13,14 @@ INFOPLIST_FILE = Resources/Info.plist
 PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID)
 
 //Signing
-CODE_SIGN_ENTITLEMENTS = Resources/entitlement.entitlements
+// One file per SDK (ADR 0004): a plist cannot expand a setting into array items,
+// and the provider types differ per platform. No unconditional value: an SDK
+// without a file fails to sign instead of signing with the wrong set.
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = Configurations/Entitlements/App-macOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = Configurations/Entitlements/App-iOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*] = Configurations/Entitlements/App-iOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=appletvos*] = Configurations/Entitlements/App-tvOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=appletvsimulator*] = Configurations/Entitlements/App-tvOS.entitlements
 ENABLE_HARDENED_RUNTIME = YES
 ENABLE_APP_SANDBOX = YES
 ENABLE_USER_SELECTED_FILES = readonly

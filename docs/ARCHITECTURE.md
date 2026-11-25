@@ -318,8 +318,10 @@ Evidence: `KeychainItemStoreTests` and `SecureItemVaultTests` in `Packages/WardA
 | Hardened Runtime | On | `ENABLE_HARDENED_RUNTIME` |
 | User-selected files | Read-only | `ENABLE_USER_SELECTED_FILES` |
 | Outgoing network | Allowed | `ENABLE_OUTGOING_NETWORK_CONNECTIONS` |
-| App Group | `$(APP_GROUP_ID)`: team-prefixed on macOS, `group.` on iOS and tvOS | `Resources/entitlement.entitlements` |
-| Keychain access groups | `$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)` first (default for writes), then `$(AppIdentifierPrefix)$(KEYCHAIN_SHARED_GROUP)` | `Resources/entitlement.entitlements` |
+| App Group | `$(APP_GROUP_ID)`: team-prefixed on macOS, `group.` on iOS and tvOS | `Configurations/Entitlements/App-*.entitlements` |
+| Keychain access groups | `$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)` first (default for writes), then `$(AppIdentifierPrefix)$(KEYCHAIN_SHARED_GROUP)` | `Configurations/Entitlements/App-*.entitlements` |
+| NetworkExtension | macOS: `app-proxy-provider`, `content-filter-provider`, `dns-proxy`, `url-filter-provider`; iOS: `packet-tunnel-provider`, `url-filter-provider`; tvOS: `packet-tunnel-provider` ([ADR 0004](adr/0004-network-extension-entitlements.md)) | `Configurations/Entitlements/App-*.entitlements` |
+| System extension install | macOS app only | `Configurations/Entitlements/App-macOS.entitlements` |
 | Privacy manifest | No tracking, no collected data types; file timestamp access with reason `C617.1` | `Resources/PrivacyInfo.xcprivacy` |
 | Export compliance | `ITSAppUsesNonExemptEncryption` = `false` | `Resources/Info.plist` |
 

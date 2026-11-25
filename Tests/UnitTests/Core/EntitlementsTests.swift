@@ -43,6 +43,28 @@ struct EntitlementsTests {
         ])
     }
 
+    /// The app is the only bundle that activates the NetworkExtension system
+    /// extensions (ADR 0004); `scripts/verify-entitlements.py` keeps it off every other bundle.
+    @Test
+    func `The app may install system extensions`() {
+        #expect(Self.value(for: "com.apple.developer.system-extension.install") as? Bool == true)
+    }
+
+    /// An exact match: an extra provider type is over-privilege, and a
+    /// `-systemextension` value is for Developer ID only, so it never matches.
+    @Test
+    func `NetworkExtension provider types are exactly the macOS App Store set`() {
+        let values = Self.value(for: "com.apple.developer.networking.networkextension") as? [String]
+
+        #expect(values.map(Set.init) == [
+            "app-proxy-provider",
+            "content-filter-provider",
+            "dns-proxy",
+            "url-filter-provider"
+        ])
+        #expect(values?.count == 4)
+    }
+
     /// Lab or runtime-weakening entitlements. Xcode adds sandbox temporary
     /// exceptions to every test host, so `scripts/verify-entitlements.py` checks
     /// that family on the archive instead.

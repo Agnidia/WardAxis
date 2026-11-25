@@ -3,7 +3,8 @@
 Verify the signed entitlements of an App Store build.
 
 Checks the app and every nested code bundle (app extension, system extension,
-XPC service, login item) in a .xcarchive or .app. Reads the code signature,
+XPC service, login item) in a .xcarchive or .app, including the
+NetworkExtension provider types each bundle may claim (ADR 0004). Reads the code signature,
 which is what the OS enforces, not the entitlements files.
 
 Usage:
@@ -34,6 +35,33 @@ FORBIDDEN_KEYS = (
 FORBIDDEN_PREFIXES = ("com.apple.security.temporary-exception.",)
 # Reserved for the Developer ID lab build (ADR 0003); never part of an App Store bundle ID.
 LAB_SEGMENT = "lab"
+
+NE_KEY = "com.apple.developer.networking.networkextension"
+# Apple documents these variants for Developer ID profiles only.
+NE_DEVELOPER_ID_SUFFIX = "-systemextension"
+SYSTEM_EXTENSION_INSTALL_KEY = "com.apple.developer.system-extension.install"
+
+# Provider types each bundle may claim, per platform (ADR 0004). Keyed by the
+# bundle-ID suffix under the app root; "" is the app. A bundle or platform not
+# listed may claim none, so a new target fails until ADR 0004 grants it a type.
+NE_ALLOWED: dict[str, dict[str, frozenset[str]]] = {
+    "": {
+        "macos": frozenset({"app-proxy-provider", "content-filter-provider", "dns-proxy", "url-filter-provider"}),
+        "ios": frozenset({"packet-tunnel-provider", "url-filter-provider"}),
+        "tvos": frozenset({"packet-tunnel-provider"}),
+    },
+    ".networkfilter": {"macos": frozenset({"content-filter-provider"})},
+    ".dnsproxy": {"macos": frozenset({"dns-proxy"})},
+    ".transparentproxy": {"macos": frozenset({"app-proxy-provider"})},
+    ".urlfilter": {
+        "macos": frozenset({"url-filter-provider"}),
+        "ios": frozenset({"url-filter-provider"}),
+    },
+    ".packettunnel": {
+        "ios": frozenset({"packet-tunnel-provider"}),
+        "tvos": frozenset({"packet-tunnel-provider"}),
+    },
+}
 
 
 def fail(message: str) -> None:
@@ -92,7 +120,38 @@ def nested_bundles(app: Path) -> list[Path]:
     return [app, *sorted(found)]
 
 
-def check_bundle(bundle: Path, root_id: str, is_macos: bool) -> list[str]:
+def platform_of(app: Path) -> str:
+    if (app / "Contents").is_dir():
+        return "macos"
+    platforms = info_plist(app).get("CFBundleSupportedPlatforms")
+    if platforms == ["iPhoneOS"]:
+        return "ios"
+    if platforms == ["AppleTVOS"]:
+        return "tvos"
+    # The NE allowlist differs per platform; guessing would check the wrong one.
+    fail(f"unknown platform {platforms!r} in {app.name}")
+    raise AssertionError("unreachable")
+
+
+def check_network_extension(name: str, values: dict, bundle_id: str, root_id: str, platform: str) -> list[str]:
+    problems: list[str] = []
+    claimed = values.get(NE_KEY, [])
+    if not isinstance(claimed, list) or not all(isinstance(item, str) for item in claimed):
+        return [f"{name}: {NE_KEY} is not an array of strings"]
+    suffix = bundle_id.removeprefix(root_id)
+    allowed = NE_ALLOWED.get(suffix, {}).get(platform, frozenset())
+    for provider in claimed:
+        if provider.endswith(NE_DEVELOPER_ID_SUFFIX):
+            problems.append(f"{name}: NetworkExtension value {provider} is for Developer ID only")
+        elif provider not in allowed:
+            problems.append(f"{name}: NetworkExtension value {provider} is not granted to this bundle")
+
+    if SYSTEM_EXTENSION_INSTALL_KEY in values and not (suffix == "" and platform == "macos"):
+        problems.append(f"{name}: {SYSTEM_EXTENSION_INSTALL_KEY} is allowed on the macOS app only")
+    return problems
+
+
+def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     problems: list[str] = []
     name = bundle.name
     values = entitlements(bundle)
@@ -105,7 +164,7 @@ def check_bundle(bundle: Path, root_id: str, is_macos: bool) -> list[str]:
         if key in FORBIDDEN_KEYS or key.startswith(FORBIDDEN_PREFIXES):
             problems.append(f"{name}: forbidden entitlement {key}")
 
-    if is_macos and values.get("com.apple.security.app-sandbox") is not True:
+    if platform == "macos" and values.get("com.apple.security.app-sandbox") is not True:
         problems.append(f"{name}: App Sandbox is off")
 
     team = values.get("com.apple.developer.team-identifier")
@@ -115,6 +174,7 @@ def check_bundle(bundle: Path, root_id: str, is_macos: bool) -> list[str]:
         problems.append(f"{name}: bundle ID {bundle_id} is outside {root_id}")
     if LAB_SEGMENT in bundle_id.split("."):
         problems.append(f"{name}: bundle ID {bundle_id} is in the lab namespace")
+    problems.extend(check_network_extension(name, values, bundle_id, root_id, platform))
 
     allowed_app_groups = {f"group.{root_id}", f"{team}.{root_id}"}
     for group in values.get("com.apple.security.application-groups", []):
@@ -142,7 +202,7 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 1
     app = resolve_app(Path(sys.argv[1]))
-    is_macos = (app / "Contents").is_dir()
+    platform = platform_of(app)
     root_id = info_plist(app).get("CFBundleIdentifier")
     if not isinstance(root_id, str) or not root_id:
         fail(f"{app.name} has no bundle identifier")
@@ -150,7 +210,7 @@ def main() -> int:
     problems: list[str] = []
     bundles = nested_bundles(app)
     for bundle in bundles:
-        problems.extend(check_bundle(bundle, root_id, is_macos))
+        problems.extend(check_bundle(bundle, root_id, platform))
 
     for problem in problems:
         print(f"error: {problem}", file=sys.stderr)
