@@ -26,6 +26,7 @@ Trust boundary: the shipped app (its signing identity, Keychain groups and App G
 | Scheme | `WardAxisLab`: every action uses `Lab`; no test action targets | `WardAxis.xcodeproj/xcshareddata/xcschemes/WardAxisLab.xcscheme` |
 | Platform | macOS only (`SUPPORTED_PLATFORMS = macosx`) | `lab.xcconfig` |
 | Compilation condition | `WARDAXIS_LAB` | `lab.xcconfig` |
+| Product | `WardAxis Lab.app`, so a tester grants Full Disk Access to the right binary | `app-lab.xcconfig` |
 
 The App Store scheme `WardAxis` still archives `Release`. No App Store configuration defines `WARDAXIS_LAB`.
 
@@ -50,11 +51,11 @@ The lab build shares no Keychain group and no container with the shipped app (T2
 | Profile | `WardAxis Lab Developer ID` (Developer ID profile for `com.agnidia.wardaxis.lab`) |
 | Export | `Configurations/export/developer-id.plist`, method `developer-id` |
 
-A restricted entitlement reaches a signature only through a manually generated profile. On macOS, the `keychain-access-groups` entitlement also needs a profile. So the lab build signs manually from the start, and the same profile gains the ES entitlement after approval.
+A restricted entitlement reaches a signature only through a manually generated profile. On macOS, the `keychain-access-groups` entitlement also needs a profile. So the lab build signs manually from the start. The ES entitlement later goes on a separate Developer ID profile for the ES extension's App ID (D4); this app profile never carries it.
 
 ### D4: The ES entitlement comes after approval, on a lab-only target
 
-No target carries `com.apple.developer.endpoint-security.client` until Apple approves the request ([LAB.md](../LAB.md#entitlement-requests)). Then it goes into a lab-only entitlements file of the ES system-extension target. `Resources/entitlement.entitlements` never carries it. The app keeps the App Sandbox and the Hardened Runtime in the lab build too: the ES client is a separate process and the app needs no extra privilege.
+No target carries `com.apple.developer.endpoint-security.client` until Apple approves the request ([LAB.md](../LAB.md#entitlement-requests)). Then it goes into a lab-only entitlements file of the ES system-extension target, signed with that extension's own Developer ID profile. The app App ID gains only the System Extension capability, so the app can install the extension but cannot be an ES client. `Resources/entitlement.entitlements` never carries it. The app keeps the App Sandbox and the Hardened Runtime in the lab build too: the ES client is a separate process and the app needs no extra privilege.
 
 ### D5: Exclusion layers
 
@@ -65,6 +66,8 @@ No target carries `com.apple.developer.endpoint-security.client` until Apple app
 | Export method | `app-store-connect` accepts only Apple Distribution | T1 |
 | `scripts/verify-entitlements.py` | Rejects a Developer ID authority, the ES entitlement, and any bundle ID with a `lab` segment | T1 |
 | `LabExclusionTests` | The App Store test host defines no `WARDAXIS_LAB` and has no `lab` segment in its bundle ID | T3 |
+
+`scripts/verify-entitlements.py` is the gate on an archive: it runs on every archive before an App Store upload (AGENTS.md, Signing). The other layers stop a wrong archive earlier or at upload, but only the script inspects the signed product. `LabExclusionTests` runs the `WardAxis` test action, which builds `Debug`; it proves that the shared configuration chain does not define `WARDAXIS_LAB`, and the script covers the archived `Release` product.
 
 ## Alternatives considered
 
