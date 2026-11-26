@@ -36,6 +36,8 @@
         {
           "target": "WardAxis",
           "inclusions": [
+            "AppIcon.icon",
+            "AppIconTV.xcassets",
             "Assets.xcassets",
             "Colors.xcassets",
             "InfoPlist.xcstrings",

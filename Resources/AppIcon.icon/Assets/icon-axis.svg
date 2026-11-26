@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1024"
+   height="1024"
+   viewBox="0 0 1024 1024"
+   role="img"
+   aria-label="WardAxis emerald app icon"
+   version="1.1"
+   id="svg14"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8">
+    <linearGradient
+       id="rim"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="1">
+      <stop
+         stop-color="#59f4bf"
+         id="stop3" />
+      <stop
+         offset="1"
+         stop-color="#159b79"
+         id="stop4" />
+    </linearGradient>
+    <linearGradient
+       xlink:href="#rim"
+       id="linearGradient2"
+       x1="202.79436"
+       y1="130.71407"
+       x2="901.78766"
+       y2="829.70734"
+       gradientTransform="scale(0.92704751,1.0786934)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <path
+     d="M 512,158 C 412,229 312,267 205,288 V 486 C 205,672 325,791 512,878 699,791 819,672 819,486 V 288 C 712,267 612,229 512,158 Z"
+     fill="#071e1c"
+     stroke="url(#rim)"
+     stroke-width="34"
+     stroke-linejoin="round"
+     id="path11"
+     style="display:inline;stroke:url(#linearGradient2)" />
+  <path
+     d="M 512,188 V 848 C 690,762 789,655 789,486 V 313 C 685,289 593,250 512,188 Z"
+     fill="#123e36"
+     opacity="0.55"
+     id="path12"
+     style="display:inline" />
+</svg>

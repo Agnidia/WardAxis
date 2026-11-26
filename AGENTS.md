@@ -213,7 +213,7 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 - **`Extensions/`** - One folder per extension shell: provider or handler, `Info.plist` (the Safari extension also has `Resources/manifest.json`)
 - **`Services/Agent/`** - macOS login item shell
 - **`AppStore/`** - App Store listing in the `asc` layout (metadata, screenshots, changelog), publishing steps and open submission items; see [AppStore/README.md](AppStore/README.md)
-- **`Resources/`** - `Assets.xcassets`, `Colors.xcassets`, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Info.plist`, `PrivacyInfo.xcprivacy`
+- **`Resources/`** - `AppIcon.icon` (iOS, macOS), `AppIconTV.xcassets` (tvOS Brand Assets), `Assets.xcassets`, `Colors.xcassets`, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Info.plist`, `PrivacyInfo.xcprivacy`
 - **`Configurations/`** - `base.xcconfig`, `debug.xcconfig`, `release.xcconfig`, `sign.xcconfig`, `app/`, `extensions/` (one file per shell target), `tests/`, `Entitlements/` (one entitlements file per target and SDK; [ADR 0004](docs/adr/0004-network-extension-entitlements.md), [ADR 0005](docs/adr/0005-extension-shells.md))
 - **`Tests/UnitTests/`** - Swift Testing suites: `Core/`, `Features/Settings/`, `Logger/`, `Navigation/`
 - **`Tests/UITests/`** - XCUITest
