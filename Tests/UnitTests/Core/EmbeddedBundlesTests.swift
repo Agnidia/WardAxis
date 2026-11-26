@@ -22,6 +22,7 @@ struct EmbeddedBundlesTests {
     }
     
     struct Embedded {
+        let url: URL
         let name: String
         let bundleID: String?
         let info: [String: Any]
@@ -89,7 +90,109 @@ struct EmbeddedBundlesTests {
         }
     }
     
+    /// App Store validation reads each bundle's own manifest; the host's manifest
+    /// does not cover an extension (ADR 0013 D2). Every bundle must declare that it
+    /// does not track, and must declare its data types and required-reason APIs.
+    @Test
+    func `Every bundle carries a privacy manifest that declares no tracking`() throws {
+        let bundles = try [Bundle.main.bundleURL] + Self.embeddedURLs()
+        
+        for url in bundles {
+            let manifest = try Self.privacyManifest(in: url)
+            
+            #expect(manifest.tracking == false, "\(url.lastPathComponent)")
+            #expect(manifest.trackingDomains?.isEmpty ?? true, "\(url.lastPathComponent)")
+        }
+    }
+    
+    @Test
+    func `A bundle without a privacy manifest is refused`() throws {
+        let empty = FileManager.default.temporaryDirectory.appending(path: "NoManifest-\(UUID().uuidString).bundle")
+        try FileManager.default.createDirectory(at: empty, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: empty) }
+        
+        #expect(throws: PrivacyManifestError.missing) {
+            try Self.privacyManifest(in: empty)
+        }
+    }
+    
+    @Test
+    func `A privacy manifest without its required keys fails to decode`() {
+        let incomplete = Data("""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <plist version="1.0"><dict><key>NSPrivacyTracking</key><false/></dict></plist>
+        """.utf8)
+        
+        #expect(throws: DecodingError.self) {
+            try PropertyListDecoder().decode(PrivacyManifest.self, from: incomplete)
+        }
+    }
+    
     // MARK: - Helpers
+    
+    /// The keys App Store validation reads. Data types and accessed APIs are
+    /// required, so a manifest that omits them fails to decode.
+    struct PrivacyManifest: Decodable {
+        let tracking: Bool
+        let trackingDomains: [String]?
+        let collectedDataTypes: [CollectedDataType]
+        let accessedAPITypes: [AccessedAPIType]
+        
+        struct CollectedDataType: Decodable {
+            let type: String
+            
+            enum CodingKeys: String, CodingKey {
+                case type = "NSPrivacyCollectedDataType"
+            }
+        }
+        
+        struct AccessedAPIType: Decodable {
+            let type: String
+            let reasons: [String]
+            
+            enum CodingKeys: String, CodingKey {
+                case type = "NSPrivacyAccessedAPIType"
+                case reasons = "NSPrivacyAccessedAPITypeReasons"
+            }
+        }
+        
+        enum CodingKeys: String, CodingKey {
+            case tracking = "NSPrivacyTracking"
+            case trackingDomains = "NSPrivacyTrackingDomains"
+            case collectedDataTypes = "NSPrivacyCollectedDataTypes"
+            case accessedAPITypes = "NSPrivacyAccessedAPITypes"
+        }
+    }
+    
+    enum PrivacyManifestError: Error, Equatable {
+        case missing
+        case oversize
+    }
+    
+    /// A real manifest is a few hundred bytes; the bound keeps the decoder off an
+    /// unbounded input.
+    static let privacyManifestMaxBytes = 64 * 1024
+    
+    private static func privacyManifest(in bundleURL: URL) throws -> PrivacyManifest {
+#if os(macOS)
+        let resources = bundleURL.appending(path: "Contents/Resources", directoryHint: .isDirectory)
+#else
+        let resources = bundleURL
+#endif
+        let url = resources.appending(path: "PrivacyInfo.xcprivacy", directoryHint: .notDirectory)
+        guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
+            throw PrivacyManifestError.missing
+        }
+        let data = try Data(contentsOf: url)
+        guard data.count <= privacyManifestMaxBytes else {
+            throw PrivacyManifestError.oversize
+        }
+        return try PropertyListDecoder().decode(PrivacyManifest.self, from: data)
+    }
+    
+    private static func embeddedURLs() throws -> [URL] {
+        try embedded().map(\.url)
+    }
     
     private static func kind(of info: [String: Any]) -> Kind? {
         if let point = (info["NSExtension"] as? [String: Any])?["NSExtensionPointIdentifier"] as? String {
@@ -126,6 +229,7 @@ struct EmbeddedBundlesTests {
                 }
                 let bundle = Bundle(url: item)
                 result.append(Embedded(
+                    url: item,
                     name: item.lastPathComponent,
                     bundleID: bundle?.bundleIdentifier,
                     info: bundle?.infoDictionary ?? [:]

@@ -16,7 +16,7 @@ WardAxis/
 ├── Configurations/          # xcconfig build settings
 ├── Tests/                   # App unit and UI tests
 ├── Server/                  # Management server (Hummingbird 2, PostgreSQL)
-├── docs/                    # This documentation; docs/adr/ holds decisions, THREAT-MODEL.md the trust boundaries
+├── docs/                    # This documentation; docs/adr/ holds decisions, THREAT-MODEL.md the trust boundaries, PRIVACY.md the data inventory, privacy/ the policy source
 ├── roadmap/                 # Product roadmap by phase
 ├── scripts/                 # Tooling (formatter.py, verify-entitlements.py, ci-simulator.py)
 ├── ci_scripts/              # Xcode Cloud hooks
@@ -35,7 +35,7 @@ WardAxis/
 | `Source/` | Every file joins the `WardAxis` target |
 | `Resources/` | Only the files in the `WardAxis` inclusion list (asset catalogs, String Catalogs, privacy manifest) |
 | `Tests/` | Only the files in the `UnitTests` or `UITests` inclusion list. Add each new test file there |
-| `Extensions/<Target>/`, `Services/Agent/` | Every file joins the target of the same name, except `Info.plist` (read through `INFOPLIST_FILE`) |
+| `Extensions/<Target>/`, `Services/Agent/` | Every file joins the target of the same name, except `Info.plist` (read through `INFOPLIST_FILE`). Each folder has the bundle's own `PrivacyInfo.xcprivacy` ([ADR 0013](adr/0013-privacy-disclosures.md)) |
 | `Configurations/` | No target; referenced by the project configurations |
 
 ---

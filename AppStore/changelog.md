@@ -1,6 +1,6 @@
 # WardAxis — Changelog
 
-## v1.0.0 (Build 1000) — unreleased
+## v0.0.1 (Build 1) — unreleased
 
 ### New
 - Multiplatform app for macOS 26, iOS 26, iPadOS 26 and tvOS 26

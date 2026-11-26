@@ -5,7 +5,8 @@ Verify the signed entitlements of an App Store build.
 Checks the app and every nested code bundle (app extension, system extension,
 XPC service, login item) in a .xcarchive or .app, including the
 NetworkExtension provider types each bundle may claim (ADR 0004). Reads the code signature,
-which is what the OS enforces, not the entitlements files.
+which is what the OS enforces, not the entitlements files. Also requires a privacy
+manifest in every bundle that declares no tracking (ADR 0013).
 
 Usage:
     python3 -I scripts/verify-entitlements.py <path.xcarchive | path.app>
@@ -66,6 +67,11 @@ NE_ALLOWED: dict[str, dict[str, frozenset[str]]] = {
 # The exact set of nested bundles per platform (ADR 0005), keyed like NE_ALLOWED.
 # A missing shell means a provider the app configures is not in the package; an
 # extra one is code that no ADR reviewed.
+PRIVACY_MANIFEST = "PrivacyInfo.xcprivacy"
+# A real manifest is a few hundred bytes; the bound keeps a planted file from
+# making the parser read an unbounded input.
+PRIVACY_MANIFEST_MAX_BYTES = 64 * 1024
+
 EXPECTED_NESTED: dict[str, frozenset[str]] = {
     "macos": frozenset({".agent", ".dnsproxy", ".mail", ".networkfilter", ".safari", ".transparentproxy", ".urlfilter"}),
     "ios": frozenset({".packettunnel", ".safari", ".urlfilter"}),
@@ -164,6 +170,35 @@ def check_network_extension(name: str, values: dict, bundle_id: str, root_id: st
     return problems
 
 
+def check_privacy_manifest(bundle: Path, platform: str) -> list[str]:
+    """App Store validation reads each bundle's own manifest; the app's manifest
+    does not cover an extension (ADR 0013 D2)."""
+    name = bundle.name
+    resources = bundle / "Contents" / "Resources" if platform == "macos" else bundle
+    path = resources / PRIVACY_MANIFEST
+    if path.is_symlink() or not path.is_file():
+        return [f"{name}: {PRIVACY_MANIFEST} is missing"]
+    if path.stat().st_size > PRIVACY_MANIFEST_MAX_BYTES:
+        return [f"{name}: {PRIVACY_MANIFEST} is larger than {PRIVACY_MANIFEST_MAX_BYTES} bytes"]
+    try:
+        manifest = plistlib.loads(path.read_bytes())
+    except (plistlib.InvalidFileException, ValueError, OSError):
+        return [f"{name}: {PRIVACY_MANIFEST} is not a property list"]
+    if not isinstance(manifest, dict):
+        return [f"{name}: {PRIVACY_MANIFEST} is not a dictionary"]
+
+    problems: list[str] = []
+    # A missing key reads as "not declared", which App Store validation reports; require it.
+    if manifest.get("NSPrivacyTracking") is not False:
+        problems.append(f"{name}: {PRIVACY_MANIFEST} must set NSPrivacyTracking to false")
+    if manifest.get("NSPrivacyTrackingDomains", []) != []:
+        problems.append(f"{name}: {PRIVACY_MANIFEST} lists tracking domains")
+    for key in ("NSPrivacyCollectedDataTypes", "NSPrivacyAccessedAPITypes"):
+        if not isinstance(manifest.get(key), list):
+            problems.append(f"{name}: {PRIVACY_MANIFEST} has no {key} array")
+    return problems
+
+
 def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     problems: list[str] = []
     name = bundle.name
@@ -199,6 +234,7 @@ def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     if LAB_SEGMENT in bundle_id.split("."):
         problems.append(f"{name}: bundle ID {bundle_id} is in the lab namespace")
     problems.extend(check_network_extension(name, values, bundle_id, root_id, platform))
+    problems.extend(check_privacy_manifest(bundle, platform))
 
     allowed_app_groups = {f"group.{root_id}", f"{team}.{root_id}"}
     for group in values.get("com.apple.security.application-groups", []):
