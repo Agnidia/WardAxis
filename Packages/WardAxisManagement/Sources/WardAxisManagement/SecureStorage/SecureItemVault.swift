@@ -17,6 +17,7 @@ public actor SecureItemVault<Value: SecurePayload> {
     private var floor: UInt64 = 0
     private var onDisk: UInt64 = 0
     private var erasePending = false
+    private var persistCleanupPending = false
     
     /// - Parameter marker: Has no default, so a new production call site cannot
     ///   lose the persisted erase by omission.
@@ -31,6 +32,7 @@ public actor SecureItemVault<Value: SecurePayload> {
             return false
         }
         erasePending = true
+        persistCleanupPending = false
         try store.delete()
         try marker.clear()
         erasePending = false
@@ -59,22 +61,30 @@ public actor SecureItemVault<Value: SecurePayload> {
         }
     }
     
-    /// Writes `value` unless a newer generation already wrote or erased.
-    /// - Returns: `false` when the write was fenced off and nothing was stored.
+    /// Persists a new generation or completes pending cleanup for the same stored value.
+    /// Returns `false` for fenced writes, different values at the same generation, or completed duplicates.
     @discardableResult
     public func persist(_ value: Value, generation: UInt64) throws(SecureItemStoreError) -> Bool {
-        guard generation > floor, generation > onDisk else {
+        guard generation > floor, generation >= onDisk else {
             return false
         }
-        try store.save(value)
-        onDisk = generation
+        if generation == onDisk {
+            guard persistCleanupPending, try store.load() == value else {
+                return false
+            }
+        } else {
+            try store.save(value)
+            onDisk = generation
+        }
         // Cleared only after the save: a crash between the two drops the new
         // value at relaunch rather than reviving the erased one.
         if erasePending || marker.isSet {
             erasePending = true
+            persistCleanupPending = true
             try marker.clear()
         }
         erasePending = false
+        persistCleanupPending = false
         return true
     }
     
@@ -85,6 +95,7 @@ public actor SecureItemVault<Value: SecurePayload> {
         guard onDisk <= generation else {
             return
         }
+        persistCleanupPending = false
         erasePending = true
         if !marker.isSet {
             do {

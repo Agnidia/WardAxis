@@ -42,6 +42,10 @@ public final class MockErasePendingMarker: ErasePendingMarkerProtocol {
         state.withLock { $0.operations }
     }
     
+    public func failClears(with error: SecureItemStoreError?) {
+        state.withLock { $0.clearError = error }
+    }
+    
     public func set() throws(SecureItemStoreError) {
         let error = state.withLock { state -> SecureItemStoreError? in
             if let error = state.setError {

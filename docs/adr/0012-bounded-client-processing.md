@@ -59,6 +59,10 @@ The vault establishes an in-memory erase fence before any erase I/O.
 It still attempts deletion if marker creation fails: successful Keychain deletion establishes safety without a marker.
 A failed delete or marker cleanup leaves the in-memory fence active.
 A newer successful save and marker cleanup can supersede the erase.
+If a save succeeds but marker cleanup fails, the vault retains the write generation and marks cleanup as pending.
+A same-generation retry reads the stored value and completes cleanup only when that value matches the retry.
+It never rewrites the credential or lowers the generation fence.
+A later erase attempt cancels pending persist cleanup, including when deletion fails.
 
 If both marker persistence and Keychain deletion fail, a durable erase record is not guaranteed.
 Callers must report incomplete erasure and retry; they cannot promise safety after restart in that case.
