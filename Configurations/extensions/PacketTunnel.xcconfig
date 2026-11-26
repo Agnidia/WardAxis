@@ -16,6 +16,8 @@ INFOPLIST_FILE = Extensions/PacketTunnel/Info.plist
 INFOPLIST_KEY_CFBundleDisplayName = WardAxis Packet Tunnel
 SUPPORTED_PLATFORMS = iphoneos iphonesimulator appletvos appletvsimulator
 TARGETED_DEVICE_FAMILY = 1,2,3
+// Xcode adds arm64 for the iOS extension but not the tvOS one; App Store validation requires it.
+INFOPLIST_KEY_UIRequiredDeviceCapabilities[sdk=appletv*] = arm64
 
 //Signing
 CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = Configurations/Entitlements/PacketTunnel.entitlements
