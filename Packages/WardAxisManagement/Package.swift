@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "WardAxisManagementTestSupport", targets: ["WardAxisManagementTestSupport"])
     ],
     dependencies: [
+        .package(path: "../WardAxisCore"),
         .package(path: "../WardAxisTelemetry"),
         .package(path: "../WardAxisManagementAPI")
     ],
@@ -18,6 +19,7 @@ let package = Package(
         .target(
             name: "WardAxisManagement",
             dependencies: [
+                .product(name: "WardAxisCore", package: "WardAxisCore"),
                 .product(name: "WardAxisTelemetry", package: "WardAxisTelemetry"),
                 .product(name: "WardAxisAPIClient", package: "WardAxisManagementAPI")
             ]
