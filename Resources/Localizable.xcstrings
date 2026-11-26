@@ -590,6 +590,138 @@
         }
       }
     },
+    "settings.developer.activate" : {
+      "comment" : "DEBUG button: submit a system extension activation request",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activate network filter"
+          }
+        }
+      }
+    },
+    "settings.developer.deactivate" : {
+      "comment" : "DEBUG button: submit a system extension deactivation request",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deactivate network filter"
+          }
+        }
+      }
+    },
+    "settings.developer.footer" : {
+      "comment" : "Footer of the DEBUG-only Developer section",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug builds only. Installs or removes the NetworkFilter system extension. No filter configuration is saved, so no traffic reaches the extension. Run the app from /Applications."
+          }
+        }
+      }
+    },
+    "settings.developer.status.activated" : {
+      "comment" : "DEBUG system extension status: activation completed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activated"
+          }
+        }
+      }
+    },
+    "settings.developer.status.deactivated" : {
+      "comment" : "DEBUG system extension status: deactivation completed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deactivated"
+          }
+        }
+      }
+    },
+    "settings.developer.status.failed %@" : {
+      "comment" : "DEBUG system extension status: request failed; the argument is an error case name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed: %@"
+          }
+        }
+      }
+    },
+    "settings.developer.status.idle" : {
+      "comment" : "DEBUG system extension status: nothing submitted yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No request sent"
+          }
+        }
+      }
+    },
+    "settings.developer.status.inProgress" : {
+      "comment" : "DEBUG system extension status: request submitted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request in progress"
+          }
+        }
+      }
+    },
+    "settings.developer.status.needsApproval" : {
+      "comment" : "DEBUG system extension status: the user must approve",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow the extension in System Settings > General > Login Items & Extensions"
+          }
+        }
+      }
+    },
+    "settings.developer.status.pendingReboot" : {
+      "comment" : "DEBUG system extension status: completes at next restart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completes after restart"
+          }
+        }
+      }
+    },
+    "settings.developer.title" : {
+      "comment" : "DEBUG-only Settings section header for test-device tools",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Developer"
+          }
+        }
+      }
+    },
     "settings.diagnostics" : {
       "comment" : "Settings diagnostics section header",
       "extractionState" : "manual",

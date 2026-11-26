@@ -23,6 +23,7 @@ struct AppContainerTests {
         #expect(container.hapticFeedback is MockHapticFeedbackService)
         #expect(container.telemetry is MockTelemetryService)
         #expect(container.configurationService is MockConfigurationService)
+        #expect(container.systemExtensionService is MockSystemExtensionService)
     }
     
     @Test
