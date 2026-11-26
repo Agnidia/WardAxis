@@ -118,7 +118,7 @@ The app target links `WardAxisTelemetry` and `WardAxisManagement`. `WardAxisMana
 | `Colors.xcassets/` | Semantic color tokens (light and dark), including `AccentColor`. Never hardcode a color |
 | `Localizable.xcstrings` | App String Catalog |
 | `InfoPlist.xcstrings` | Localized `Info.plist` values |
-| `Info.plist` | `APIBaseURL` (from `API_BASE_URL`), scene manifest, `ITSAppUsesNonExemptEncryption` |
+| `Info.plist` | `APIBaseURL` (from `API_BASE_URL`), scene manifest |
 | `PrivacyInfo.xcprivacy` | Privacy manifest |
 | `Preview Content/` | Preview assets (development only) |
 
@@ -130,7 +130,7 @@ Edit build settings here, not in the Xcode UI.
 
 | File | Purpose |
 |---|---|
-| `base.xcconfig` | `APP_NAME`, `APP_BUNDLE_ID`, extension bundle IDs, `APP_GROUP_ID`, `KEYCHAIN_SHARED_GROUP`, supported platforms, deployment targets, `SWIFT_VERSION = 6`, strict concurrency |
+| `base.xcconfig` | `APP_NAME`, `APP_BUNDLE_ID`, extension bundle IDs, `APP_GROUP_ID`, `KEYCHAIN_SHARED_GROUP`, supported platforms, deployment targets, `SWIFT_VERSION = 6`, strict concurrency, `ITSAppUsesNonExemptEncryption` for every bundle ([ADR 0014](adr/0014-export-compliance.md)) |
 | `debug.xcconfig` / `release.xcconfig` | Per-configuration flags (optimization, `DEBUG` condition) |
 | `lab.xcconfig` | Lab-only `Lab` configuration on top of Release: `.lab` bundle-ID root, macOS only, `WARDAXIS_LAB`, manual Developer ID signing ([ADR 0003](adr/0003-lab-build-signing.md)) |
 | `sign.xcconfig` | Signing style and the interim `DEVELOPMENT_TEAM` |

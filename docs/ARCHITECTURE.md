@@ -355,7 +355,7 @@ Evidence: `KeychainItemStoreTests` and `SecureItemVaultTests` in `Packages/WardA
 | NetworkExtension | macOS: `app-proxy-provider`, `content-filter-provider`, `dns-proxy`, `url-filter-provider`; iOS: `packet-tunnel-provider`, `url-filter-provider`; tvOS: `packet-tunnel-provider` ([ADR 0004](adr/0004-network-extension-entitlements.md)) | `Configurations/Entitlements/App-*.entitlements` |
 | System extension install | macOS app only | `Configurations/Entitlements/App-macOS.entitlements` |
 | Privacy manifest | One per bundle: no tracking, no collected data types, no required-reason API ([PRIVACY.md](PRIVACY.md#privacy-manifests), [ADR 0013](adr/0013-privacy-disclosures.md)) | `Resources/PrivacyInfo.xcprivacy`, `PrivacyInfo.xcprivacy` in each `Extensions/<Target>/` and `Services/Agent/` |
-| Export compliance | `ITSAppUsesNonExemptEncryption` = `false` | `Resources/Info.plist` |
+| Export compliance | `ITSAppUsesNonExemptEncryption` = `false` in every bundle: OS-provided or authentication-only encryption ([ADR 0014](adr/0014-export-compliance.md)) | `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption` in `Configurations/base.xcconfig` |
 
 Bundle IDs, groups and group membership per component: [ADR 0002](adr/0002-app-store-signing-identifiers.md). `EntitlementsTests` checks the test host's signature on macOS; `scripts/verify-entitlements.py` checks every bundle of an archive.
 

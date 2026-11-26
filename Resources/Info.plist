@@ -26,7 +26,5 @@
 	</dict>
 	<key>WANetworkFilterBundleIdentifier</key>
 	<string>$(NETWORK_FILTER_BUNDLE_ID)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 </dict>
 </plist>

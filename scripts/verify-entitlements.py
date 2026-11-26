@@ -6,7 +6,8 @@ Checks the app and every nested code bundle (app extension, system extension,
 XPC service, login item) in a .xcarchive or .app, including the
 NetworkExtension provider types each bundle may claim (ADR 0004). Reads the code signature,
 which is what the OS enforces, not the entitlements files. Also requires a privacy
-manifest in every bundle that declares no tracking (ADR 0013).
+manifest in every bundle that declares no tracking (ADR 0013), and an exempt-only
+export compliance declaration in every bundle (ADR 0014).
 
 Usage:
     python3 -I scripts/verify-entitlements.py <path.xcarchive | path.app>
@@ -36,6 +37,8 @@ FORBIDDEN_KEYS = (
 FORBIDDEN_PREFIXES = ("com.apple.security.temporary-exception.",)
 # Reserved for the Developer ID lab build (ADR 0003); never part of an App Store bundle ID.
 LAB_SEGMENT = "lab"
+# Declared false in every bundle (ADR 0014); the value is a legal statement.
+EXPORT_COMPLIANCE_KEY = "ITSAppUsesNonExemptEncryption"
 
 NE_KEY = "com.apple.developer.networking.networkextension"
 # Apple documents these variants for Developer ID profiles only.
@@ -199,6 +202,15 @@ def check_privacy_manifest(bundle: Path, platform: str) -> list[str]:
     return problems
 
 
+def check_export_compliance(bundle: Path) -> list[str]:
+    """The declaration is a legal statement about the code in the bundle (ADR 0014 D1).
+    A missing key makes App Store Connect ask again and block TestFlight; a string
+    "NO" is not the boolean the key requires, so accept only a real false."""
+    if info_plist(bundle).get(EXPORT_COMPLIANCE_KEY) is not False:
+        return [f"{bundle.name}: {EXPORT_COMPLIANCE_KEY} must be false (ADR 0014)"]
+    return []
+
+
 def check_device_capabilities(bundle: Path, platform: str) -> list[str]:
     """App Store validation refuses an iOS or tvOS bundle with a 64-bit slice that
     does not require arm64; Xcode adds the value to some bundles only."""
@@ -254,6 +266,7 @@ def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     problems.extend(check_network_extension(name, values, bundle_id, root_id, platform))
     problems.extend(check_privacy_manifest(bundle, platform))
     problems.extend(check_device_capabilities(bundle, platform))
+    problems.extend(check_export_compliance(bundle))
 
     allowed_app_groups = {f"group.{root_id}", f"{team}.{root_id}"}
     for group in values.get("com.apple.security.application-groups", []):
