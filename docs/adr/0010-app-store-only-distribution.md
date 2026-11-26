@@ -4,6 +4,8 @@
 
 Accepted on 2026-11-26 (PRE-008, #8). Roadmap ID: ADR-015.
 
+Amended on 2026-11-26 (#9): the typed schemas and the typed read of feed values exist. See [D3](#d3-no-custom-updater-no-downloaded-code-t2-t3) and [ADR 0011](0011-versioned-schemas.md).
+
 ## Context
 
 WardAxis targets macOS 26, iOS/iPadOS 26 and tvOS 26. A security product can ship through the App Store, through Developer ID on macOS, or both. The channel decides what the product can do and how it reaches a fleet.
@@ -40,8 +42,8 @@ App Store archives are signed Apple Distribution and exported with the `app-stor
 
 The App Store delivers every update. The app downloads no executable code. ML models ship in the bundle. Policies, detector rules and the configuration feed are data:
 
-- The feed envelope is typed and size-bounded at decode. Its `values` are schemaless JSON (`ConfigurationValue`), bounded only in size and nesting depth (32). They are not typed yet.
-- Every consumer decodes the values it reads into its own typed `Codable` model and rejects anything else. No consumer interprets a raw `ConfigurationValue` tree as rules ([THREAT-MODEL.md](../THREAT-MODEL.md#threats-of-this-file) TM5). The typed policy schema comes with PRE-009.
+- The feed envelope is typed and size-bounded at decode. Its `values` are schemaless JSON (`ConfigurationValue`), bounded only in size and nesting depth (32). The feed does not type them.
+- Every consumer decodes the values it reads into its own typed `Codable` model and rejects anything else. No consumer interprets a raw `ConfigurationValue` tree as rules ([THREAT-MODEL.md](../THREAT-MODEL.md#threats-of-this-file) TM5). A consumer reads a value with `ManagedConfiguration.document(_:forKey:)`, which decodes it through `SchemaCodec` ([ADR 0011](0011-versioned-schemas.md)).
 - A rule format that could express control flow needs its own ADR first.
 
 ### D4: The platform matrix is the source of truth for capability claims (T4)
@@ -83,6 +85,6 @@ Development uses an individual team. Organization enrollment (ORG-001, #192) com
 | `Configurations/export/app-store.plist` | Build | Method `app-store-connect`, which signs only with Apple Distribution and App Store profiles | D2 |
 | TestFlight upload per platform | Upload | App Store Connect accepts the archive for macOS, iOS and tvOS (Phase 0 acceptance) | D1 |
 | Size-bounded decode | Unit tests | The configuration feed rejects oversize, too-deep and malformed frames (`ConfigurationWireTests`) | D3 |
-| Typed decode per consumer | Code review, then unit tests with PRE-009 | Each consumer of configuration values has a typed model and a test that rejects a wrong shape | D3 |
+| Typed decode per consumer | Code review; `ConfigurationSchemaTests`, `SchemaFixtureTests` | Each consumer of configuration values has a typed model and a test that rejects a wrong shape | D3 |
 | Matrix review | Manual, per TN3134 revision and per listing change | Listing and docs claim no capability outside D4 | D4 |
 | Account check | Manual, before the first packet tunnel submission | ORG-001 is done | D5 |
