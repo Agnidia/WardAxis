@@ -163,7 +163,7 @@ swiftformat . \
   && (cd Packages/WardAxisManagementAPI && swift test)
 ```
 
-Add `(cd Server && swift test)` when the change touches `Server/` or the contract. The repository has no CI workflows, so this local gate is the only gate.
+Add `(cd Server && swift test)` when the change touches `Server/` or the contract. `.github/workflows/PullRequest.yml` runs the same checks for macOS, iOS and tvOS, but it stays disabled until after v1.0.0 (repository variable `CI_ENABLED`; [ADR 0007](docs/adr/0007-pull-request-ci.md)). Until then this local gate is the only gate.
 
 ---
 

@@ -18,9 +18,9 @@ WardAxis/
 ├── Server/                  # Management server (Hummingbird 2, PostgreSQL)
 ├── docs/                    # This documentation; docs/adr/ holds decisions
 ├── roadmap/                 # Product roadmap by phase
-├── scripts/                 # Tooling (formatter.py, verify-entitlements.py)
+├── scripts/                 # Tooling (formatter.py, verify-entitlements.py, ci-simulator.py)
 ├── ci_scripts/              # Xcode Cloud hooks
-├── .github/                 # Issue forms and security policy (no workflows)
+├── .github/                 # Issue forms, security policy, PullRequest.yml (disabled until v1.0.0)
 ├── WardAxis.xcodeproj/      # Xcode project (JSON format, project.xcproj)
 ├── .swiftformat             # Format configuration
 ├── AGENTS.md                # Development rules for people and agents
@@ -173,4 +173,5 @@ Reference material. Update a doc in the same change as the behaviour it describe
 |---|---|
 | `scripts/formatter.py` | Runs SwiftFormat on modified files (`--all`, `--check`, `--staged` options); called by the Xcode build phase |
 | `scripts/verify-entitlements.py` | Checks the signed entitlements of every bundle in an archive or app; run before each App Store upload |
+| `scripts/ci-simulator.py` | Prints the UDID of the newest available iOS or tvOS simulator for `PullRequest.yml`; fails when none exists |
 | `ci_scripts/ci_post_clone.sh` | Xcode Cloud post-clone hook; resets the Xcode package-resolution defaults |

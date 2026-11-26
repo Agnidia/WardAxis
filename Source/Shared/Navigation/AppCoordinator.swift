@@ -297,6 +297,11 @@ extension AppCoordinator {
     }
 }
 
+extension AppCoordinator {
+    /// Built once: an `@Entry` default expression runs on every access.
+    nonisolated static let environmentDefault: AppCoordinator = placeholder()
+}
+
 extension EnvironmentValues {
-    @Entry var coordinator: AppCoordinator = .placeholder()
+    @Entry var coordinator: AppCoordinator = .environmentDefault
 }

@@ -142,6 +142,11 @@ final class AppContainer {
 
 // MARK: - Environment
 
+extension AppContainer {
+    /// Built once: an `@Entry` default expression runs on every access.
+    nonisolated static let environmentDefault: AppContainer = placeholder()
+}
+
 extension EnvironmentValues {
-    @Entry var appContainer: AppContainer = .placeholder()
+    @Entry var appContainer: AppContainer = .environmentDefault
 }

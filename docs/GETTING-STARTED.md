@@ -148,7 +148,7 @@ swiftformat .
 
 ## 5. Pre-PR quality gate
 
-The repository has no CI workflows. Run the gate locally:
+The pull request workflow (`.github/workflows/PullRequest.yml`, [ADR 0007](adr/0007-pull-request-ci.md)) is disabled until after v1.0.0. Run the gate locally:
 
 ```bash
 swiftformat . \
