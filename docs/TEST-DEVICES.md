@@ -13,7 +13,7 @@ The physical devices and the VM that WardAxis is tested on, how to prepare each 
 | Role | Model | Model identifier | OS | Build | Supervised |
 |---|---|---|---|---|---|
 | Development and build Mac, VM host | MacBook Air (Apple M3, 16 GB) | `Mac15,13` | macOS 27.2.1 | 26B131 | — |
-| System extension test VM | macOS VM on the MacBook Air (UTM, Apple backend) | TBD | macOS 15.6: below the macOS 26 minimum, to be replaced | TBD | — |
+| System extension test VM | macOS VM on the MacBook Air (UTM, Apple backend, 8 GB) | `VirtualMac2,1` | macOS 27.2.1 | 26B131 | — |
 | Unsupervised iOS device | iPhone 16 Pro | `iPhone17,1` | iOS 27.2.1 | 24B156 | No |
 | Supervised iOS device | iPad mini (A17 Pro) | `iPad16,1` | iPadOS 27.2.1 | 24B156 | Yes, by `Agnidia Lab` (Apple Configurator, no MDM) |
 | Apple TV | Apple TV 4K (2nd generation) | `AppleTV11,1` | tvOS 27.2.1 | 24K157 | — |
@@ -57,8 +57,8 @@ Prerequisite: the App IDs `com.agnidia.wardaxis` and `com.agnidia.wardaxis.netwo
 2. Archive the app with `ditto -c -k --keepParent WardAxis.app WardAxis-Debug.zip`, which keeps the signatures, and put it in the shared directory. In the VM, unpack it into `/Applications`: `ditto -x -k "/Volumes/My Shared Files/WardAxis-Debug.zip" /Applications`. The OS activates extensions only for an app in `/Applications`.
    Check that the development profile includes the VM; it prints `1` when it does: `security cms -D -i /Applications/WardAxis.app/Contents/embedded.provisionprofile | grep -c "$(system_profiler SPHardwareDataType | awk '/Provisioning UDID/ {print $3}')"`
 3. Start a log stream in the VM: `log stream --predicate 'subsystem == "com.apple.sx"' --level info`.
-4. Open WardAxis → Settings → Developer, and select **Activate network filter**. The status reads "Allow the extension in System Settings…".
-5. Open System Settings → General → Login Items & Extensions → Network Extensions, and allow WardAxis. The status changes to **Activated**.
+4. Open WardAxis → Settings → Developer, and select **Activate network filter**. macOS shows "“WardAxis” would like to use a new network extension", and the status reads "Allow the extension in System Settings…". **Extension state** reads **Waiting for approval**.
+5. In the prompt, select **Open System Settings**; it opens the WardAxis system extension directly. **OK** only closes the prompt: then open System Settings → General → Login Items & Extensions → **WardAxis Extensions** (ⓘ) yourself. Turn on **Network Extension**, select **Done** and enter your password. Within a second, **Extension state** reads **Enabled** and the status changes to **Activated**. The same sheet lists `com.apple.networkextension.url-filter-control`, switched on: that is the URLFilter app extension, which needs no approval and does nothing without a saved configuration. If an earlier copy shows `terminated waiting to uninstall on reboot` and the switch does not stay on, restart the VM and activate again.
 6. Run `systemextensionsctl list`. The `com.agnidia.wardaxis.networkfilter` row shows `[activated enabled]`.
 7. Open System Settings → Network → Filters. It lists no WardAxis filter, because activation saves no configuration (ADR 0006 D3).
 8. Select **Deactivate network filter**. The status changes to **Deactivated**, and `systemextensionsctl list` no longer shows the row as `[activated enabled]`. The OS can show it as waiting to uninstall until the next restart.
@@ -71,7 +71,7 @@ Prerequisite: the App IDs `com.agnidia.wardaxis` and `com.agnidia.wardaxis.netwo
 | Failed: `codeSignatureInvalid` | The bundle changed after signing | Copy the app again from a fresh build |
 | Failed: `invalidIdentifier` | `WANetworkFilterBundleIdentifier` is not `<app ID>.<segment>` | Check `NETWORK_FILTER_BUNDLE_ID` in `Configurations/base.xcconfig` |
 | Failed: `forbiddenBySystemPolicy` | A configuration profile blocks the extension | Remove the profile, or restore the clean VM copy |
-| Stays on "Allow the extension…" | The user has not approved it | Approve it in System Settings; the pending request then completes |
+| Stays on "Allow the extension…"; Extension state reads **Waiting for approval** | macOS has no approval recorded (`systemextensionsctl list` shows `[activated waiting for user]`). The URL filter switch being on is not the approval | Turn on **Network Extension** under WardAxis Extensions and enter your password; restart first if an earlier copy waits to uninstall |
 
 ## Supervise the iPad
 
@@ -101,7 +101,8 @@ Add one row per run. Never delete a row: a failure is a result too.
 
 | Date | Device | Build | Step | Result |
 |---|---|---|---|---|
-| TBD | macOS VM | Debug | Activate, approve, deactivate | TBD |
+| 2026-11-26 | MacBook Air (development Mac), macOS 27.2.1 | Debug (`7ccb9b4` plus the uncommitted state display) | Activate, approve, deactivate, from `/Applications` | Pass, outside the VM procedure. First runs: `unsupportedParentBundleLocation` when run from Xcode; then the status stayed on approval because only the URL filter switch was on. After turning on **Network Extension** under WardAxis Extensions, the app showed **Enabled** and **Activated**. Deactivation: the Network Extension switch turned off, and `systemextensionsctl list` shows the only copy as `[terminated waiting to uninstall on reboot]` |
+| 2026-11-26 | macOS VM, `VirtualMac2,1`, macOS 27.2.1, SIP on | Debug (`7ccb9b4` plus the uncommitted state display) | Activate, approve, deactivate, from `/Applications` | Pass. Activate: macOS prompt, then **Open System Settings** → **Network Extension** on; `systemextensionsctl list` shows `[activated enabled]`, no provider process runs, and no configuration is saved. Deactivate: the only copy shows `[terminated waiting to uninstall on reboot]`. Before the run, the new VM was registered in the Developer portal and Xcode's cached development profiles were refreshed |
 | 2026-11-26 | iPhone 16 Pro, iOS 27.2.1, unsupervised | Debug (`3106424` plus uncommitted edits to `RootView` and `AlertPresenter`) | Install and launch over USB with `devicectl` | Pass: installed, launched and still running. Settings not yet opened by hand |
 | 2026-11-26 | iPad mini (A17 Pro) | — | Supervise with Apple Configurator | Pass after a retry. The first Prepare failed: "Add to Apple School Manager or Apple Business" was on, and the iPad was already set up. Erased and prepared again. About shows "supervised and managed by Agnidia Lab" |
 | 2026-11-26 | iPad mini (A17 Pro), iPadOS 27.2.1, unsupervised | Debug (`3106424`) | Install and launch over USB with `devicectl` | Pass: installed, launched and still running. Settings not yet opened by hand |
