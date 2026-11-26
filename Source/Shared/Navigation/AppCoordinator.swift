@@ -261,7 +261,8 @@ final class AppCoordinator {
         
         switch host {
         case "settings":
-            switchTab(to: .settings)
+            // Settings has no tab; it opens as a sheet, as from the Home settings button.
+            navigate(to: .settings)
             return true
         case "help":
             navigate(to: .help)

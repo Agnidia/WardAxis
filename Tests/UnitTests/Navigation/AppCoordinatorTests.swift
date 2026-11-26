@@ -119,6 +119,15 @@ struct AppCoordinatorTests {
         #expect(coordinator.presentedSheet == .settings)
     }
     
+    @Test
+    func `The settings deep link opens the Settings sheet and keeps the selected tab`() throws {
+        let coordinator = AppCoordinator()
+        
+        #expect(try coordinator.handleDeepLink(#require(URL(string: "wardaxis://settings"))))
+        #expect(coordinator.presentedSheet == .settings)
+        #expect(coordinator.selectedTab == .home)
+    }
+    
     @Test(arguments: ["wardaxis://profile", "wardaxis://permissions", "wardaxis://", "wardaxis://evil.example"])
     func `A deep link to an unknown host changes nothing`(link: String) throws {
         let coordinator = AppCoordinator()
