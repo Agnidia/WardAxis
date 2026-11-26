@@ -12,6 +12,8 @@ Amended on 2026-11-24 (WardAxis #5): the template server became the WardAxis man
 
 Amended on 2026-11-24 (WardAxis #5): the OpenAPI generator moves to `from: "1.14.0"` and the #17 `exact:` exception ends. `WardAxisManagementAPI` and `Server` raise their macOS floor to 26, the app's floor. See [Generator pin](#generator-pin-2026-11-24).
 
+Amended on 2026-11-26 (WardAxis #8): the known-gaps table moved to [THREAT-MODEL.md](../THREAT-MODEL.md#known-gaps). See [WardAxis adoption](#wardaxis-adoption).
+
 The pins in [Pinned versions](#pinned-versions) were checked against the upstream tags on 2026-10-11.
 
 ## Context
@@ -159,10 +161,4 @@ Decided on 2026-11-24 for WardAxis issue #5.
 | Config feed | `/v1/config/stream` accepts only a client certificate that chains to the device CA in `TLS_CLIENT_CA_PATH`. Without that variable the route does not exist. No header is ever trusted for identity. |
 | Contract | `WardAxisManagementAPI` 2.0.0: `/config/stream` with the OpenAPI `mutualTLS` scheme only. |
 
-Known gaps, owned by the threat model (PRE-008) and the Phase 5 PKI work:
-
-| Gap | Current mitigation |
-|---|---|
-| No CRL or OCSP check | A connection lifetime cap (15 min minus up to 3 min jitter) forces a new handshake, so a CA bundle change takes effect within one cap |
-| Authorization is "holds a device-CA certificate"; no per-device authorization | The feed serves global configuration only; per-device data waits for the Phase 5 device API |
-| With mTLS on, `/v1/health` also needs a client certificate | The container probe presents `HEALTHCHECK_CLIENT_CERTIFICATE_PATH` / `HEALTHCHECK_CLIENT_KEY_PATH` |
+Known gaps (no CRL or OCSP check, no per-device authorization, client certificate on `/v1/health`) and their current mitigations are tracked in [THREAT-MODEL.md](../THREAT-MODEL.md#known-gaps), boundary TB4.

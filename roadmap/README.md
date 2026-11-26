@@ -170,29 +170,29 @@ WardAxisEndpoint/
 
 ## Architecture decision records
 
-Each ADR contains context, alternatives, decision, consequences and validation criteria.
+Each ADR contains context, alternatives, decision, consequences and validation criteria ([template](../docs/adr/TEMPLATE.md)). Records in `docs/adr/` use the next free repository number; the Record column maps a roadmap ID to its file. The threat model is [docs/THREAT-MODEL.md](../docs/THREAT-MODEL.md).
 
-| ID | Decision |
-|---|---|
-| ADR-001 | System and app extensions under App Store distribution |
-| ADR-002 | Network filtering versus transparent proxying |
-| ADR-003 | Immutable security policy snapshots |
-| ADR-004 | Swift 6 concurrency and C interoperability |
-| ADR-005 | EndpointSecurity as a lab-only track |
-| ADR-006 | Sandboxed IPC (XPC, App Groups, NE messaging) |
-| ADR-007 | SQLite and bounded event persistence |
-| ADR-008 | Certificate trust and private PKI |
-| ADR-009 | DLP detection architecture |
-| ADR-010 | NanoMDM versus custom MDM implementation |
-| ADR-011 | Signed policy distribution |
-| ADR-012 | Fail-open and fail-closed semantics |
-| ADR-013 | Privacy-preserving telemetry |
-| ADR-014 | App Store install, update and removal |
-| ADR-015 | App Store–only distribution and platform matrix |
-| ADR-016 | Safari Web Extension DLP |
-| ADR-017 | MailKit compose DLP |
-| ADR-018 | tvOS packet-tunnel filtering |
-| ADR-019 | URL filter versus content filter per platform |
+| ID | Decision | Record |
+|---|---|---|
+| ADR-001 | System and app extensions under App Store distribution | [0008](../docs/adr/0008-extensions-under-app-store.md) |
+| ADR-002 | Network filtering versus transparent proxying | — |
+| ADR-003 | Immutable security policy snapshots | — |
+| ADR-004 | Swift 6 concurrency and C interoperability | — |
+| ADR-005 | EndpointSecurity as a lab-only track | [0009](../docs/adr/0009-endpoint-security-lab-only.md) |
+| ADR-006 | Sandboxed IPC (XPC, App Groups, NE messaging) | — |
+| ADR-007 | SQLite and bounded event persistence | — |
+| ADR-008 | Certificate trust and private PKI | — |
+| ADR-009 | DLP detection architecture | — |
+| ADR-010 | NanoMDM versus custom MDM implementation | — |
+| ADR-011 | Signed policy distribution | — |
+| ADR-012 | Fail-open and fail-closed semantics | — |
+| ADR-013 | Privacy-preserving telemetry | — |
+| ADR-014 | App Store install, update and removal | — |
+| ADR-015 | App Store–only distribution and platform matrix | [0010](../docs/adr/0010-app-store-only-distribution.md) |
+| ADR-016 | Safari Web Extension DLP | — |
+| ADR-017 | MailKit compose DLP | — |
+| ADR-018 | tvOS packet-tunnel filtering | — |
+| ADR-019 | URL filter versus content filter per platform | — |
 
 ## Testing strategy
 
