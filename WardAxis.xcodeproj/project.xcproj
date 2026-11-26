@@ -57,6 +57,7 @@
             "UnitTests/Core/EntitlementsTests.swift",
             "UnitTests/Core/HostConfigurationTests.swift",
             "UnitTests/Core/LabExclusionTests.swift",
+            "UnitTests/Core/LocalizationCoverageTests.swift",
             "UnitTests/Core/SystemExtensionIdentifierTests.swift",
             "UnitTests/Core/SystemExtensionServiceTests.swift",
             "UnitTests/Features/Settings/SettingsViewModelTests.swift",

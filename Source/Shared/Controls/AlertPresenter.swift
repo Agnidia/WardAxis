@@ -17,7 +17,7 @@ import SwiftUI
 ///     .alertPresenter(alertManager: container.alertManager)
 /// ```
 struct AlertPresenterModifier: ViewModifier {
-    @Bindable var alertManager: AlertManager
+    @State var alertManager: any AlertManagerProtocol
     
     func body(content: Content) -> some View {
         content

@@ -37,7 +37,7 @@ The delegate answers `.replace` to a version change. The OS offers a replacement
 
 ### D5: No security control is relaxed (T4)
 
-The tester copies the app to `/Applications` and approves it in System Settings. Testing never disables SIP and never enables `systemextensionsctl developer`. Approval tests run in a disposable macOS VM, which is reverted to a snapshot afterward ([TEST-DEVICES.md](../TEST-DEVICES.md)).
+The tester copies the app to `/Applications` and approves it in System Settings. Testing never disables SIP and never enables `systemextensionsctl developer`. Approval tests run in a disposable macOS VM, which is restored from a clean copy afterward ([TEST-DEVICES.md](../TEST-DEVICES.md)).
 
 ## Alternatives considered
 
