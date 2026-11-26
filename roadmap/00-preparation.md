@@ -21,7 +21,7 @@
 - [ ] PRE-007 — Configure CI for compilation on macOS and the iOS and tvOS simulators, unit tests, formatting and static analysis. The workflow exists and is enabled after v1.0.0 ([ADR 0007](../docs/adr/0007-pull-request-ci.md)).
 - [x] PRE-008 — Write initial threat model, trust boundaries and ADRs (ADR-001, ADR-005, ADR-015 first); define project scope and out-of-scope functionality. See [THREAT-MODEL.md](../docs/THREAT-MODEL.md), [ADR 0008](../docs/adr/0008-extensions-under-app-store.md), [ADR 0009](../docs/adr/0009-endpoint-security-lab-only.md) and [ADR 0010](../docs/adr/0010-app-store-only-distribution.md).
 - [x] PRE-009 — Define versioned event, policy and application identity schemas; introduce synthetic data sources and fixtures. See [ADR 0011](../docs/adr/0011-versioned-schemas.md).
-- [ ] PRE-010 — Document how to disable and remove every extension, test recovery from an invalid configuration, and take a clean lab snapshot.
+- [x] PRE-010 — Document how to disable and remove every extension, test recovery from an invalid configuration, and take a clean lab snapshot. See [RECOVERY.md](../docs/RECOVERY.md) and [TEST-DEVICES.md](../docs/TEST-DEVICES.md#clean-lab-snapshot).
 - [ ] PRE-011 — Draft the privacy policy, consent-screen copy, App Privacy label inventory and privacy manifest (`PrivacyInfo.xcprivacy`) for the app and each extension.
 - [ ] PRE-012 — Decide export compliance (`ITSAppUsesNonExemptEncryption`) and record the rationale.
 

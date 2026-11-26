@@ -160,6 +160,7 @@ Client resource and deletion controls: [ADR 0012](adr/0012-bounded-client-proces
 
 | Gap | Boundary | Current mitigation | Owner |
 |---|---|---|---|
+| Keychain items outlive the removal of the app (R2 in [RECOVERY.md](RECOVERY.md)) | TB3 | The app writes no Keychain item before enrollment exists (`NoClientIdentityProvider`) | Enrollment implementation: unenrollment erases every item through `SecureItemVault` |
 | Both erase-marker persistence and Keychain deletion fail | TB3 | The vault returns an error and suppresses restores in memory. No restart guarantee exists without durable state; the enrollment caller must retry | Enrollment implementation |
 | No CRL or OCSP check of device certificates | TB4 | None for one device. The server reads the device-CA bundle only at start-up, so revoking one device needs a rotation of the whole device CA, a server restart and the re-enrollment of every device. The connection lifetime cap (15 min minus up to 3 min jitter) then limits how long an old connection survives the restart; it does not revoke anything by itself | Phase 5 PKI |
 | Authorization is "holds a device-CA certificate"; no per-device authorization | TB4 | The feed serves global configuration only; per-device data waits for the Phase 5 device API | Phase 5 |
@@ -183,5 +184,6 @@ Client resource and deletion controls: [ADR 0012](adr/0012-bounded-client-proces
 | `SyntheticSourceTests` | TB2 | Synthetic events are labeled `synthetic`; a reused PID resolves to no identity |
 | `KeychainItemStoreTests`, `SecureItemVaultTests` | TB3 | Keychain item attributes, write fencing, interrupted erase. They do not test group isolation |
 | `ConfigStreamMutualTLSTests`, `TLSListenerTests`, `RequestBodyLimitTests` (`Server/`) | TB4 | A certificate from another CA fails the handshake whatever headers it sends; weak TLS is refused; an oversize body gets 413 |
+| `ConfigurationCacheTests`; the recovery test of [RECOVERY.md](RECOVERY.md#recovery-test) | TB2, TB4 | A truncated, oversize, unknown-schema or stale configuration cache is deleted, and the app keeps working |
 | Planned: replay, expired and revoked certificate tests | TB4 | Phase 2 and 5 |
 | Planned: native messaging and MailKit fuzz fixtures | TB6, TB7 | Phase 4 |
