@@ -57,6 +57,7 @@ struct SettingsView: View {
                 developerSection
 #endif
             }
+            .padding(.padding.xl)
             .navigationTitle(L.Settings.title)
             .navigationDestination(for: Route.self) { route in
                 destinationView(for: route)

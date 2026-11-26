@@ -64,13 +64,13 @@ struct MainButtonStyle: ButtonStyle {
             .background {
                 backgroundColor(isPressed: configuration.isPressed)
                     .shimmerEffect(
-                        colors: [.Button.Background.Primary.loading, .Brand.primary, .Button.Background.Primary.loading],
+                        colors: [.Button.Background.Primary.loading, .Background.primary, .Button.Background.Primary.loading],
                         isEnabled: isLoading,
                         isAnimated: isLoading
                     )
                     .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
             }
-            .padding(Border.thin)
+            .padding(.border.thin)
             .background {
                 Color.Button.Background.Primary.Border.default
                     .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))

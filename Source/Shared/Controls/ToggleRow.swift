@@ -56,7 +56,7 @@ struct ToggleRow: View {
             HStack {
                 Text(label)
                     .bodyMono()
-                    .foregroundStyle(Color.Brand.primary)
+                    .foregroundStyle(Color.Label.primary)
                 
                 Spacer()
                 
@@ -80,7 +80,7 @@ struct ToggleRow: View {
             // Divider
             if showDivider {
                 Divider()
-                    .background(Color.Brand.primary)
+                    .background(Color.Label.secondary)
             }
         }
         .accessibleGroup(accessibilityConfig)

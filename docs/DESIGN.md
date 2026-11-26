@@ -20,25 +20,25 @@ Colors live in `Resources/Colors.xcassets/`. Xcode generates Swift symbols from 
 
 | Namespace | Purpose | Colors |
 |---|---|---|
-| `Brand` | Brand identity | Primary, Secondary, Base |
 | `Background` | Surfaces | Primary, Secondary |
 | `Button.Background` | Button fills | Primary (Default, Pressed, Disabled, Loading, Border.Default), Secondary (Default, Border: Default, Pressed, Disabled, Loading), Tertiary (Default) |
 | `Button.Label` | Button text | Primary, Secondary, Tertiary; each Default, Pressed, Disabled, Loading |
 | `State` | Feedback | Error, Success, Warning, Info, Accent |
 | `Text` | Text | Primary, Secondary, Disabled, White |
 | `Label` | Labels | Primary, Secondary, Disabled |
-| `Textfield` | Inputs | Background, Text, Placeholder, Border (Primary, Secondary, Accent, Search) |
+| `Textfield` | Inputs | Background, Text, Placeholder, Border (Primary, Focused, Accent) |
 | `Border` | Structural borders | Primary, Secondary, Stroke |
 | `Shadow` | Elevation | Primary |
-| `UI` | General purpose | Background, Border, Surface |
 
 ```swift
 Text(L.Main.Home.title)
     .foregroundStyle(Color.Label.primary)
 
 RoundedRectangle(cornerRadius: CGFloat.radius.m)
-    .fill(Color.Brand.primary)
+    .fill(Color.Background.secondary)
 ```
+
+Text fields and the search field draw `Textfield.Border.primary` at rest and `Textfield.Border.focused` while focused or edited. The `Button.*.Tertiary` colors remain in the catalog, but no button style uses them.
 
 Never hardcode a color. To change a value, edit the colorset `Contents.json`; the namespace stays the same.
 
@@ -78,14 +78,15 @@ VStack(spacing: CGFloat.spacing.m) {
 | `CGFloat.opacity` | 12 levels from `transparent` (0.0) to `opaque` (1.0) |
 | `AnimationDuration` | zero 0, ultraFast 0.1, fast 0.2, normal 0.3, slow 0.6, ultraSlow 1.0 |
 | `Delay` | ultraShort, short, normal, long, ultraLong, extraLong (derived from `AnimationDuration`) |
-| `Scale` | hoverLift 1.025, focusLift 1.01, unfocuse 1.0 |
+| `Scale` | collapsed 0.0; x0_10, x0_25, x0_50, x0_75; base 1.0; focus 1.01 (tvOS); hover 1.025 (macOS); x1_10, x1_25, x1_50, x1_75; doubled 2.0 |
 | `Distance` | short 25, medium 50, long 100 |
 | `Shadow` | hoverRadius 12, hoverY 4 |
 | `IconSize` | xs 8, s 16, m 32, l 48, xl 64, xxl 128 |
 | `ButtonSize` | s 24, m 48, l 64, xl 128 |
 | `GridSize` | m 128, l 256 |
 | `TextFieldSize` | height 40 |
-| `Border` | primary 4, secondary 2, thin 1 |
+| `CGFloat.lineWidth` | hairline 0.5, thin 1, regular 2, bold 3, heavy 4 (strokes and dividers) |
+| `CGFloat.border` | primary 4, secondary 2, thin 1 (button and input borders) |
 | `IconBadgeSize` | s 44, m 80, l 120, xl 160 |
 | `BadgeSize` | s 18, m 22 |
 | `CarouselDotSize` | inactive 6, active 8 |
@@ -151,7 +152,6 @@ All styles take a `ButtonState`: `.base`, `.loading` (shimmer), `.complete`.
 |---|---|---|
 | `MainButtonStyle` | `.main(state:isFullWidth:)`, `.mainIconOnly(state:)` | Filled, brand colors |
 | `SecondaryButtonStyle` | `.secondary(state:isFullWidth:backgroundType:)`, `.secondaryIconOnly(state:backgroundType:)` | Outlined; `.blurred` background by default |
-| `TertiaryButtonStyle` | `.tertiary(state:isFullWidth:backgroundType:)`, `.tertiaryIconOnly(state:backgroundType:)` | Text only |
 
 ```swift
 Button(L.Common.done) { }
@@ -219,6 +219,20 @@ RoundedRectangle(cornerRadius: CGFloat.radius.m)
 view.shimmerEffect(colors: colors, isEnabled: isLoading, mask: RoundedRectangle(cornerRadius: CGFloat.radius.m))
 ```
 
+### Hiding a view
+
+`Source/Shared/Extensions/SwiftUI/View/View+IsHidden.swift`:
+
+| Method | Effect |
+|---|---|
+| `.isHidden(_:)` | Removes the view from the layout (renders nothing) |
+| `.isJustHidden(_:)` | Hides the view but keeps its space (`.hidden()`) |
+
+```swift
+ProgressView()
+    .isHidden(!isLoading)
+```
+
 ### Reduce Motion
 
 ```swift
@@ -244,7 +258,6 @@ Source/Shared/
       ButtonState.swift
       MainButtonStyle.swift
       SecondaryButtonStyle.swift
-      TertiaryButtonStyle.swift
   Controls/                   # Shared controls, AlertPresenter
   Services/Alert/             # AlertManager, AlertManagerProtocol, InAppAlert
   ViewModifiers/Animation/

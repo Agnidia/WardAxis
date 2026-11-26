@@ -70,6 +70,7 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
     } compact: {
         Text(verbatim: "Compact")
     }
+    .padding()
 }
 
 #Preview("Compact") {
@@ -78,5 +79,6 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
     } compact: {
         Text(verbatim: "Compact")
     }
+    .padding()
 }
 #endif

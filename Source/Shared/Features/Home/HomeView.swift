@@ -52,7 +52,7 @@ struct HomeView: View {
         VStack(spacing: CGFloat.spacing.m) {
             Image(systemName: "house.fill")
                 .font(.system(size: IconSize.xxl))
-                .foregroundStyle(Color.Brand.primary)
+                .foregroundStyle(Color.Background.secondary)
                 .accessibleDecorativeImage()
             
             Text(L.Main.Home.welcome)

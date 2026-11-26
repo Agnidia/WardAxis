@@ -121,9 +121,9 @@ struct SearchField: View {
     
     private var borderColor: Color {
         switch currentState {
-        case .default: .Textfield.Border.search
-        case .pressed: .Textfield.Border.primary
-        case .entered: .Textfield.Border.search
+        case .default: .Textfield.Border.primary
+        case .pressed: .Textfield.Border.focused
+        case .entered: .Textfield.Border.focused
         }
     }
     

@@ -119,7 +119,7 @@ struct ColorSwatchView: View {
             .frame(width: FormSize.colorSwatchSize, height: FormSize.colorSwatchSize)
             .overlay(
                 Circle()
-                    .stroke(Color.Brand.base, lineWidth: 1)
+                    .stroke(Color.Background.secondary, lineWidth: .lineWidth.thin)
             )
     }
 }
@@ -129,7 +129,7 @@ struct ColorSwatchView: View {
 #if PREVIEW_DEBUG
 
 #Preview("Row View") {
-    VStack(spacing: 8) {
+    VStack(spacing: .spacing.l) {
         RowView(
             label: "Soft Pink",
             accessibility: PreviewRowAccessibility()
@@ -154,7 +154,7 @@ struct ColorSwatchView: View {
             Image(systemName: "lock")
                 .frame(width: IconSize.s, height: IconSize.s)
                 .padding(.trailing, .padding.s)
-                .foregroundStyle(Color.Label.primary)
+                .foregroundStyle(Color.Label.secondary)
         } trailing: {
             Image(systemName: "chevron.right")
                 .frame(width: IconSize.s, height: IconSize.s)

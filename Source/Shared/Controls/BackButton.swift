@@ -54,7 +54,7 @@ struct BackButton: View {
             action: {}
         )
         .padding(.padding.s)
-        .background(Color.Brand.primary)
+        .background(Color.Background.secondary)
         .clipShape(RoundedRectangle(cornerRadius: .radius.m))
     }
     .padding(.padding.l)

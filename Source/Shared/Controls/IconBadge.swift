@@ -26,7 +26,7 @@ struct IconBadge: View {
     
     init(
         icon: ImageResource,
-        color: Color = .Brand.primary,
+        color: Color = .Label.primary,
         size: CGFloat = IconBadgeSize.l
     ) {
         content = .resource(icon)
@@ -36,7 +36,7 @@ struct IconBadge: View {
     
     init(
         systemName: String,
-        color: Color = .Brand.primary,
+        color: Color = .Label.primary,
         size: CGFloat = IconBadgeSize.l
     ) {
         content = .system(systemName)
@@ -74,35 +74,35 @@ struct IconBadge: View {
 // MARK: - Convenience Initializers
 
 extension IconBadge {
-    static func small(systemName: String, color: Color = .Brand.primary) -> IconBadge {
+    static func small(systemName: String, color: Color = .Label.primary) -> IconBadge {
         IconBadge(systemName: systemName, color: color, size: IconBadgeSize.s)
     }
     
-    static func medium(systemName: String, color: Color = .Brand.primary) -> IconBadge {
+    static func medium(systemName: String, color: Color = .Label.primary) -> IconBadge {
         IconBadge(systemName: systemName, color: color, size: IconBadgeSize.m)
     }
     
-    static func large(systemName: String, color: Color = .Brand.primary) -> IconBadge {
+    static func large(systemName: String, color: Color = .Label.primary) -> IconBadge {
         IconBadge(systemName: systemName, color: color, size: IconBadgeSize.l)
     }
     
-    static func hero(systemName: String, color: Color = .Brand.primary) -> IconBadge {
+    static func hero(systemName: String, color: Color = .Label.primary) -> IconBadge {
         IconBadge(systemName: systemName, color: color, size: IconBadgeSize.xl)
     }
     
-    static func small(icon: ImageResource, color: Color = .Brand.primary) -> IconBadge {
+    static func small(icon: ImageResource, color: Color = .Label.primary) -> IconBadge {
         IconBadge(icon: icon, color: color, size: IconBadgeSize.s)
     }
     
-    static func medium(icon: ImageResource, color: Color = .Brand.primary) -> IconBadge {
+    static func medium(icon: ImageResource, color: Color = .Label.primary) -> IconBadge {
         IconBadge(icon: icon, color: color, size: IconBadgeSize.m)
     }
     
-    static func large(icon: ImageResource, color: Color = .Brand.primary) -> IconBadge {
+    static func large(icon: ImageResource, color: Color = .Label.primary) -> IconBadge {
         IconBadge(icon: icon, color: color, size: IconBadgeSize.l)
     }
     
-    static func hero(icon: ImageResource, color: Color = .Brand.primary) -> IconBadge {
+    static func hero(icon: ImageResource, color: Color = .Label.primary) -> IconBadge {
         IconBadge(icon: icon, color: color, size: IconBadgeSize.xl)
     }
 }
@@ -112,7 +112,7 @@ extension IconBadge {
 #if PREVIEW_DEBUG
 
 #Preview("Icon Badge Sizes") {
-    VStack(spacing: 24) {
+    VStack(spacing: .spacing.xxxl) {
         IconBadge.small(systemName: "checkmark")
         IconBadge.medium(systemName: "sparkles")
         IconBadge.large(systemName: "person.fill")

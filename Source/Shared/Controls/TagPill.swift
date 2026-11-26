@@ -33,6 +33,7 @@ struct TagPill: View {
         
         TagPill(tag: "1")
     }
+    .padding()
 }
 
 #endif

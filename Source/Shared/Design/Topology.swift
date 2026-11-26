@@ -45,12 +45,39 @@ enum Delay {
 
 /// Scale effect tokens for interactive animations
 enum Scale {
-    /// 1.025x - Subtle hover lift (macOS)
-    static let hoverLift: CGFloat = 1.025
+    /// Collapsed / hidden
+    /// 0.0x - Collapsed (hidden)
+    static let collapsed: CGFloat = 0.0
+    /// 0.1x - Tiny scale for micro feedback
+    static let x0_10: CGFloat = 0.1
+    /// 0.25x - Quarter size
+    static let x0_25: CGFloat = 0.25
+    /// 0.5x - Half size
+    static let x0_50: CGFloat = 0.5
+    /// 0.75x - Three-quarter size
+    static let x0_75: CGFloat = 0.75
+    
+    /// Baseline
+    /// 1.0x - Baseline scale
+    static let base: CGFloat = 1.0
+    
+    /// Interactive scales (<= 1.1x)
     /// 1.01x - tvOS focus scale
-    static let focusLift: CGFloat = 1.01
-    /// 1.0x - unfocus scale
-    static let unfocuse: CGFloat = 1.0
+    static let focus: CGFloat = 1.01
+    /// 1.025x - Subtle hover lift (macOS)
+    static let hover: CGFloat = 1.025
+    /// 1.1x - Slight enlarge
+    static let x1_10: CGFloat = 1.1
+    
+    /// Enlargements
+    /// 1.25x - Quarter up enlarge
+    static let x1_25: CGFloat = 1.25
+    /// 1.5x - One and a half enlarge
+    static let x1_50: CGFloat = 1.5
+    /// 1.75x - One and three-quarter enlarge
+    static let x1_75: CGFloat = 1.75
+    /// 2.0x - Double size
+    static let doubled: CGFloat = 2.0
 }
 
 /// Distance tokens for swipe thresholds and gesture recognition
@@ -90,7 +117,7 @@ extension CGFloat {
         static let xl: CGFloat = 10
         /// 12pt - Extra large spacing
         static let xxl: CGFloat = 12
-        /// 26pt - Huge spacing for major sections
+        /// 16pt - Huge spacing for major sections
         static let xxxl: CGFloat = 16
         /// 20pt - Maximum spacing for prominent gaps
         static let xxxxl: CGFloat = 20
@@ -149,6 +176,30 @@ extension CGFloat {
         static let l: CGFloat = 32
         /// 40pt - Extra heavy blur
         static let xl: CGFloat = 40
+    }
+    
+    /// Line width tokens
+    enum lineWidth {
+        /// 0.5pt - Hairline separators and subtle dividers
+        static let hairline: CGFloat = 0.5
+        /// 1pt - Standard separators and thin strokes
+        static let thin: CGFloat = 1
+        /// 2pt - Emphasized separators and standard borders
+        static let regular: CGFloat = 2
+        /// 3pt - Strong emphasis dividers
+        static let bold: CGFloat = 3
+        /// 4pt - Extra-strong dividers and prominent borders
+        static let heavy: CGFloat = 4
+    }
+    
+    /// Button border width tokens
+    enum border {
+        /// 4pt - Primary button border
+        static let primary: CGFloat = 4
+        /// 2pt - Secondary button border
+        static let secondary: CGFloat = 2
+        /// 1pt - Thin border for input fields
+        static let thin: CGFloat = 1
     }
 }
 
@@ -224,16 +275,6 @@ enum TextFieldSize {
     static let height: CGFloat = 40
 }
 
-/// Button border width tokens
-enum Border {
-    /// 4pt - Primary button border
-    static let primary: CGFloat = 4
-    /// 2pt - Secondary button border
-    static let secondary: CGFloat = 2
-    /// 1pt - Thin border for input fields
-    static let thin: CGFloat = 1
-}
-
 /// Button background appearance type
 enum ButtonBackgroundType: Sendable {
     /// Solid background color without blur
@@ -269,7 +310,7 @@ enum FormSize {
     /// 12pt - Inner input field corner radius
     static let innerRadius: CGFloat = .radius.l - 2
     /// 1pt - Border width for input fields
-    static let borderWidth: CGFloat = Border.thin
+    static let borderWidth: CGFloat = .border.thin
     /// 56pt - Digit code input size (width and height)
     static let digitCodeSize: CGFloat = 56
     /// 48pt - Search field height

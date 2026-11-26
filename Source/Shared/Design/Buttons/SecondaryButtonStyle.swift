@@ -65,18 +65,18 @@ struct SecondaryButtonStyle: ButtonStyle {
                     .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
             }
             .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
-            .padding(Border.thin)
+            .padding(.border.thin)
             .overlay {
                 RoundedRectangle(cornerRadius: .radius.xxxl)
-                    .inset(by: Border.primary.half)
-                    .stroke(borderColor(isPressed: configuration.isPressed), lineWidth: Border.thin)
+                    .inset(by: .border.primary.half)
+                    .stroke(borderColor(isPressed: configuration.isPressed), lineWidth: .lineWidth.thin)
                     .shimmerEffect(
-                        colors: [.Button.Background.Primary.loading, .Brand.primary, .Button.Background.Primary.loading],
+                        colors: [.Button.Background.Primary.loading, .Background.secondary, .Button.Background.Primary.loading],
                         isEnabled: isLoading,
                         isAnimated: isLoading,
                         mask: RoundedRectangle(cornerRadius: .radius.xxxl)
-                            .inset(by: Border.primary.half)
-                            .stroke(lineWidth: Border.thin)
+                            .inset(by: .border.primary.half)
+                            .stroke(lineWidth: .lineWidth.thin)
                     )
             }
             .animation(.easeInOut(duration: AnimationDuration.fast), value: configuration.isPressed)

@@ -61,14 +61,16 @@ struct CustomLabel: View {
 
 #if PREVIEW_DEBUG
 
-// Note: CustomLabel's `icon:` parameter is `ImageResource?` (asset-catalog-bound).
-// This template ships only brand-asset imagesets, so the icon-only and title+icon
-// variants cannot be rendered here without introducing a new asset (out of scope).
-// The preview exercises the title-only and long-localized-title code paths; the
-// icon code paths are visually validated by sibling controls (RowView, IconBadge)
-// that already render `Image` instances under the same Topology tokens.
+/// Preview-only helper to fabricate an ImageResource from a system symbol name
+/// so we can exercise icon code paths without shipping extra assets.
+private extension ImageResource {
+    static var preview: ImageResource {
+        .gear
+    }
+}
+
 #Preview("Custom Label") {
-    VStack(alignment: .leading, spacing: .spacing.xl) {
+    VStack(alignment: .leading, spacing: .spacing.xxxl) {
         CustomLabel(title: "Settings")
         
         CustomLabel(
@@ -77,7 +79,28 @@ struct CustomLabel: View {
     }
     .padding(.padding.l)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(Color.Background.primary)
+    .background(Color.Background.secondary)
+}
+
+#Preview("Custom Label – Title + Icon") {
+    VStack(alignment: .leading, spacing: .spacing.xxxl) {
+        CustomLabel(title: "Settings", icon: .preview)
+        CustomLabel(title: "Long title with icon that wraps to the next line", icon: .preview)
+    }
+    .padding(.padding.l)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.Background.secondary)
+}
+
+#Preview("Custom Label – Icon Only") {
+    HStack(spacing: .spacing.xl) {
+        CustomLabel(icon: .preview)
+        CustomLabel(icon: .preview, iconSize: IconSize.m)
+        CustomLabel(icon: .preview, iconSize: IconSize.l)
+    }
+    .padding(.padding.l)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.Background.secondary)
 }
 
 #endif
