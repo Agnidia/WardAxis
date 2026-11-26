@@ -54,7 +54,7 @@ The scheme, the group membership per component and the rationale are in [ADR 000
 
 The lab-only Developer ID build (`WardAxisLab` scheme) has its own setup: see [LAB.md](LAB.md).
 
-Test devices, the macOS test VM and the system extension approval procedure are in [TEST-DEVICES.md](TEST-DEVICES.md). Approval needs the NetworkFilter App ID registered with the Network Extensions capability.
+Test devices, the macOS test VM and the system extension approval procedure are in [TEST-DEVICES.md](TEST-DEVICES.md). Approval needs the NetworkFilter App ID registered with the Network Extensions capability. To remove WardAxis or recover a device from an invalid configuration, see [RECOVERY.md](RECOVERY.md).
 
 ### App Store archive
 

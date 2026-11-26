@@ -45,8 +45,7 @@ Do not paste the full `system_profiler` or `devicectl` output anywhere: it conta
 3. In the VM, read the provisioning UDID with `system_profiler SPHardwareDataType | grep "Provisioning UDID"`. Register it in the Apple Developer portal under Devices as a Mac. Do not record it anywhere else.
 4. On the MacBook Air, build the `WardAxis` scheme once in Xcode with automatic signing. Xcode then regenerates the development profiles with the VM included.
 5. In UTM, add a shared directory for build transfer (VM settings → Sharing; the VM must be shut down, not suspended). The guest mounts it under `/Volumes/My Shared Files`.
-6. Shut the VM down and keep a clean copy. UTM has no snapshots with the Apple backend, so clone the bundle instead; an APFS clone takes no extra space until the copies differ:
-   `cp -c -R ~/Library/Containers/com.utmapp.UTM/Data/Documents/macOS.utm ~/Library/Containers/com.utmapp.UTM/Data/Documents/macOS-clean.utm`
+6. Take the [clean lab snapshot](#clean-lab-snapshot).
 7. Update the VM row of the [inventory](#inventory).
 
 ## System extension approval (macOS VM)
@@ -62,7 +61,7 @@ Prerequisite: the App IDs `com.agnidia.wardaxis` and `com.agnidia.wardaxis.netwo
 6. Run `systemextensionsctl list`. The `com.agnidia.wardaxis.networkfilter` row shows `[activated enabled]`.
 7. Open System Settings → Network → Filters. It lists no WardAxis filter, because activation saves no configuration (ADR 0006 D3).
 8. Select **Deactivate network filter**. The status changes to **Deactivated**, and `systemextensionsctl list` no longer shows the row as `[activated enabled]`. The OS can show it as waiting to uninstall until the next restart.
-9. Record the result in the [results log](#results-log). Shut the VM down, delete `macOS.utm`, and clone `macOS-clean.utm` back to `macOS.utm`.
+9. Record the result in the [results log](#results-log). [Restore the clean snapshot](#restore-the-snapshot).
 
 | Status shown | Cause | Fix |
 |---|---|---|
@@ -95,6 +94,49 @@ Supervision erases the iPad. Back it up first.
 
 The iOS and tvOS shells cannot be activated yet. The packet tunnel and the URL filter need a saved configuration, and that arrives in Phase 1. Enrollment behavior on iPad and Apple TV is tested with MDM in Phase 5 (MDM-011, MDM-012).
 
+## Clean lab snapshot
+
+A clean snapshot is a test device with no WardAxis app, extension, configuration, profile or container. Every system extension test starts from it and ends by restoring it. The removal and recovery steps are in [RECOVERY.md](RECOVERY.md).
+
+### Take the snapshot (macOS VM)
+
+UTM has no snapshots with the Apple backend, so the snapshot is a clone of the VM bundle. An APFS clone takes no extra space until the copies differ. The clone keeps the machine identifier of the VM, so the provisioning UDID registered in the Developer portal stays valid.
+
+1. Start the VM and check that it is clean. Each command prints nothing:
+   ```bash
+   systemextensionsctl list | grep com.agnidia.wardaxis
+   ls /Applications ~/Library/Containers ~/Library/Group\ Containers | grep -i wardaxis
+   ```
+   Then check that System Settings → General → Device Management lists no profile, and that `csrutil status` reads `enabled`.
+2. Shut the VM down. Do not suspend it: a suspended VM keeps its memory state in the bundle.
+3. Replace the old snapshot with a new clone:
+   ```bash
+   cd ~/Library/Containers/com.utmapp.UTM/Data/Documents
+   rm -rf macOS-clean.utm
+   cp -c -R macOS.utm macOS-clean.utm
+   ```
+4. Record the snapshot in the [results log](#results-log), with the macOS version and build.
+
+Take a new snapshot after a macOS update and after a change to the shared directory. Never take one while a WardAxis build is installed.
+
+### Restore the snapshot
+
+1. Shut the VM down.
+2. Replace the used VM with a clone of the snapshot:
+   ```bash
+   cd ~/Library/Containers/com.utmapp.UTM/Data/Documents
+   rm -rf macOS.utm
+   cp -c -R macOS-clean.utm macOS.utm
+   ```
+3. Start the VM, and do the checks of step 1 of [Take the snapshot](#take-the-snapshot-macos-vm).
+
+### iPhone, iPad and Apple TV
+
+These devices have no snapshot. Their clean state is the result of the [removal procedure](RECOVERY.md#remove-wardaxis). When that procedure does not give a clean state, erase the device:
+
+- iPhone, iPad: Settings → General → Transfer or Reset → **Erase All Content and Settings**. The iPad then needs [supervision](#supervise-the-ipad) again.
+- Apple TV: Settings → System → Reset → **Reset**.
+
 ## Results log
 
 Add one row per run. Never delete a row: a failure is a result too.
@@ -109,3 +151,4 @@ Add one row per run. Never delete a row: a failure is a result too.
 | 2026-11-26 | iPad mini (A17 Pro), iPadOS 27.2.1, supervised | Debug (`3106424`) | Pair again, turn on Developer Mode, install and launch over USB with `devicectl` | Pass: installed, launched and still running. Settings not yet opened by hand |
 | 2026-11-26 | Apple TV 4K (2nd generation), tvOS 27.2.1 | Debug (working tree, installed from Xcode) | Install and launch | Fail: launches, but shows string keys such as `main.tab.home`. Cause: the Ukrainian table translated 11 of 86 keys, and the OS does not fall back to English per key |
 | 2026-11-26 | Apple TV 4K (2nd generation), tvOS 27.2.1 | Debug (working tree, complete Ukrainian catalog) | Install and launch | Pass: localized text on every screen checked by the tester |
+| 2026-11-26 | MacBook Air (development Mac), macOS 27.2.1 | Debug (`e0ff997`), run from the build folder | Recovery test: truncated, oversize, unknown-schema and stale cache files ([RECOVERY.md](RECOVERY.md#recovery-test)) | Pass: at each launch the app deleted the file and kept running. Leftovers of earlier installs found: the `com.agnidia.wardaxis`, `.safari`, `.mail` and `.lab.mail` containers, the App Group container, and the NetworkFilter row `[terminated waiting to uninstall on reboot]` |
