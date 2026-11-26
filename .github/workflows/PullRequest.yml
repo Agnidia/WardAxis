@@ -1,0 +1,130 @@
+# Pull request gate: build, unit tests, formatting and static analysis for
+# macOS, iOS and tvOS. Trust boundary and rationale: docs/adr/0007-pull-request-ci.md.
+#
+# Disabled until after v1.0.0: every job runs only when the repository
+# variable CI_ENABLED is 'true'. Until then the local gate in AGENTS.md applies.
+
+name: PullRequest
+
+on:
+  pull_request:
+    branches: [develop, master]
+  workflow_dispatch:
+
+# Untrusted pull request code runs here: read-only token, no secrets.
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  XCODE_APP: /Applications/Xcode_27.2.app
+  SWIFTFORMAT_VERSION: 0.64.7
+  SWIFTFORMAT_SHA256: e82e224325cbd3403fc7b68caf6c917926dc106de3af875fca4b87e3c4634038
+  # Pinned versions in Package.resolved bound what the build plugin trust covers.
+  XCODEBUILD_FLAGS: -skipPackagePluginValidation -onlyUsePackageVersionsFromResolvedFile
+
+jobs:
+  format:
+    name: Formatting
+    if: vars.CI_ENABLED == 'true'
+    runs-on: xcode-27
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install SwiftFormat
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/swiftformat"
+          mkdir -p "$dir"
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+            --output "$dir/swiftformat.zip" \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
+          echo "${SWIFTFORMAT_SHA256}  $dir/swiftformat.zip" | shasum -a 256 --check --strict
+          unzip -q "$dir/swiftformat.zip" -d "$dir"
+          chmod +x "$dir/swiftformat"
+          echo "$dir" >> "$GITHUB_PATH"
+
+      - name: Lint
+        run: swiftformat --lint .
+
+  xcode:
+    name: ${{ matrix.platform }}
+    if: vars.CI_ENABLED == 'true'
+    runs-on: xcode-27
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macOS, iOS, tvOS]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch "$XCODE_APP"
+
+      - name: Resolve destination
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          case "$PLATFORM" in
+            macOS) echo "DESTINATION=platform=macOS" >> "$GITHUB_ENV" ;;
+            iOS|tvOS)
+              udid="$(python3 -I scripts/ci-simulator.py "$PLATFORM")"
+              echo "DESTINATION=id=$udid" >> "$GITHUB_ENV"
+              ;;
+            *) echo "unknown platform: $PLATFORM" >&2; exit 1 ;;
+          esac
+
+      # Hosted runners have no team certificate, so nothing is signed with an
+      # identity or entitlements; the linker's ad hoc signature lets the test host
+      # launch. EntitlementsTests reads the team signature and runs only on the
+      # device gate. WA_WARNINGS_AS_ERRORS reaches project targets only.
+      - name: Build and unit test
+        run: |
+          set -euo pipefail
+          # XCODEBUILD_FLAGS holds two fixed flags; split on purpose.
+          # shellcheck disable=SC2086
+          xcodebuild -project WardAxis.xcodeproj -scheme WardAxis -configuration Debug \
+            -destination "$DESTINATION" $XCODEBUILD_FLAGS \
+            -only-testing:UnitTests \
+            -skip-testing:UnitTests/EntitlementsTests \
+            WA_WARNINGS_AS_ERRORS=YES CODE_SIGNING_ALLOWED=NO \
+            test
+
+      - name: Static analysis
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          xcodebuild -project WardAxis.xcodeproj -scheme WardAxis -configuration Debug \
+            -destination "$DESTINATION" $XCODEBUILD_FLAGS \
+            WA_WARNINGS_AS_ERRORS=YES CODE_SIGNING_ALLOWED=NO \
+            analyze
+
+  packages:
+    name: Packages
+    if: vars.CI_ENABLED == 'true'
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch "$XCODE_APP"
+
+      - name: Test
+        run: |
+          set -euo pipefail
+          for package in WardAxisTelemetry WardAxisManagement WardAxisManagementAPI; do
+            (cd "Packages/$package" && swift test --force-resolved-versions)
+          done
