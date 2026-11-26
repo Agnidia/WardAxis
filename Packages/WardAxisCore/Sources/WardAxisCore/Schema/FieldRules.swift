@@ -35,7 +35,7 @@ enum FieldRules {
         }
         let labels = bytes.split(separator: UInt8(ascii: "."), omittingEmptySubsequences: false)
         // An all-numeric last label reads as an IP address (`999.0.0.1`, `127.1`), never a name (RFC 3696 §2).
-        guard let last = labels.last, !last.allSatisfy(ASCII.digits.contains) else {
+        guard let last = labels.last, !last.allSatisfy(ASCII.digits.contains), !isNumericAddress(labels) else {
             return false
         }
         return labels.allSatisfy { label in
@@ -97,6 +97,17 @@ enum FieldRules {
     }
     
     // MARK: - Private
+    
+    private static func isNumericAddress(_ labels: [ArraySlice<UInt8>]) -> Bool {
+        guard (1...4).contains(labels.count) else { return false }
+        return labels.allSatisfy { label in
+            if label.starts(with: [UInt8(ascii: "0"), UInt8(ascii: "x")]) {
+                let digits = label.dropFirst(2)
+                return !digits.isEmpty && digits.allSatisfy { ASCII.digits.contains($0) || ASCII.lowercaseHexLetters.contains($0) }
+            }
+            return !label.isEmpty && label.allSatisfy(ASCII.digits.contains)
+        }
+    }
     
     private static func ipv6Groups(_ value: String) -> [UInt16]? {
         let bytes = Array(value.utf8)

@@ -6,7 +6,7 @@ Logging has two parts:
 
 | Part | Location | Contents |
 |---|---|---|
-| `Log` API | `Packages/WardAxisTelemetry/Sources/WardAxisTelemetry/` | `Log`, `Log+Constants` (`Level`, `Category`, `Privacy`, `Environment`, `Configuration`), `LogProtocol`, `LogMetadata`, `LogDateFormat`, `LoggingError`, `FileLogHandler`, `FileHandlerOutputStream` |
+| `Log` API | `Packages/WardAxisTelemetry/Sources/WardAxisTelemetry/` | `Log`, `Log+Constants` (`Level`, `Category`, `Privacy`, `Environment`, `Configuration`), `LogProtocol`, `LogMetadata`, `LogDateFormat`, `LoggingError`, `FileLogHandler`, `LogFileTail`, `LogFileLimits` |
 | Reader and viewer | `Source/Shared/Logger/` (this folder) | `Models/` (`LogEntry`, `LogDateRange`), `Service/` (`LogReaderService`, `LogReaderServiceProtocol`, `LogEntryParser`, `LogReaderError`), `UI/` (`LogRowView`, `LogLevelFilterBar`, `LogDateRangeFilterBar`, `LogDateRange+UI`, `Log.Level+UI`, `LogsUnavailableView`) |
 | Viewer screen | `Source/Shared/Features/Logs/` | `LogsViewerView`, `LogsViewerViewModel` |
 
@@ -148,7 +148,7 @@ At start-up, `Log` picks `.test` when `XCTestConfigurationFilePath` is set, othe
 |---|---|
 | Path | `Library/Logs/<bundle identifier>/log.log` in the user domain (inside the sandbox container); `Log.logDirectoryUrl` returns the folder |
 | Writer | `FileLogHandler.shared`; `nil` when the main bundle has no identifier, and logging then falls back to the unified log only |
-| Rotation | Keeps the last 100,000 lines, through the live `FileHandle` |
+| Rotation | 4 MiB maximum; retains up to 2 MiB through the live handle on the writer actor |
 | Extensions | `Log` never attaches the file writer when the bundle path ends in `.appex`, `.systemextension` or `.xpc` |
 
 ### Log line format
@@ -189,7 +189,7 @@ Rationale:
 | Filters | Level (error, warning, info, debug) and date range (10 min, 30 min, 1 hour, 1 day, all) |
 | Refresh | Reloads the file |
 | Share | `exportEntries(_:)` writes `wardaxis-logs-YYYYMMDD-HHmmss.txt` to the temporary directory; `ShareLink` presents it |
-| Clear | `clearEntries()` truncates the live file through `FileLogHandler`; later writes land in the empty file |
+| Clear | `clearEntries()` truncates the live file through `FileLogHandler`; pending entries are discarded; later writes land in the empty file; failures reach the UI |
 | Copy | Long-press copies the raw line |
 
 ---
@@ -200,8 +200,8 @@ Rationale:
 
 | Feature | Detail |
 |---|---|
-| Init | `LogReaderService(fileURL:parser:streamingThresholdBytes:maxStreamedEntries:now:)`; every parameter has a default |
-| Large files | At 5 MB or more, returns only the last 5,000 entries |
+| Init | `LogReaderService(fileURL:parser:maximumReadBytes:writer:maxStreamedEntries:now:)`; every parameter has a default |
+| Large files | Reads at most the last 2 MiB; discards oversized entries; returns at most 5,000 entries |
 | Order | File order, oldest first; the view reverses it for display |
 | Errors | `LogReaderError`: `fileMissing`, `permissionDenied`, `readFailed`, `writeFailed` |
 | Test double | `MockLogReaderService(scenario:)` in `Source/Shared/Mocks/` |

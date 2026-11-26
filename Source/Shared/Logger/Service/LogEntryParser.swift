@@ -131,20 +131,35 @@ struct LogEntryParser: Sendable {
     func parseAll(_ source: String) -> [LogEntry] {
         guard !source.isEmpty else { return [] }
         
-        let rawLines = source
-            .split(separator: "\n", omittingEmptySubsequences: true)
-            .map(String.init)
-        
+        let rawLines = source.split(separator: "\n", omittingEmptySubsequences: true)
         var merged: [String] = []
-        merged.reserveCapacity(rawLines.count)
-        
+        var current = ""
+        var currentBytes = 0
+        var oversized = false
         for line in rawLines {
-            if Self.isHeaderLine(line) || merged.isEmpty {
-                merged.append(line)
-            } else {
-                merged[merged.count - 1].append("\n")
-                merged[merged.count - 1].append(line)
+            let header = String(decoding: line.utf8.prefix(512), as: UTF8.self)
+            if Self.isHeaderLine(header) {
+                if !current.isEmpty, !oversized {
+                    merged.append(current)
+                }
+                current = ""
+                currentBytes = 0
+                oversized = false
             }
+            let addedBytes = line.utf8.count + (current.isEmpty ? 0 : 1)
+            guard !oversized, currentBytes + addedBytes <= LogFileLimits.maximumEntryBytes else {
+                oversized = true
+                current = ""
+                continue
+            }
+            if !current.isEmpty {
+                current.append("\n")
+            }
+            current.append(contentsOf: line)
+            currentBytes += addedBytes
+        }
+        if !current.isEmpty, !oversized {
+            merged.append(current)
         }
         
         return merged.map(parse)

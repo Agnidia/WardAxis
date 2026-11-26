@@ -4,6 +4,8 @@
 
 Accepted on 2026-11-26 (PRE-009, #9).
 
+Amended on 2026-11-26: refuse hexadecimal and mixed numeric address forms before hostname validation.
+
 ## Context
 
 Events, policies and application identities cross the boundaries between the server, the app, the extensions and the agent. Each of them is data that an untrusted or partly trusted peer can write.
@@ -61,7 +63,7 @@ The body types decode only inside `SchemaCodec`. Each body's `init(from:)` requi
 | `ApplicationMatcher` | Pins `teamIdentifier`, or sets `isPlatformBinary` with no Team ID. A signing identifier alone is refused |
 | `ApplicationIdentity` | A platform binary with a Team ID is refused as a contradictory claim |
 | Team ID | Exactly ten of `A–Z 0–9` |
-| Host name | ASCII, lowercase LDH labels, no trailing dot, last label not all digits. Internationalized names arrive as punycode |
+| Host name | ASCII, lowercase LDH labels, no trailing dot, last label not all digits, and no one-to-four-component numeric IPv4 form, including hexadecimal components. Internationalized names arrive as punycode |
 | Host pattern | A host name, or `*.` and a name of at least two labels. `*.com` is refused. No public-suffix list is consulted, so `*.co.uk` passes (known gap) |
 | Remote host of a flow | A host name, a dotted-quad IPv4 with no leading zeros, or an IPv6 address in RFC 5952 form. No zone, no embedded IPv4, no short or hex forms |
 | Event time | Whole seconds; `validate()` refuses a fraction, which the wire format would drop |

@@ -286,4 +286,22 @@ struct ConfigurationWireTests {
             #expect(reloaded == configuration)
         }
     }
+    
+    @Test
+    @MainActor
+    func `Overflow ends a bounded stream instead of accepting frames after a gap`() async {
+        let (stream, continuation) = URLSessionWebSocketTransport.eventStream()
+        let connection = WebSocketConnection(continuation: continuation, identity: ConfigurationHarness.identity)
+        for _ in 0..<URLSessionWebSocketTransport.maximumBufferedEvents {
+            #expect(connection.yield(.message(Data("{}".utf8))))
+        }
+        #expect(!connection.yield(.message(Data("overflow".utf8))))
+        #expect(!connection.yield(.message(Data("after gap".utf8))))
+        var events: [ConfigurationStreamEvent] = []
+        for await event in stream {
+            events.append(event)
+        }
+        #expect(events.count == URLSessionWebSocketTransport.maximumBufferedEvents)
+        #expect(events.allSatisfy { $0 == .message(Data("{}".utf8)) })
+    }
 }

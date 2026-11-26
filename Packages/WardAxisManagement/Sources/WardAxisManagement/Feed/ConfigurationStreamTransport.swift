@@ -10,7 +10,7 @@ import Foundation
 /// Opens one configuration feed connection.
 ///
 /// The returned stream yields ``ConfigurationStreamEvent/opened`` at most once,
-/// then each frame, and ends after exactly one ``ConfigurationStreamEvent/closed(_:)``.
+/// then ordered frames. Overflow terminates the stream; a final close event may not fit.
 /// When the consumer stops iterating (its task is cancelled or it drops the
 /// stream), the transport closes the connection with a normal closure.
 public protocol ConfigurationStreamTransport: Sendable {
@@ -44,4 +44,6 @@ public enum ConfigurationStreamClose: Sendable, Equatable {
     
     /// The connection failed without a close code or an HTTP status.
     case connectionFailed
+    
+    case bufferOverflow
 }

@@ -62,6 +62,12 @@ extension AccessibilityProtocol {
 /// .accessibilityHint(AccessibilityID.Home.settingsButton.hint)
 /// ```
 enum AccessibilityID: Sendable {
+    enum Screen {
+        static let home = "screen.home"
+        static let settings = "screen.settings"
+        static let help = "screen.help"
+    }
+    
     // MARK: - Home
     
     enum Home: String, AccessibilityProtocol, CaseIterable, Sendable {

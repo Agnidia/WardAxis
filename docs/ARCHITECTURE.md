@@ -78,7 +78,7 @@ enum Route: Hashable, Sendable {
 |---|---|---|
 | Presentation policy | [`RoutePresentation.swift`](../Source/Shared/Navigation/RoutePresentation.swift) | `defaultPresentation`: `.settings` is a sheet, all others push. Callers can override it at `navigate(to:presentation:)` |
 | View construction | [`RouteResolver.swift`](../Source/Shared/Navigation/RouteResolver.swift) | The only place that maps a `Route` to a view |
-| Deep links | `AppCoordinator.handleDeepLink(_:)` | Hosts `settings`, `home` (tab switch), `help` (navigate). Other hosts return `false` |
+| Deep links | `AppCoordinator.handleDeepLink(_:)` | Registered `APP_URL_SCHEME`; navigation-only Home, Help and Settings URLs, handled during splash and main content. Other URL components fail closed ([ADR 0012](adr/0012-bounded-client-processing.md)) |
 
 Call site:
 
@@ -241,6 +241,7 @@ Trust boundary: the TLS handshake. The device authenticates with its TLS client 
 | Any other challenge (for example HTTP Basic) | Cancelled |
 | Binary frame | Dropped; the contract sends text frames only |
 | Message size | `maximumMessageSize` is 256 KiB |
+| Queue | Eight events; overflow terminates the stream and reconnects after backoff for a snapshot |
 
 ### Close routing
 
@@ -268,6 +269,8 @@ Trust boundary: the TLS handshake. The device authenticates with its TLS client 
 - The directory is excluded from backup, because the server can resend it.
 - The file holds the schema version, the configuration version and the values. It has no credential field.
 - The service applies the cached copy before the first network attempt. Unenrollment deletes it.
+- One cache worker retains one active operation and the latest pending save. Deletion precedes pending loads and saves.
+- A failed deletion blocks cache loads until a delete succeeds. See [ADR 0012](adr/0012-bounded-client-processing.md).
 
 Evidence: `ConfigurationServiceTests`, `ConfigurationWireTests`, `ConfigurationCacheTests`, `ReconnectBackoffTests`, `ConfigurationContractTests` and `ConfigurationSchemaTests` in `Packages/WardAxisManagement/Tests/`.
 
@@ -325,7 +328,7 @@ Keychain item attributes (from `KeychainQuery`):
 
 Generation fencing: the caller gives every write and erase a generation from one increasing counter. A write at or below the highest erased generation is dropped. An older write does not replace a newer item. The final content depends only on which generations wrote and erased, not on call order.
 
-Erase-pending marker: an empty file, `<Application Support>/<bundle identifier>/Vault/erase-pending` (under Caches on tvOS). The vault sets it before an erase deletes and clears it when a delete or a newer save covers the item. `resumePendingErase()` finishes an erase that a previous launch could not complete. A missing or unsafe bundle identifier gives `VolatileErasePendingMarker`, which lasts for one process.
+Erase-pending marker: an empty file, `<Application Support>/<bundle identifier>/Vault/erase-pending` (under Caches on tvOS). The vault sets it before an erase deletes and clears it when a delete or a newer save covers the item. `resumePendingErase()` retries a persisted or in-memory erase. Marker operations throw; failed erasures suppress restores in memory. If marker persistence and deletion both fail, callers must report incomplete erasure and retry before restart ([ADR 0012](adr/0012-bounded-client-processing.md)). A missing or unsafe bundle identifier gives `VolatileErasePendingMarker`, which lasts for one process.
 
 Evidence: `KeychainItemStoreTests` and `SecureItemVaultTests` in `Packages/WardAxisManagement/Tests/`.
 

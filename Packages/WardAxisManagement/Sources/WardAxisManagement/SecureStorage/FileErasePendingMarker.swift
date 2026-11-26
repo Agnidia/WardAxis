@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import WardAxisTelemetry
 
 /// An ``ErasePendingMarkerProtocol`` kept as one empty file: the flag is set
 /// while the file exists.
@@ -21,7 +20,6 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
     /// The directory that holds the marker file. `set()` creates it when needed.
     let directory: URL
     private let fileURL: URL
-    private let logger = Log(category: .storage)
     
     /// - Parameter directory: Tests pass a throwaway directory, so they never
     ///   touch the app's own marker.
@@ -81,19 +79,19 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
         FileManager.default.fileExists(atPath: fileURL.path(percentEncoded: false))
     }
     
-    public func set() {
+    public func set() throws(SecureItemStoreError) {
         do {
             try createFile()
         } catch {
-            logger.error("Writing the erase-pending marker failed: \(Self.logName(of: error))", privacy: .public)
+            throw .markerUnavailable
         }
     }
     
-    public func clear() {
+    public func clear() throws(SecureItemStoreError) {
         do {
             try removeFile()
         } catch {
-            logger.error("Removing the erase-pending marker failed: \(Self.logName(of: error))", privacy: .public)
+            throw .markerUnavailable
         }
     }
     
@@ -190,12 +188,5 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
     
     private static func posixError() -> POSIXError {
         POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-    }
-    
-    /// The error domain and code only: a Cocoa file error's description holds
-    /// the container path, which names the user on macOS.
-    private static func logName(of error: any Error) -> String {
-        let error = error as NSError
-        return "\(error.domain) \(error.code)"
     }
 }

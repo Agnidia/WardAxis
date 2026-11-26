@@ -58,6 +58,7 @@ final class AppCoordinator {
     var appPhase: AppPhase = .splash
     
     private let logger = Log(category: .ui)
+    private let deepLinkScheme: String?
     
     // MARK: - Tab Enum
     
@@ -93,7 +94,8 @@ final class AppCoordinator {
     
     // MARK: - Initialization
     
-    init() {
+    init(deepLinkScheme: String? = Bundle.main.object(forInfoDictionaryKey: "WADeepLinkScheme") as? String) {
+        self.deepLinkScheme = deepLinkScheme
         logger.debug("AppCoordinator initialized")
     }
     
@@ -252,9 +254,14 @@ final class AppCoordinator {
     /// - Returns: Whether the URL was handled.
     @discardableResult
     func handleDeepLink(_ url: URL) -> Bool {
-        logger.info("Handling deep link: \(url.absoluteString)")
-        
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false), let host = components.host
+        guard url.absoluteString.utf8.count <= 2048,
+              let deepLinkScheme, !deepLinkScheme.isEmpty,
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              components.scheme?.lowercased() == deepLinkScheme,
+              let host = components.host,
+              components.user == nil, components.password == nil, components.port == nil,
+              components.query == nil, components.fragment == nil,
+              components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/"
         else {
             return false
         }
@@ -265,13 +272,20 @@ final class AppCoordinator {
             navigate(to: .settings)
             return true
         case "help":
+            presentedSheet = nil
+            presentedFullScreenCover = nil
+            popToRoot()
             navigate(to: .help)
             return true
         case "home":
             switchTab(to: .home)
+            if selectedTab == .home {
+                presentedSheet = nil
+                presentedFullScreenCover = nil
+                popToRoot(in: .home)
+            }
             return true
         default:
-            logger.warning("Unknown deep link host: \(host)")
             return false
         }
     }

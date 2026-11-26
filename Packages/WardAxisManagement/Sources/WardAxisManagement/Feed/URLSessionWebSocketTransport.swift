@@ -14,10 +14,16 @@ import Synchronization
 /// its delegate until it is invalidated, and the delegate here belongs to one
 /// connection.
 public struct URLSessionWebSocketTransport: ConfigurationStreamTransport {
+    static let maximumBufferedEvents = 8
+    
     public init() {}
     
+    static func eventStream() -> (AsyncStream<ConfigurationStreamEvent>, AsyncStream<ConfigurationStreamEvent>.Continuation) {
+        AsyncStream.makeStream(bufferingPolicy: .bufferingOldest(maximumBufferedEvents))
+    }
+    
     public func open(_ request: URLRequest, identity: ClientIdentity) -> AsyncStream<ConfigurationStreamEvent> {
-        let (stream, continuation) = AsyncStream.makeStream(of: ConfigurationStreamEvent.self, bufferingPolicy: .unbounded)
+        let (stream, continuation) = Self.eventStream()
         let connection = WebSocketConnection(continuation: continuation, identity: identity)
         let session = URLSession(configuration: .ephemeral, delegate: connection, delegateQueue: nil)
         let task = session.webSocketTask(with: request)
@@ -80,9 +86,8 @@ public struct URLSessionWebSocketTransport: ConfigurationStreamTransport {
     }
 }
 
-/// The delegate and receive loop of one connection. Yields exactly one
-/// `.closed`, whichever callback reports the end first.
-private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, Sendable {
+/// Finishes once; a full queue may omit the final close event.
+final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, Sendable {
     private let continuation: AsyncStream<ConfigurationStreamEvent>.Continuation
     private let identity: ClientIdentity
     private let isClosed = Mutex(false)
@@ -100,7 +105,7 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
             switch result {
             case .success(let message):
                 if let payload = URLSessionWebSocketTransport.payload(of: message) {
-                    continuation.yield(.message(payload))
+                    guard yield(.message(payload)) else { return }
                 }
                 receiveNext(on: task)
             case .failure:
@@ -111,7 +116,7 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
     }
     
     func urlSession(_: URLSession, webSocketTask _: URLSessionWebSocketTask, didOpenWithProtocol _: String?) {
-        continuation.yield(.opened)
+        _ = yield(.opened)
     }
     
     func urlSession(
@@ -150,6 +155,22 @@ private final class WebSocketConnection: NSObject, URLSessionWebSocketDelegate, 
         completionHandler: @escaping @Sendable (URLRequest?) -> Void
     ) {
         completionHandler(nil)
+    }
+    
+    @discardableResult
+    func yield(_ event: ConfigurationStreamEvent) -> Bool {
+        switch continuation.yield(event) {
+        case .enqueued:
+            return true
+        case .dropped:
+            finish(.bufferOverflow)
+            return false
+        case .terminated:
+            return false
+        @unknown default:
+            finish(.bufferOverflow)
+            return false
+        }
     }
     
     private func finish(_ close: ConfigurationStreamClose) {

@@ -107,6 +107,7 @@ struct SettingsView: View {
                 await viewModel?.refreshHasEntries()
             }
         }
+        .accessibilityIdentifier(AccessibilityID.Screen.settings)
         .onAppear {
             logger.debug("SettingsView appeared")
         }

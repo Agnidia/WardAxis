@@ -16,9 +16,8 @@ import WardAxisTelemetry
 /// Each teardown bumps `epoch`; work that resumes after an `await` under an older
 /// epoch is dropped.
 ///
-/// Cache operations run in one chain (`cacheTask`), so an unenrollment delete can
-/// never be overtaken by an earlier save, and the cold-launch load finishes
-/// before the first connection attempt.
+/// Cache work has one worker and one pending latest save. Enrollment deletion
+/// runs after an active write and before work for the next enrollment.
 @MainActor @Observable
 public final class ConfigurationService: ConfigurationServiceProtocol {
     public private(set) var configuration: ManagedConfiguration?
@@ -42,9 +41,14 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
     
     @ObservationIgnored private var hasLoadedCache = false
     @ObservationIgnored private var connectionTask: Task<Void, Never>?
-    /// The most recent loop, kept after a teardown so tests can await its end.
+    /// Retained after teardown so callers can await completion.
     @ObservationIgnored private var latestConnectionTask: Task<Void, Never>?
     @ObservationIgnored private var cacheTask: Task<Void, Never>?
+    @ObservationIgnored private var cacheWorkerRunning = false
+    @ObservationIgnored private var pendingCacheDelete = false
+    @ObservationIgnored private var pendingCacheLoad: UInt64?
+    @ObservationIgnored private var pendingCacheSave: ManagedConfiguration?
+    @ObservationIgnored private var cacheReadBlocked = false
     
     // Existentials: each dependency is a protocol seam with a test double.
     private let apiConfiguration: APIConfiguration?
@@ -153,7 +157,10 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         hasLoadedCache = false
         isIdentityRejected = false
         configuration = nil
-        enqueueCacheOperation("delete") { try await $0.delete() }
+        pendingCacheLoad = nil
+        pendingCacheSave = nil
+        pendingCacheDelete = true
+        startCacheWorkIfNeeded()
     }
     
     // MARK: - Connection loop
@@ -167,7 +174,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
     private enum ConnectionEnd {
         case closed(ConfigurationStreamClose)
         case gap
-        case stopped
+        case ended
     }
     
     private func startConnection() {
@@ -210,7 +217,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
                     for await event in stream {
                         guard end == nil else { continue }
                         guard let self, isCurrent(loopEpoch) else {
-                            end = .stopped
+                            end = .ended
                             withUnsafeCurrentTask { $0?.cancel() }
                             continue
                         }
@@ -219,7 +226,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
                             withUnsafeCurrentTask { $0?.cancel() }
                         }
                     }
-                    return end ?? .stopped
+                    return end ?? .ended
                 }
                 let end = await withTaskCancellationHandler {
                     await consumer.value
@@ -286,8 +293,8 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         guard isCurrent(loopEpoch) else { return nil }
         let close: ConfigurationStreamClose
         switch end {
-        case .stopped:
-            return nil
+        case .ended:
+            return nextBackoffDelay()
         case .gap:
             logger.info("Configuration version gap; reconnecting for a snapshot", privacy: .public)
             return nextBackoffDelay()
@@ -359,40 +366,71 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
     
     private func adopt(_ next: ManagedConfiguration) {
         configuration = next
-        enqueueCacheOperation("save") { try await $0.save(next) }
+        pendingCacheSave = next
+        startCacheWorkIfNeeded()
     }
     
     // MARK: - Cache
     
+    private enum CacheWork {
+        case delete
+        case load(UInt64)
+        case save(ManagedConfiguration)
+    }
+    
     private func loadCacheIfNeeded() {
         guard !hasLoadedCache else { return }
         hasLoadedCache = true
-        let loadGeneration = enrollmentGeneration
-        let previous = cacheTask
-        let cache = cache
-        cacheTask = Task { [weak self] in
-            await previous?.value
-            let cached = await cache.load()
-            guard let self, let cached, enrollmentGeneration == loadGeneration, configuration == nil else { return }
-            configuration = cached
-            logger.info("Applied cached configuration version \(cached.version)", privacy: .public)
-        }
+        pendingCacheLoad = enrollmentGeneration
+        startCacheWorkIfNeeded()
     }
     
-    private func enqueueCacheOperation(
-        _ name: String,
-        _ operation: @escaping @Sendable (any ConfigurationCacheProtocol) async throws -> Void
-    ) {
-        let previous = cacheTask
-        let cache = cache
-        let logger = logger
-        cacheTask = Task {
-            await previous?.value
-            do {
-                try await operation(cache)
-            } catch {
-                logger.error("Configuration cache \(name) failed: \(FileConfigurationCache.logName(of: error))", privacy: .public)
+    private func takeCacheWork() -> CacheWork? {
+        if pendingCacheDelete {
+            pendingCacheDelete = false
+            return .delete
+        }
+        if let generation = pendingCacheLoad {
+            pendingCacheLoad = nil
+            return .load(generation)
+        }
+        if let configuration = pendingCacheSave {
+            pendingCacheSave = nil
+            return .save(configuration)
+        }
+        return nil
+    }
+    
+    /// One active operation and one latest save bound memory even when the cache stalls.
+    private func startCacheWorkIfNeeded() {
+        guard !cacheWorkerRunning else { return }
+        cacheWorkerRunning = true
+        cacheTask = Task { [weak self] in
+            while let self, let work = takeCacheWork() {
+                switch work {
+                case .load(let generation):
+                    guard !cacheReadBlocked else { continue }
+                    let cached = await cache.load()
+                    if let cached, enrollmentGeneration == generation, configuration == nil {
+                        configuration = cached
+                    }
+                case .delete:
+                    do {
+                        try await cache.delete()
+                        cacheReadBlocked = false
+                    } catch {
+                        cacheReadBlocked = true
+                        logger.error("Configuration cache delete failed: \(FileConfigurationCache.logName(of: error))", privacy: .public)
+                    }
+                case .save(let configuration):
+                    do {
+                        try await cache.save(configuration)
+                    } catch {
+                        logger.error("Configuration cache save failed: \(FileConfigurationCache.logName(of: error))", privacy: .public)
+                    }
+                }
             }
+            self?.cacheWorkerRunning = false
         }
     }
     
@@ -411,6 +449,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
         case .handshakeRejected(let status): "handshake status \(status)"
         case .clientCertificateRejected: "client certificate rejected"
         case .connectionFailed: "connection failed"
+        case .bufferOverflow: "buffer overflow"
         }
     }
     

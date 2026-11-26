@@ -17,7 +17,9 @@ import WardAxisTelemetry
 actor LogReaderService: LogReaderServiceProtocol {
     private let fileURL: URL
     private let parser: LogEntryParser
-    private let streamingThresholdBytes: Int
+    private let maximumReadBytes: Int
+    private let writer: FileLogHandler?
+    private let usesLiveWriter: Bool
     private let maxStreamedEntries: Int
     private let now: @Sendable () -> Date
     
@@ -25,21 +27,23 @@ actor LogReaderService: LogReaderServiceProtocol {
     ///   - fileURL: Absolute URL of the log file. Defaults to the live
     ///     `Log.logDirectoryUrl/log.log` location.
     ///   - parser: Pure parser. Defaults to a fresh `LogEntryParser`.
-    ///   - streamingThresholdBytes: File-size cutoff (bytes) above which the
-    ///     parsed array is capped at `maxStreamedEntries`.
+    ///   - maximumReadBytes: Maximum tail bytes read before parsing.
     ///   - maxStreamedEntries: Maximum entries returned for large files.
     ///   - now: Clock injection for filename generation in tests.
     init(
-        fileURL: URL = Log.logDirectoryUrl.appending(path: "log.log"),
+        fileURL: URL? = nil,
         parser: LogEntryParser = LogEntryParser(),
-        streamingThresholdBytes: Int = 5 * 1024 * 1024,
+        maximumReadBytes: Int = LogFileLimits.retainedBytes,
+        writer: FileLogHandler? = nil,
         maxStreamedEntries: Int = 5000,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
-        self.fileURL = fileURL
+        self.fileURL = fileURL ?? Log.logDirectoryUrl.appending(path: "log.log")
+        self.writer = writer
+        usesLiveWriter = fileURL == nil
         self.parser = parser
-        self.streamingThresholdBytes = streamingThresholdBytes
-        self.maxStreamedEntries = maxStreamedEntries
+        self.maximumReadBytes = max(1, min(maximumReadBytes, LogFileLimits.retainedBytes))
+        self.maxStreamedEntries = max(1, min(maxStreamedEntries, 5000))
         self.now = now
     }
     
@@ -54,18 +58,17 @@ actor LogReaderService: LogReaderServiceProtocol {
         
         let content: String
         do {
-            content = try String(contentsOf: fileURL, encoding: .utf8)
+            let data = try LogFileTail.read(from: fileURL, maximumBytes: maximumReadBytes)
+            guard let text = String(data: data, encoding: .utf8) else {
+                throw LogReaderError.readFailed(underlying: "Invalid log encoding")
+            }
+            content = text
         } catch {
             throw LogReaderError.readFailed(underlying: String(describing: error))
         }
         
-        let byteCount = content.utf8.count
         let entries = parser.parseAll(content)
-        
-        if byteCount >= streamingThresholdBytes, entries.count > maxStreamedEntries {
-            return Array(entries.suffix(maxStreamedEntries))
-        }
-        return entries
+        return Array(entries.suffix(maxStreamedEntries))
     }
     
     func exportEntries(_ entries: [LogEntry]) async throws -> URL {
@@ -83,8 +86,12 @@ actor LogReaderService: LogReaderServiceProtocol {
     }
     
     func clearEntries() async throws {
-        if let handler = FileLogHandler.shared {
-            await handler.clear()
+        if let writer = writer ?? (usesLiveWriter ? FileLogHandler.shared : nil) {
+            do {
+                try await writer.clear()
+            } catch {
+                throw LogReaderError.writeFailed(underlying: "Log deletion failed")
+            }
             return
         }
         

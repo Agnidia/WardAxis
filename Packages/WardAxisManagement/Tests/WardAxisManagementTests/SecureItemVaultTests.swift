@@ -158,11 +158,11 @@ struct SecureItemVaultTests {
         let file = directory.appending(path: FileErasePendingMarker.fileName)
         #expect(!marker.isSet)
         
-        marker.set()
+        try marker.set()
         #expect(marker.isSet)
         #expect(try Data(contentsOf: file).isEmpty)
         
-        marker.clear()
+        try marker.clear()
         #expect(!marker.isSet)
         #expect(!FileManager.default.fileExists(atPath: file.path(percentEncoded: false)))
     }
@@ -189,11 +189,11 @@ struct SecureItemVaultTests {
     }
     
     @Test
-    func `Set creates a missing directory, and a directory that cannot exist leaves the marker clear without a crash`() throws {
+    func `Set creates a missing directory and reports a blocked directory`() throws {
         let root = Self.makeMarkerDirectory()
         defer { Self.removeMarkerDirectory(root) }
         let nested = FileErasePendingMarker(directory: root.appending(path: "a/b", directoryHint: .isDirectory))
-        nested.set()
+        try nested.set()
         #expect(nested.isSet)
         
         let blocker = root.appending(path: "blocker")
@@ -201,7 +201,7 @@ struct SecureItemVaultTests {
         try Data().write(to: blocker)
         let blocked = FileErasePendingMarker(directory: blocker.appending(path: "Auth", directoryHint: .isDirectory))
         #expect(throws: (any Error).self) { try blocked.createFile() }
-        blocked.set()
+        #expect(throws: SecureItemStoreError.markerUnavailable) { try blocked.set() }
         #expect(!blocked.isSet)
     }
     
@@ -269,7 +269,7 @@ struct SecureItemVaultTests {
         )
         #expect(marker.directory == expected)
         
-        marker.set()
+        try marker.set()
         let file = expected.appending(path: FileErasePendingMarker.fileName)
         #expect(FileManager.default.fileExists(atPath: file.path(percentEncoded: false)))
     }
@@ -277,14 +277,14 @@ struct SecureItemVaultTests {
     @Test(
         arguments: [nil, "", ".", "..", "a/b", "../app", "app\u{0}x", "ap p"] as [String?]
     )
-    func `A missing or unusable bundle identifier gives a volatile marker and writes nothing`(bundleIdentifier: String?) {
+    func `A missing or unusable bundle identifier gives a volatile marker and writes nothing`(bundleIdentifier: String?) throws {
         let base = Self.makeMarkerDirectory().deletingLastPathComponent()
         defer { Self.removeMarkerDirectory(base.appending(path: "Vault")) }
         
         let marker = FileErasePendingMarker.live(in: base, bundleIdentifier: bundleIdentifier)
         #expect(marker is VolatileErasePendingMarker)
         
-        marker.set()
+        try marker.set()
         #expect(marker.isSet)
         #expect(!FileManager.default.fileExists(atPath: base.path(percentEncoded: false)))
     }
@@ -457,5 +457,121 @@ struct SecureItemVaultTests {
     
     private final class Outcome: Sendable {
         let value = Mutex<Result<Void, any Error>?>(nil)
+    }
+    
+    @Test
+    func `A failed marker and failed delete fence restores until a retry succeeds`() async throws {
+        let marker = MockErasePendingMarker(setError: .markerUnavailable)
+        let store = InMemorySecureItemStore<TestSecret>(value: Self.makeCredential("old"), deleteError: Self.deleteFailure)
+        let vault = SecureItemVault(store: store, marker: marker)
+        await #expect(throws: Self.deleteFailure) { try await vault.erase(generation: 1) }
+        #expect(!marker.isSet)
+        #expect(try await vault.restore() == nil)
+        #expect(try await vault.persist(Self.makeCredential("late"), generation: 1) == false)
+        store.failDeletes(with: nil)
+        #expect(try await vault.resumePendingErase())
+        #expect(store.value == nil)
+    }
+    
+    @Test
+    func `Deletion succeeds even when the marker cannot be created`() async throws {
+        let marker = MockErasePendingMarker(setError: .markerUnavailable)
+        let store = InMemorySecureItemStore<TestSecret>(value: Self.makeCredential("old"))
+        let vault = SecureItemVault(store: store, marker: marker)
+        try await vault.erase(generation: 1)
+        #expect(store.value == nil)
+        #expect(try await vault.restore() == nil)
+    }
+    
+    @Test
+    func `A marker cleanup failure is reported and prevents a restore`() async throws {
+        let marker = MockErasePendingMarker(isSet: true, clearError: .markerUnavailable)
+        let store = InMemorySecureItemStore<TestSecret>(value: Self.makeCredential("old"))
+        let vault = SecureItemVault(store: store, marker: marker)
+        await #expect(throws: SecureItemStoreError.markerUnavailable) { try await vault.resumePendingErase() }
+        #expect(store.value == nil)
+        #expect(marker.isSet)
+        #expect(try await vault.restore() == nil)
+    }
+    
+    @Test
+    func `A real marker creation failure reaches the caller`() throws {
+        let directory = Self.makeMarkerDirectory()
+        defer { Self.removeMarkerDirectory(directory) }
+        try FileManager.default.createDirectory(at: directory.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data().write(to: directory)
+        let marker = FileErasePendingMarker(directory: directory)
+        #expect(throws: SecureItemStoreError.markerUnavailable) { try marker.set() }
+    }
+    
+    @Test
+    func `A same-generation retry completes failed persist cleanup without another save`() async throws {
+        let value = Self.makeCredential("new")
+        let store = InMemorySecureItemStore<TestSecret>()
+        let marker = MockErasePendingMarker(isSet: true, clearError: .markerUnavailable)
+        let vault = SecureItemVault(store: store, marker: marker)
+        await #expect(throws: SecureItemStoreError.markerUnavailable) { try await vault.persist(value, generation: 2) }
+        #expect(try await vault.restore() == nil)
+        #expect(try await vault.persist(Self.makeCredential("stale"), generation: 1) == false)
+        await #expect(throws: SecureItemStoreError.markerUnavailable) { try await vault.persist(value, generation: 2) }
+        marker.failClears(with: nil)
+        #expect(try await vault.persist(value, generation: 2))
+        #expect(try await vault.restore() == value)
+        #expect(try await vault.persist(value, generation: 2) == false)
+        #expect(store.operations.filter { $0 == .save }.count == 1)
+        #expect(!store.operations.contains(.delete))
+        #expect(marker.operations == [.clear])
+    }
+    
+    @Test
+    func `A cleanup retry cannot substitute another value at the same generation`() async throws {
+        let value = Self.makeCredential("saved")
+        let store = InMemorySecureItemStore<TestSecret>()
+        let marker = MockErasePendingMarker(isSet: true, clearError: .markerUnavailable)
+        let vault = SecureItemVault(store: store, marker: marker)
+        await #expect(throws: SecureItemStoreError.markerUnavailable) { try await vault.persist(value, generation: 2) }
+        marker.failClears(with: nil)
+        #expect(try await vault.persist(Self.makeCredential("other"), generation: 2) == false)
+        #expect(marker.isSet)
+        #expect(try await vault.restore() == nil)
+        #expect(try await vault.persist(value, generation: 2))
+        #expect(store.value == value)
+        #expect(store.operations.filter { $0 == .save }.count == 1)
+    }
+    
+    @Test
+    func `A newer persist replaces the pending cleanup generation`() async throws {
+        let first = Self.makeCredential("first")
+        let latest = Self.makeCredential("latest")
+        let store = InMemorySecureItemStore<TestSecret>()
+        let marker = MockErasePendingMarker(isSet: true, clearError: .markerUnavailable)
+        let vault = SecureItemVault(store: store, marker: marker)
+        await #expect(throws: SecureItemStoreError.markerUnavailable) { try await vault.persist(first, generation: 2) }
+        await #expect(throws: SecureItemStoreError.markerUnavailable) { try await vault.persist(latest, generation: 3) }
+        marker.failClears(with: nil)
+        #expect(try await vault.persist(first, generation: 2) == false)
+        #expect(try await vault.persist(latest, generation: 3))
+        #expect(try await vault.restore() == latest)
+        #expect(store.operations.filter { $0 == .save }.count == 2)
+    }
+    
+    @Test(arguments: [false, true])
+    func `An erase attempt cancels pending persist cleanup even if deletion fails`(resuming: Bool) async throws {
+        let value = Self.makeCredential("saved")
+        let store = InMemorySecureItemStore<TestSecret>(deleteError: Self.deleteFailure)
+        let marker = MockErasePendingMarker(isSet: true, clearError: .markerUnavailable)
+        let vault = SecureItemVault(store: store, marker: marker)
+        await #expect(throws: SecureItemStoreError.markerUnavailable) { try await vault.persist(value, generation: 2) }
+        if resuming {
+            await #expect(throws: Self.deleteFailure) { try await vault.resumePendingErase() }
+        } else {
+            await #expect(throws: Self.deleteFailure) { try await vault.erase(generation: 2) }
+        }
+        marker.failClears(with: nil)
+        #expect(try await vault.persist(value, generation: 2) == false)
+        #expect(try await vault.restore() == nil)
+        store.failDeletes(with: nil)
+        #expect(try await vault.resumePendingErase())
+        #expect(store.value == nil)
     }
 }

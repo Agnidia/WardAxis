@@ -24,4 +24,34 @@ final class LaunchUITests: XCTestCase {
             XCUIApplication().launch()
         }
     }
+    
+    @MainActor
+    func testSettingsDeepLinkOnColdLaunch() throws {
+        let app = XCUIApplication()
+        app.terminate()
+        try open(XCTUnwrap(URL(string: "wardaxis://settings")), in: app)
+        XCTAssertTrue(app.descendants(matching: .any)["screen.settings"].firstMatch.waitForExistence(timeout: 10))
+    }
+    
+    @MainActor
+    func testHelpDeepLinkOnWarmLaunch() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.descendants(matching: .any)["screen.home"].firstMatch.waitForExistence(timeout: 10))
+        try open(XCTUnwrap(URL(string: "wardaxis://help")), in: app)
+        XCTAssertTrue(app.descendants(matching: .any)["screen.help"].firstMatch.waitForExistence(timeout: 10))
+        try open(XCTUnwrap(URL(string: "wardaxis://home")), in: app)
+        XCTAssertTrue(app.descendants(matching: .any)["screen.home"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.descendants(matching: .any)["screen.help"].firstMatch.exists)
+    }
+    
+    @MainActor
+    private func open(_ url: URL, in app: XCUIApplication) {
+#if os(macOS)
+        // Pin the reviewed build when another installed copy may own the scheme.
+        app.open(url)
+#else
+        XCUIDevice.shared.system.open(url)
+#endif
+    }
 }

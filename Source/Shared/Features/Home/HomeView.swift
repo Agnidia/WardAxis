@@ -41,6 +41,7 @@ struct HomeView: View {
                 .accessible(AccessibilityID.Home.settingsButton)
             }
         }
+        .accessibilityIdentifier(AccessibilityID.Screen.home)
         .onAppear {
             logger.debug("HomeView appeared")
         }
