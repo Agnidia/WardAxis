@@ -43,6 +43,7 @@ The `docs/` directory holds the long-form reference. Read these instead of guess
 | [docs/LAB.md](docs/LAB.md) | Lab-only Developer ID build, EndpointSecurity entitlement request status |
 | [docs/TEST-DEVICES.md](docs/TEST-DEVICES.md) | Test device inventory, macOS VM, system extension approval, iPad supervision, clean lab snapshot |
 | [docs/RECOVERY.md](docs/RECOVERY.md) | Removing every component per platform, recovering from an invalid configuration, the recovery test |
+| [docs/PRIVACY.md](docs/PRIVACY.md) | Data inventory, App Privacy label, privacy manifests per bundle, consent copy (EN, UK); policy source in [docs/privacy/PRIVACY-POLICY.md](docs/privacy/PRIVACY-POLICY.md) |
 | [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) | Scope and out of scope, assets, attackers, trust boundaries (`TB1`–`TB10`), known gaps |
 | [docs/adr/](docs/adr/) | Recorded architecture decisions; new ones start from [docs/adr/TEMPLATE.md](docs/adr/TEMPLATE.md) |
 | [roadmap/README.md](roadmap/README.md) | Product scope and phase plan |

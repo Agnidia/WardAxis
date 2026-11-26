@@ -22,7 +22,7 @@
 - [x] PRE-008 — Write initial threat model, trust boundaries and ADRs (ADR-001, ADR-005, ADR-015 first); define project scope and out-of-scope functionality. See [THREAT-MODEL.md](../docs/THREAT-MODEL.md), [ADR 0008](../docs/adr/0008-extensions-under-app-store.md), [ADR 0009](../docs/adr/0009-endpoint-security-lab-only.md) and [ADR 0010](../docs/adr/0010-app-store-only-distribution.md).
 - [x] PRE-009 — Define versioned event, policy and application identity schemas; introduce synthetic data sources and fixtures. See [ADR 0011](../docs/adr/0011-versioned-schemas.md).
 - [x] PRE-010 — Document how to disable and remove every extension, test recovery from an invalid configuration, and take a clean lab snapshot. See [RECOVERY.md](../docs/RECOVERY.md) and [TEST-DEVICES.md](../docs/TEST-DEVICES.md#clean-lab-snapshot).
-- [ ] PRE-011 — Draft the privacy policy, consent-screen copy, App Privacy label inventory and privacy manifest (`PrivacyInfo.xcprivacy`) for the app and each extension.
+- [x] PRE-011 — Draft the privacy policy, consent-screen copy, App Privacy label inventory and privacy manifest (`PrivacyInfo.xcprivacy`) for the app and each extension. See [PRIVACY.md](../docs/PRIVACY.md) and [ADR 0013](../docs/adr/0013-privacy-disclosures.md).
 - [ ] PRE-012 — Decide export compliance (`ITSAppUsesNonExemptEncryption`) and record the rationale.
 
 ## Capability dependencies
@@ -48,9 +48,9 @@ Do not disable SIP or system security controls on the development machine to mak
 - [ ] Signing and entitlement requirements documented per target and per platform.
 - [ ] All App Store schemes build sandboxed with no root-requiring or lab entitlements.
 - [ ] Internal TestFlight upload succeeds for all three platforms.
-- [ ] Privacy policy draft, consent copy and privacy manifests committed.
+- [x] Privacy policy draft, consent copy and privacy manifests committed.
 - [x] Lab-only: entitlement request submitted; status recorded.
-- [ ] Test environment is recoverable; disable/removal procedure exists.
+- [x] Test environment is recoverable; disable/removal procedure exists.
 - [x] ADR template and initial threat model committed.
 - [x] Initial schemas and synthetic adapters have fixture tests.
 

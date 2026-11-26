@@ -26,7 +26,7 @@ Add Platform): one record for all three platforms gives Universal Purchase (ADR 
 |---|---|
 | App icon | `Resources/Assets.xcassets/AppIcon.appiconset` has no images. App Store validation fails (ITMS 90236) |
 | Safari extension icons | `Extensions/SafariWebExtension/Resources/manifest.json` has no `icons` field. App Store validation fails |
-| Privacy policy, terms, portfolio pages | `policy.html` and `terms.html` are drafted in the site repo (`public/info/app/wardaxis/`, branch `feature/wardaxis-legal-pages`); deploy them before submission. The portfolio page `agnidia.com/portfolio/wardaxis` needs the app icon and screenshots first |
+| Privacy policy, terms, portfolio pages | The policy source is [docs/privacy/PRIVACY-POLICY.md](../docs/privacy/PRIVACY-POLICY.md); it needs a contact address and an effective date. `policy.html` and `terms.html` are drafted in the site repo (`public/info/app/wardaxis/`, branch `feature/wardaxis-legal-pages`); bring `policy.html` in line with the source and deploy both before submission. The portfolio page `agnidia.com/portfolio/wardaxis` needs the app icon and screenshots first |
 | Description | Describes the 1.0 scope of the [roadmap](../roadmap/README.md). The listing must match what the build does (Guideline 2.3); trim it to the shipped features before submission |
 | Ukrainian keywords | 85 characters, 139 bytes. If App Store Connect rejects them as too long, shorten them to 100 bytes |
 | Screenshots | None yet; the app has no final UI |
@@ -108,10 +108,11 @@ The build number must match `CURRENT_PROJECT_VERSION` in `Configurations/base.xc
 
 ## Privacy label
 
-The label is **Data Not Collected**. Classification runs on the device, matched content never leaves it, and
-`Resources/PrivacyInfo.xcprivacy` declares no collected data types and no tracking. Diagnostics telemetry is opt-in
-(`TelemetryService` drops every event without consent) and contains no matched content. When telemetry gains a
-remote sink, or the management agent reports device data to a server that Agnidia operates, update the label, the
+The label is **Data Not Collected**. Classification runs on the device, and matched content never leaves it. The app
+and each embedded bundle carry a privacy manifest that declares no collected data types, no tracking and no
+required-reason API. Usage telemetry is opt-in (`TelemetryService` drops every event without consent) and has no
+remote sink. The answer per data type, the manifest inventory and the events that change the label are in
+[docs/PRIVACY.md](../docs/PRIVACY.md) ([ADR 0013](../docs/adr/0013-privacy-disclosures.md)). Update the label, the
 privacy manifests and the hosted policy together. Read the live label with `asc web privacy pull --app 6839274307`.
 
 ## App Review notes
