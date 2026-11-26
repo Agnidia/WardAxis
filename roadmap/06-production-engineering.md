@@ -83,7 +83,7 @@ Distinguish loss of remote connectivity from loss of enforcement. Provider failu
 
 ## 6.3. Threat model
 
-Create `Documentation/ThreatModel/STRIDE.md` with assets, assumptions, trust boundaries, abuse cases, mitigations, verification and residual risks.
+Complete [docs/THREAT-MODEL.md](../docs/THREAT-MODEL.md) (started in PRE-008): assets, assumptions, trust boundaries, abuse cases, mitigations, verification and residual risks. Replace every `TBD` cell of its threat register.
 
 | Threat | Mitigation |
 |---|---|

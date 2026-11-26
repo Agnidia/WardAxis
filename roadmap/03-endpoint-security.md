@@ -10,7 +10,7 @@
 
 **Goal:** Ship a sandboxed agent and authenticated IPC that connect the app, its extensions and the management agent. In the lab, build an event-driven macOS runtime security engine with process monitoring, behavioral detection and controlled authorization.
 
-> App Store apps must be sandboxed and cannot request root (guideline 2.4.5(i), (v)). EndpointSecurity needs root, Full Disk Access and a restricted entitlement, so the EDR engine is a research track. Confirm the App Store position with Apple DTS and record it in ADR-005.
+> App Store apps must be sandboxed and cannot request root (guideline 2.4.5(i), (v)). EndpointSecurity needs root, Full Disk Access and a restricted entitlement, so the EDR engine is a research track. Confirm the App Store position with Apple DTS and record it in ADR-005 ([ADR 0009](../docs/adr/0009-endpoint-security-lab-only.md)).
 
 ## 3.1. Sandboxed agent and IPC (Shipped)
 

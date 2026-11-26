@@ -413,4 +413,6 @@ Golden frames: `config-frame-snapshot.json`, `config-frame-delta.json` and `conf
 - [TESTING.md](TESTING.md) - `AppContainer.testing()`, mocks, package tests
 - [ERROR-HANDLING.md](ERROR-HANDLING.md) - `AppError` and alerts
 - [DESIGN.md](DESIGN.md) - design tokens
+- [THREAT-MODEL.md](THREAT-MODEL.md) - scope, assets and trust boundaries
+- [ADR template](adr/TEMPLATE.md)
 - [ADR 0001: Swift server stack](adr/0001-swift-server-stack.md)

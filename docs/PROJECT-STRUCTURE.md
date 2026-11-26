@@ -16,7 +16,7 @@ WardAxis/
 ├── Configurations/          # xcconfig build settings
 ├── Tests/                   # App unit and UI tests
 ├── Server/                  # Management server (Hummingbird 2, PostgreSQL)
-├── docs/                    # This documentation; docs/adr/ holds decisions
+├── docs/                    # This documentation; docs/adr/ holds decisions, THREAT-MODEL.md the trust boundaries
 ├── roadmap/                 # Product roadmap by phase
 ├── scripts/                 # Tooling (formatter.py, verify-entitlements.py, ci-simulator.py)
 ├── ci_scripts/              # Xcode Cloud hooks
@@ -163,7 +163,7 @@ Swift package with the executable `Server` and the library `ServerCore`, plus `c
 
 ## `docs/`
 
-Reference material. Update a doc in the same change as the behaviour it describes. Record security-relevant decisions in `docs/adr/`.
+Reference material. Update a doc in the same change as the behaviour it describes. Record security-relevant decisions in `docs/adr/`, and a new trust boundary, asset or out-of-scope item in `docs/THREAT-MODEL.md`.
 
 ---
 

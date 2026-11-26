@@ -19,7 +19,7 @@
 - [ ] PRE-005 — Create Swift 6.4 packages (Swift 6 language mode) and a multiplatform Xcode app target with minimum versions macOS 26, iOS 26 and tvOS 26. Add extension targets as empty shells.
 - [x] PRE-006 — Prepare test devices: a disposable macOS VM or dedicated Mac, an iPhone or iPad that can be supervised, and an Apple TV. Validate system extension approval and enrollment behavior on each.
 - [ ] PRE-007 — Configure CI for compilation on macOS and the iOS and tvOS simulators, unit tests, formatting and static analysis. The workflow exists and is enabled after v1.0.0 ([ADR 0007](../docs/adr/0007-pull-request-ci.md)).
-- [ ] PRE-008 — Write initial threat model, trust boundaries and ADRs (ADR-001, ADR-005, ADR-015 first); define project scope and out-of-scope functionality.
+- [x] PRE-008 — Write initial threat model, trust boundaries and ADRs (ADR-001, ADR-005, ADR-015 first); define project scope and out-of-scope functionality. See [THREAT-MODEL.md](../docs/THREAT-MODEL.md), [ADR 0008](../docs/adr/0008-extensions-under-app-store.md), [ADR 0009](../docs/adr/0009-endpoint-security-lab-only.md) and [ADR 0010](../docs/adr/0010-app-store-only-distribution.md).
 - [ ] PRE-009 — Define versioned event, policy and application identity schemas; introduce synthetic data sources and fixtures.
 - [ ] PRE-010 — Document how to disable and remove every extension, test recovery from an invalid configuration, and take a clean lab snapshot.
 - [ ] PRE-011 — Draft the privacy policy, consent-screen copy, App Privacy label inventory and privacy manifest (`PrivacyInfo.xcprivacy`) for the app and each extension.
@@ -51,7 +51,7 @@ Do not disable SIP or system security controls on the development machine to mak
 - [ ] Privacy policy draft, consent copy and privacy manifests committed.
 - [x] Lab-only: entitlement request submitted; status recorded.
 - [ ] Test environment is recoverable; disable/removal procedure exists.
-- [ ] ADR and threat-model templates committed.
+- [x] ADR template and initial threat model committed.
 - [ ] Initial schemas and synthetic adapters have fixture tests.
 
 ## Deliverables
