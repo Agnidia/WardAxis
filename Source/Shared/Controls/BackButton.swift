@@ -40,7 +40,7 @@ struct BackButton: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Back Button") {
     VStack(spacing: .spacing.xxl) {

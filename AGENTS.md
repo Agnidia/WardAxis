@@ -58,6 +58,7 @@ The `docs/` directory holds the long-form reference. Read these instead of guess
 - **MUST** inject services through `AppContainer`; never construct them inside views or view models
 - **MUST** define every service as a `Sendable` protocol with a concrete implementation and a mock. Put it in a `WardAxis*` package when an extension or the agent needs it; otherwise in `Source/Shared/Services/<Name>/`
 - **MUST** run SwiftFormat before committing: `swiftformat .`
+- **MUST** guard every `#Preview` with `#if PREVIEW_DEBUG`. `Configurations/debug.xcconfig` defines it together with `DEBUG`, and `Source/Shared/Core/BuildConditions.swift` fails the build when the two differ. Keep `#if DEBUG` for mocks, container factories and other debug-only code
 - **MUST NOT** commit secrets, API keys, or credentials
 - **MUST NOT** use hardcoded colors; use the semantic colors in `Resources/Colors.xcassets`
 

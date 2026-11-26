@@ -93,7 +93,7 @@ struct HomeView: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 #Preview {
     NavigationStack {
         HomeView()

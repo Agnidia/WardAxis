@@ -51,7 +51,7 @@ struct SelectableChip: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Selectable Chip") {
     HStack(spacing: 8) {

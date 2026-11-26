@@ -29,7 +29,7 @@ struct LogsUnavailableView: View {
     }
 }
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview {
     LogsUnavailableView()

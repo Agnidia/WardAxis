@@ -138,7 +138,7 @@ struct SearchField: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Search Field States") {
     VStack(spacing: 24) {

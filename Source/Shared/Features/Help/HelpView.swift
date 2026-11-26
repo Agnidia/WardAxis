@@ -127,8 +127,10 @@ private struct FAQItem {
 
 // MARK: - Preview
 
+#if PREVIEW_DEBUG
 #Preview {
     NavigationStack {
         HelpView()
     }
 }
+#endif

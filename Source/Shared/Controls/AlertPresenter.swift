@@ -76,7 +76,7 @@ extension View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Alert Presenter - Accent") {
     @Previewable @State var alertManager = AlertManager()

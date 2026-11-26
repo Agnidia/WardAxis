@@ -91,7 +91,7 @@ struct SimpleProgressDots: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Progress Dots") {
     VStack(spacing: 24) {

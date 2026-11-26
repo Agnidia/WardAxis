@@ -100,7 +100,7 @@ struct AccentAlert: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Accent Alert - Dark") {
     VStack(spacing: 0) {

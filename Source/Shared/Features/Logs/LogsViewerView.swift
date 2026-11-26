@@ -314,7 +314,7 @@ struct LogsViewerView: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview {
     NavigationStack {

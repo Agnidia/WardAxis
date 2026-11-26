@@ -126,7 +126,7 @@ struct ColorSwatchView: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Row View") {
     VStack(spacing: 8) {

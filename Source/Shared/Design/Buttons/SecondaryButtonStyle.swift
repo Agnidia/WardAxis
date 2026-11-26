@@ -126,7 +126,7 @@ extension ButtonStyle where Self == SecondaryButtonStyle {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Secondary Button States") {
     VStack(spacing: 16) {

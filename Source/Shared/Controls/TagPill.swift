@@ -23,7 +23,7 @@ struct TagPill: View {
     }
 }
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview {
     VStack {

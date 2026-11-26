@@ -195,7 +195,7 @@ struct FormTextField: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Form Text Field States") {
     VStack(spacing: 24) {

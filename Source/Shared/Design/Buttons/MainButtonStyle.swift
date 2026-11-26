@@ -121,7 +121,7 @@ extension ButtonStyle where Self == MainButtonStyle {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Primary Button States") {
     VStack(spacing: 16) {

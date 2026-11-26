@@ -63,6 +63,7 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
     }
 }
 
+#if PREVIEW_DEBUG
 #Preview("Regular") {
     SizeClassAdaptiveView(sizeClass: .regular) {
         Text(verbatim: "Regular")
@@ -78,3 +79,4 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
         Text(verbatim: "Compact")
     }
 }
+#endif

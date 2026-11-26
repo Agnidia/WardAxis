@@ -60,7 +60,7 @@ struct FlowLayout: Layout {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Flow Layout") {
     let shortTags = ["Sale", "New", "Hot"]

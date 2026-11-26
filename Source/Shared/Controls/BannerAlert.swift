@@ -102,7 +102,7 @@ struct BannerAlert: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Banner Alert - Info") {
     VStack {

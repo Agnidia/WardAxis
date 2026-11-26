@@ -109,7 +109,7 @@ extension IconBadge {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Icon Badge Sizes") {
     VStack(spacing: 24) {

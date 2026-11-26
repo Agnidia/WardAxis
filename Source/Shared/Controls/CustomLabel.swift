@@ -59,7 +59,7 @@ struct CustomLabel: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 // Note: CustomLabel's `icon:` parameter is `ImageResource?` (asset-catalog-bound).
 // This template ships only brand-asset imagesets, so the icon-only and title+icon

@@ -91,7 +91,7 @@ struct ToggleRow: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Toggle Row") {
     VStack(spacing: .zero) {

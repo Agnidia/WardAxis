@@ -183,7 +183,7 @@ struct SettingsView: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 #Preview {
     SettingsView()
         .environment(\.appContainer, AppContainer.preview())

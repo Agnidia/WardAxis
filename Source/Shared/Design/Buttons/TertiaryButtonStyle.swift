@@ -96,7 +96,7 @@ extension ButtonStyle where Self == TertiaryButtonStyle {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Tertiary Button States") {
     VStack(spacing: 16) {

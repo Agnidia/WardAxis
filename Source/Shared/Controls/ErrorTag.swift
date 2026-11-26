@@ -37,7 +37,7 @@ struct ErrorTag: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Error Tag") {
     VStack(spacing: 16) {

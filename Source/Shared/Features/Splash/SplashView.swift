@@ -99,6 +99,8 @@ struct SplashView: View {
 
 // MARK: - Preview
 
+#if PREVIEW_DEBUG
 #Preview {
     SplashView()
 }
+#endif

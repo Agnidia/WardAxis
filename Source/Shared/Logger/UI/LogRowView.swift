@@ -249,7 +249,7 @@ struct LogLevelBadge: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Parsed entries") {
     VStack(spacing: .spacing.m) {

@@ -150,7 +150,7 @@ struct Application: App {
 | `AppContainer.testing()` | Unit tests (DEBUG) | Mocks |
 | `AppContainer.placeholder()` | Default value of `@Environment(\.appContainer)` | DEBUG: `testing()`. Release: real services that never connect (no server URL, no cache, no identity) |
 
-The `appContainer` environment value is non-optional. Mocks live in the app target, not the test target, so previews can use them.
+The `appContainer` environment value is non-optional. Mocks live in the app target, not the test target, so previews can use them. Previews sit under `#if PREVIEW_DEBUG`, which is defined exactly when `DEBUG` is, so a preview can always reach the DEBUG-only mocks and `preview()`.
 
 ### Why a container instead of singletons?
 
