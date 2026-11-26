@@ -18,7 +18,7 @@
 - [x] PRE-004 — Enable NetworkExtension capabilities per [TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment): content filter, DNS proxy and app proxy as system extensions on macOS; URL filter on macOS and iOS; packet tunnel on iOS and tvOS. Add `com.apple.developer.system-extension.install` and the App Sandbox to every macOS target.
 - [ ] PRE-005 — Create Swift 6.4 packages (Swift 6 language mode) and a multiplatform Xcode app target with minimum versions macOS 26, iOS 26 and tvOS 26. Add extension targets as empty shells.
 - [x] PRE-006 — Prepare test devices: a disposable macOS VM or dedicated Mac, an iPhone or iPad that can be supervised, and an Apple TV. Validate system extension approval and enrollment behavior on each.
-- [ ] PRE-007 — Configure CI for compilation on macOS and the iOS and tvOS simulators, unit tests, formatting and static analysis.
+- [ ] PRE-007 — Configure CI for compilation on macOS and the iOS and tvOS simulators, unit tests, formatting and static analysis. The workflow exists and is enabled after v1.0.0 ([ADR 0007](../docs/adr/0007-pull-request-ci.md)).
 - [ ] PRE-008 — Write initial threat model, trust boundaries and ADRs (ADR-001, ADR-005, ADR-015 first); define project scope and out-of-scope functionality.
 - [ ] PRE-009 — Define versioned event, policy and application identity schemas; introduce synthetic data sources and fixtures.
 - [ ] PRE-010 — Document how to disable and remove every extension, test recovery from an invalid configuration, and take a clean lab snapshot.
