@@ -39,6 +39,10 @@ The delegate answers `.replace` to a version change. The OS offers a replacement
 
 The tester copies the app to `/Applications` and approves it in System Settings. Testing never disables SIP and never enables `systemextensionsctl developer`. Approval tests run in a disposable macOS VM, which is restored from a clean copy afterward ([TEST-DEVICES.md](../TEST-DEVICES.md)).
 
+### D6: The state display only reads, and only while it is visible (T1)
+
+The Developer section shows the extension's state from `OSSystemExtensionRequest.propertiesRequest`, polled once a second. The query changes nothing: its delegate never approves and refuses any replacement. Polling runs in a task bound to the section, so it stops when Settings closes, and it compiles only where the section does (D1). When the OS finished an approval without a callback to the app, the polled state ends the pending request in the UI; the request's late outcome is then ignored.
+
 ## Alternatives considered
 
 - **Wait for Phase 1 activation code.** PRE-006 would then not prove approval on the Mac. Rejected.

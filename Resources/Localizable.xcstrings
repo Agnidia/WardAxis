@@ -888,6 +888,132 @@
         }
       }
     },
+    "settings.developer.state.awaitingApproval" : {
+      "comment" : "DEBUG system extension state: waits for the user to allow it in System Settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for approval"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікує на дозвіл"
+          }
+        }
+      }
+    },
+    "settings.developer.state.disabled" : {
+      "comment" : "DEBUG system extension state: installed but turned off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed, not enabled"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановлено, не увімкнено"
+          }
+        }
+      }
+    },
+    "settings.developer.state.enabled" : {
+      "comment" : "DEBUG system extension state: installed and enabled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увімкнено"
+          }
+        }
+      }
+    },
+    "settings.developer.state.notInstalled" : {
+      "comment" : "DEBUG system extension state: not installed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not installed"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не встановлено"
+          }
+        }
+      }
+    },
+    "settings.developer.state.title" : {
+      "comment" : "DEBUG system extension: label of the state the OS reports",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extension state"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стан розширення"
+          }
+        }
+      }
+    },
+    "settings.developer.state.uninstalling" : {
+      "comment" : "DEBUG system extension state: removal pending a restart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removal finishes after restart"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалення завершиться після перезапуску"
+          }
+        }
+      }
+    },
+    "settings.developer.state.unknown" : {
+      "comment" : "DEBUG system extension state: the OS has not answered or the query failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Невідомо"
+          }
+        }
+      }
+    },
     "settings.developer.status.activated" : {
       "comment" : "DEBUG system extension status: activation completed",
       "extractionState" : "manual",

@@ -164,6 +164,34 @@ enum L {
             static func statusFailed(_ reason: String) -> LocalizedStringKey {
                 "settings.developer.status.failed \(reason)"
             }
+            
+            static var stateTitle: LocalizedStringKey {
+                "settings.developer.state.title"
+            }
+            
+            static var stateUnknown: LocalizedStringKey {
+                "settings.developer.state.unknown"
+            }
+            
+            static var stateNotInstalled: LocalizedStringKey {
+                "settings.developer.state.notInstalled"
+            }
+            
+            static var stateAwaitingApproval: LocalizedStringKey {
+                "settings.developer.state.awaitingApproval"
+            }
+            
+            static var stateEnabled: LocalizedStringKey {
+                "settings.developer.state.enabled"
+            }
+            
+            static var stateDisabled: LocalizedStringKey {
+                "settings.developer.state.disabled"
+            }
+            
+            static var stateUninstalling: LocalizedStringKey {
+                "settings.developer.state.uninstalling"
+            }
         }
         
         // MARK: - Logs Viewer

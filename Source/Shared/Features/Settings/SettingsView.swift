@@ -160,6 +160,11 @@ struct SettingsView: View {
             .disabled(isBusy)
             .accessibilityIdentifier(AccessibilityID.Developer.deactivateButton.id)
             
+            LabeledContent(L.Settings.Developer.stateTitle) {
+                Text(systemExtensionViewModel?.installStateText ?? L.Settings.Developer.stateUnknown)
+            }
+            .accessibilityIdentifier(AccessibilityID.Developer.installState.id)
+            
             Text(systemExtensionViewModel?.statusText ?? L.Settings.Developer.statusIdle)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -168,6 +173,10 @@ struct SettingsView: View {
             Text(L.Settings.Developer.title)
         } footer: {
             Text(L.Settings.Developer.footer)
+        }
+        // Restarts once the view model exists; cancelled when Settings closes, which stops the polling.
+        .task(id: systemExtensionViewModel == nil) {
+            await systemExtensionViewModel?.monitorInstallState()
         }
     }
 #endif

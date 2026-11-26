@@ -27,6 +27,8 @@ final class MockSystemExtensionService: SystemExtensionServiceProtocol, @uncheck
     private let deactivation: Script
     private var _activateCount = 0
     private var _deactivateCount = 0
+    private var _installState: Result<SystemExtensionInstallState, SystemExtensionError> = .success(.notInstalled)
+    private var _installStateCount = 0
     private var pending: [AsyncThrowingStream<SystemExtensionEvent, any Error>.Continuation] = []
     
     init(activation: Script = .approvedAndCompleted, deactivation: Script = .completed) {
@@ -42,6 +44,15 @@ final class MockSystemExtensionService: SystemExtensionServiceProtocol, @uncheck
         lock.withLock { _deactivateCount }
     }
     
+    var installStateCount: Int {
+        lock.withLock { _installStateCount }
+    }
+    
+    /// What ``installState()`` reports from now on.
+    func setInstallState(_ result: Result<SystemExtensionInstallState, SystemExtensionError>) {
+        lock.withLock { _installState = result }
+    }
+    
     func activate() -> AsyncThrowingStream<SystemExtensionEvent, any Error> {
         lock.withLock { _activateCount += 1 }
         return replay(activation)
@@ -52,13 +63,21 @@ final class MockSystemExtensionService: SystemExtensionServiceProtocol, @uncheck
         return replay(deactivation)
     }
     
-    /// Finishes every stream that a script with `finishes == false` left open.
-    func finishPending() {
+    func installState() async throws(SystemExtensionError) -> SystemExtensionInstallState {
+        let result = lock.withLock {
+            _installStateCount += 1
+            return _installState
+        }
+        return try result.get()
+    }
+    
+    /// Ends every stream that a script with `finishes == false` left open, normally or with `error`.
+    func finishPending(throwing error: SystemExtensionError? = nil) {
         let continuations = lock.withLock {
             defer { pending.removeAll() }
             return pending
         }
-        continuations.forEach { $0.finish() }
+        continuations.forEach { $0.finish(throwing: error) }
     }
     
     private func replay(_ script: Script) -> AsyncThrowingStream<SystemExtensionEvent, any Error> {
