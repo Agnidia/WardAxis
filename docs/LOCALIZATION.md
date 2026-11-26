@@ -12,7 +12,9 @@ The app uses **String Catalogs** (`.xcstrings`) and a type-safe `L` enum. Views 
 | [`Resources/InfoPlist.xcstrings`](../Resources/InfoPlist.xcstrings) | Localized `Info.plist` values |
 | [`Source/Shared/Localization/LocalizedStrings.swift`](../Source/Shared/Localization/LocalizedStrings.swift) | The `L` namespace |
 
-Build settings (`Configurations/base.xcconfig`): `LOCALIZATION_PREFERS_STRING_CATALOGS = YES`, `SWIFT_EMIT_LOC_STRINGS = YES`, `STRING_CATALOG_GENERATE_SYMBOLS = YES`. The development language is English.
+Build settings (`Configurations/base.xcconfig`): `LOCALIZATION_PREFERS_STRING_CATALOGS = YES`, `SWIFT_EMIT_LOC_STRINGS = YES`, `STRING_CATALOG_GENERATE_SYMBOLS = YES`. The development language is English. The app also ships Ukrainian (`uk`), matching the App Store listing.
+
+Every shipped language must translate every key. The OS picks one table for the user's language and does not fall back to English per key, so a partly translated language shows raw keys such as `main.tab.home`. `LocalizationCoverageTests` fails when a compiled table misses a key. Add the Ukrainian value together with the English one.
 
 ---
 
