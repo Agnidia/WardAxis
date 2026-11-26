@@ -14,13 +14,8 @@ import Foundation
 /// disk I/O off the main actor. View models (`@MainActor`) call into this
 /// service via `await`.
 protocol LogReaderServiceProtocol: Sendable {
-    /// Loads all entries from the active log file. Newest entry is **last**
-    /// in the returned array — the view layer is responsible for reversing
-    /// for display, keeping service semantics file-order and lossless.
-    ///
-    /// - Throws: `LogReaderError`.
-    /// - Returns: All parsed entries (or up to the streaming cap for very
-    ///   large files; see `LogReaderService.maxStreamedEntries`).
+    /// Returns recent entries in file order, within the byte, entry-size and count limits.
+    /// A cut first line and oversize entries are omitted.
     func loadEntries() async throws -> [LogEntry]
     
     /// Serialises `entries` back to one-line-per-entry text and writes to
@@ -31,11 +26,6 @@ protocol LogReaderServiceProtocol: Sendable {
     /// - Throws: `LogReaderError.writeFailed` on I/O failure.
     func exportEntries(_ entries: [LogEntry]) async throws -> URL
     
-    /// Truncates the persisted log file to zero bytes. Done in-place via
-    /// the live `FileLogHandler` so the long-lived writer is not orphaned —
-    /// callers continue to log normally; entries flushed after this call
-    /// land into the empty file.
-    ///
-    /// - Throws: `LogReaderError.writeFailed` on I/O failure.
+    /// Discards pending entries and truncates the live file; deletion failures throw.
     func clearEntries() async throws
 }

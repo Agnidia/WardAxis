@@ -51,4 +51,16 @@ struct FieldRulesTests {
     func `A signing identifier is an ASCII token of at most 255 bytes`(identifier: String, isValid: Bool) {
         #expect(FieldRules.isSigningIdentifier(identifier) == isValid)
     }
+    
+    @Test(arguments: ["0x7f000001", "0x7f.0x0.0x0.0x1", "127.0x0.0x0.0x1", "0x7f.1", "0177.0.0.1", "2130706433", "127.1"])
+    func `Numeric address alternatives are neither host names nor policy patterns`(host: String) {
+        #expect(!FieldRules.isHostName(host))
+        #expect(!FieldRules.isHostPattern(host))
+        #expect(!FieldRules.isRemoteHost(host))
+    }
+    
+    @Test(arguments: ["0x7f.example.com", "example0x1.com", "localhost", "example.com"])
+    func `Non-numeric host names remain valid`(host: String) {
+        #expect(FieldRules.isHostName(host))
+    }
 }

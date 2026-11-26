@@ -121,7 +121,7 @@ defer { signposter.endInterval("loadEntries", state) }
 |---|---|
 | Path | `Library/Logs/<bundle identifier>/log.log` in the app's container (`Log.logDirectoryUrl` gives the folder) |
 | Writer | `FileLogHandler.shared`, one `actor` for the process |
-| Rotation | Keeps the last 100,000 lines, in place |
+| Rotation | 4 MiB maximum; retains up to 2 MiB through the live handle, serialized with writes and clearing |
 | Extensions | Never write a file. A bundle path that ends in `.appex`, `.systemextension` or `.xpc` logs to the unified log only, because extensions see flows, DNS queries and mail |
 | Line format | `[timestamp] [category] [level] message[ | key=value, ...]` |
 

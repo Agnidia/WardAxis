@@ -15,6 +15,7 @@ APP_NAME = WardAxis
 APP_DOMAIN = com.agnidia
 // Lowercase reverse-DNS root shared by the app, its extensions and the OSLog subsystem.
 APP_BUNDLE_ID = $(APP_DOMAIN).wardaxis
+APP_URL_SCHEME = wardaxis
 MTL_FAST_MATH = YES
 
 //Identifiers (ADR 0002)

@@ -58,11 +58,15 @@ struct ConfigurationServiceTests {
     @Test
     func `A save still in flight at unenrollment cannot bring the cache back`() async {
         let gate = Gate()
-        let cache = InMemoryConfigurationCache(saveHook: { _ in await gate.wait() })
+        let started = Gate()
+        let cache = InMemoryConfigurationCache(saveHook: { _ in
+            started.open()
+            await gate.wait()
+        })
         let harness = ConfigurationHarness(cache: cache)
         let connection = await harness.start()
         connection.send(frame: ConfigFrames.snapshot(41))
-        await waitUntil { harness.service.configuration != nil }
+        await started.wait()
         
         harness.service.enrollmentDidChange(to: .unenrolled)
         gate.open()
@@ -453,5 +457,65 @@ struct ConfigurationServiceTests {
         #expect(harness.service.configuration == cached)
         second.send(frame: ConfigFrames.snapshot(8))
         await waitUntil { harness.service.configuration?.version == 8 }
+    }
+    
+    @Test
+    func `A stalled cache retains only the latest pending configuration`() async {
+        let started = Gate()
+        let release = Gate()
+        let cache = InMemoryConfigurationCache(saveHook: { configuration in
+            if configuration.version == 1 {
+                started.open()
+                await release.wait()
+            }
+        })
+        let harness = ConfigurationHarness(cache: cache)
+        let connection = await harness.start()
+        connection.send(frame: ConfigFrames.snapshot(1))
+        await started.wait()
+        for version in 2...1000 {
+            connection.send(frame: ConfigFrames.snapshot(Int64(version)))
+        }
+        await waitUntil { harness.service.configuration?.version == 1000 }
+        release.open()
+        await harness.service.cacheWorkFinished()
+        #expect(cache.saveCount == 2)
+        #expect(cache.stored?.version == 1000)
+        harness.service.enrollmentDidChange(to: .unenrolled)
+    }
+    
+    @Test
+    func `Unenrollment discards a coalesced save after an active save finishes`() async {
+        let started = Gate()
+        let release = Gate()
+        let cache = InMemoryConfigurationCache(saveHook: { _ in started.open()
+            await release.wait()
+        })
+        let harness = ConfigurationHarness(cache: cache)
+        let connection = await harness.start()
+        connection.send(frame: ConfigFrames.snapshot(1))
+        await started.wait()
+        connection.send(frame: ConfigFrames.snapshot(2))
+        await waitUntil { harness.service.configuration?.version == 2 }
+        harness.service.enrollmentDidChange(to: .unenrolled)
+        release.open()
+        await harness.service.cacheWorkFinished()
+        #expect(cache.saveCount == 1)
+        #expect(cache.deleteCount == 1)
+        #expect(cache.stored == nil)
+    }
+    
+    @Test
+    func `An ended stream without a close reconnects for a fresh snapshot after backoff`() async {
+        let harness = ConfigurationHarness()
+        let first = await harness.start()
+        first.send(frame: ConfigFrames.snapshot(1))
+        await waitUntil { harness.service.configuration?.version == 1 }
+        first.finish()
+        await harness.passBackoff(number: 1, expected: .seconds(1))
+        let second = await harness.transport.connection(2)
+        second.send(frame: ConfigFrames.snapshot(99))
+        await waitUntil { harness.service.configuration?.version == 99 }
+        harness.service.enrollmentDidChange(to: .unenrolled)
     }
 }

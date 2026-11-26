@@ -18,6 +18,8 @@ public enum SecureItemStoreError: Error, Sendable, Equatable {
     /// This store keeps nothing, so it cannot save. Its loads find no item and
     /// its deletes succeed.
     case unavailable
+    
+    case markerUnavailable
 }
 
 /// A value kept in a secure item store.

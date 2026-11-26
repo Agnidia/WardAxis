@@ -43,6 +43,7 @@ struct HelpView: View {
             }
         }
         .navigationTitle(L.Help.title)
+        .accessibilityIdentifier(AccessibilityID.Screen.help)
         .onAppear {
             logger.debug("HelpView appeared")
         }

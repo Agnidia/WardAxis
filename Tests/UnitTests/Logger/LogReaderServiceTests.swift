@@ -24,7 +24,7 @@ struct LogReaderServiceTests {
         LogReaderService(
             fileURL: fileURL,
             parser: LogEntryParser(),
-            streamingThresholdBytes: 5 * 1024 * 1024,
+            maximumReadBytes: 2 * 1024 * 1024,
             maxStreamedEntries: maxStreamedEntries
         )
     }
@@ -126,7 +126,7 @@ struct LogReaderServiceTests {
         let service = LogReaderService(
             fileURL: url,
             parser: LogEntryParser(),
-            streamingThresholdBytes: 5 * 1024 * 1024,
+            maximumReadBytes: 2 * 1024 * 1024,
             maxStreamedEntries: 5000,
             now: { fixedDate }
         )
@@ -177,5 +177,30 @@ struct LogReaderServiceTests {
         for line in rawLines {
             #expect(exported.contains(line))
         }
+    }
+    
+    @Test
+    func `A bounded read skips an oversized entry and keeps the latest entry`() async throws {
+        let url = try makeTempFile(content: "[ui] [info] " + String(repeating: "x", count: 100_000) + "\n[ui] [error] latest\n")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let service = LogReaderService(fileURL: url, maximumReadBytes: 128)
+        let entries = try await service.loadEntries()
+        #expect(entries.map(\.rawLine) == ["[ui] [error] latest"])
+    }
+    
+    @Test
+    func `The parser drops oversized multiline entries without dropping the next header`() async throws {
+        let url = try makeTempFile(content: "[ui] [info] " + String(repeating: "x\n", count: 10_000) + "[ui] [error] latest\n")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let entries = try await makeService(fileURL: url).loadEntries()
+        #expect(entries.map(\.rawLine) == ["[ui] [error] latest"])
+    }
+    
+    @Test
+    func `An oversized new entry does not discard valid adjacent entries`() async throws {
+        let url = try makeTempFile(content: "[ui] [info] before\n[ui] [info] " + String(repeating: "x", count: 20_000) + "\n[ui] [info] after\n")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let entries = try await makeService(fileURL: url).loadEntries()
+        #expect(entries.map(\.rawLine) == ["[ui] [info] before", "[ui] [info] after"])
     }
 }

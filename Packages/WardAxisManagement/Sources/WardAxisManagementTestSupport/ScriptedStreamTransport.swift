@@ -30,6 +30,10 @@ public final class ScriptedStreamTransport: ConfigurationStreamTransport {
             termination.isRaised
         }
         
+        public func finish() {
+            continuation.finish()
+        }
+        
         public func send(_ event: ConfigurationStreamEvent) {
             continuation.yield(event)
         }

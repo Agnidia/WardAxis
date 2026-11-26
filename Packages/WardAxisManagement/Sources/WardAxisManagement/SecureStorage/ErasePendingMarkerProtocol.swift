@@ -18,8 +18,8 @@ public protocol ErasePendingMarkerProtocol: Sendable {
     var isSet: Bool { get }
     
     /// Records that an erase is due.
-    func set()
+    func set() throws(SecureItemStoreError)
     
     /// Records that no erase is due.
-    func clear()
+    func clear() throws(SecureItemStoreError)
 }

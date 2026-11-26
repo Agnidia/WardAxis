@@ -32,4 +32,14 @@ struct HostConfigurationTests {
     func `The bundle identifier is the WardAxis root`() {
         #expect(Bundle.main.bundleIdentifier == "com.agnidia.wardaxis")
     }
+    
+    @Test
+    func `The built app registers the same scheme the coordinator accepts`() throws {
+        let scheme = try #require(Bundle.main.object(forInfoDictionaryKey: "WADeepLinkScheme") as? String)
+        let types = try #require(Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]])
+        #expect(types.count == 1)
+        #expect(types.first?["CFBundleURLSchemes"] as? [String] == [scheme])
+        #expect(!scheme.isEmpty)
+        #expect(!scheme.contains("$("))
+    }
 }

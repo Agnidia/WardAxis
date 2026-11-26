@@ -7,162 +7,170 @@
 
 import Foundation
 import os
+import Synchronization
 
-private let internalLog = os.Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.agnidia.wardaxis",
-    category: "FileLogHandler"
-)
+public enum LogFileLimits {
+    public static let maximumFileBytes = 4 * 1024 * 1024
+    public static let retainedBytes = 2 * 1024 * 1024
+    public static let maximumEntryBytes = 16 * 1024
+    static let maximumPendingEntries = 64
+}
 
-/// `TextOutputStream` that appends to a log file and triggers async rotation.
-public struct FileHandlerOutputStream: TextOutputStream {
-    private let fileHandle: FileHandle
-    public let encoding: String.Encoding
-    
-    /// Opens (or creates) the log file at `url` and seeks to its end. Rotation
-    /// to the last 100,000 lines runs asynchronously so init never blocks.
-    ///
-    /// - Throws: `LoggingError.fileCreationFailed` if file creation fails.
-    public init(localFile url: URL, encoding: String.Encoding = .utf8) throws {
-        if !FileManager.default.fileExists(atPath: url.path) {
-            guard FileManager.default.createFile(atPath: url.path, contents: nil, attributes: nil) else {
-                throw LoggingError.fileCreationFailed(url)
-            }
-        }
-        
-        let fileHandle = try FileHandle(forWritingTo: url)
-        fileHandle.seekToEndOfFile()
-        self.fileHandle = fileHandle
-        self.encoding = encoding
-        
-        Task.detached(priority: .utility) {
-            Self.keepLastLinesOfFile(from: url, writingTo: fileHandle)
-        }
-    }
-    
-    /// Appends `string` to the file; write failures are logged, never thrown,
-    /// so logging cannot crash the app.
-    ///
-    /// - Note: `mutating` is required by `TextOutputStream`, though the
-    ///         underlying `FileHandle` is a reference type.
-    public mutating func write(_ string: String) {
-        guard let data = string.data(using: encoding) else { return }
-        
-        do {
-            try fileHandle.write(contentsOf: data)
-        } catch {
-            internalLog.error("Failed to write data: \(error.localizedDescription)")
-        }
-    }
-    
-    public func close() {
-        try? fileHandle.close()
-    }
-    
-    /// Truncates the underlying file to zero bytes and rewinds the handle.
-    /// Done in-place via the live `FileHandle` so the open writer keeps
-    /// targeting the same inode — atomic replace would orphan the handle
-    /// and silently drop subsequent log writes.
-    public func truncate() {
-        do {
-            try fileHandle.truncate(atOffset: 0)
-            try fileHandle.seek(toOffset: 0)
-        } catch {
-            internalLog.error("Failed to truncate: \(error.localizedDescription)")
-        }
-    }
-    
-    /// Rotates the log by keeping only the last `lineCount` lines.
-    ///
-    /// Called from a background `.utility` task during init. Reads the file in
-    /// full, so size stays reasonable; rewrites in-place only if needed.
-    /// Uses the live `handle` (same inode) so the open writer is never orphaned.
-    private static func keepLastLinesOfFile(from url: URL, writingTo handle: FileHandle, lineCount: Int = 100_000) {
-        do {
-            let fileContent = try String(contentsOf: url, encoding: .utf8)
-            var lines = fileContent.split(separator: "\n").map(String.init)
-            
-            guard lines.count > lineCount else { return }
-            
-            lines = Array(lines.suffix(lineCount))
-            let updatedContent = lines.joined(separator: "\n") + "\n"
-            guard let data = updatedContent.data(using: .utf8) else { return }
-            
-            try handle.seek(toOffset: 0)
-            try handle.write(contentsOf: data)
-            try handle.truncate(atOffset: UInt64(data.count))
-            handle.seekToEndOfFile()
-            
-            internalLog.info("Log file rotated successfully")
-        } catch {
-            internalLog.error("Log rotation failed: \(error.localizedDescription)")
-        }
+/// Reads at most `maximumBytes`, discarding a partial first line after seeking.
+public enum LogFileTail {
+    public static func read(from url: URL, maximumBytes: Int) throws -> Data {
+        precondition(maximumBytes > 0)
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        let end = try handle.seekToEnd()
+        let offset = end > UInt64(maximumBytes) ? end - UInt64(maximumBytes) : 0
+        try handle.seek(toOffset: offset)
+        let data = try handle.read(upToCount: maximumBytes) ?? Data()
+        guard offset > 0 else { return data }
+        guard let newline = data.firstIndex(of: 10) else { return Data() }
+        return Data(data[data.index(after: newline)...])
     }
 }
 
-/// Actor-isolated file log handler that serializes writes automatically.
-///
-/// ## Singleton Justification (ADR-FileLogHandler-001)
-///
-/// `FileLogHandler.shared` is the **only** justified singleton in this codebase.
-/// The "no Singleton" rule from `AGENTS.md` stands for everything else.
-///
-/// Why process-wide is required:
-/// - **File-descriptor safety**: a `FileHandle` is a kernel descriptor; multiple
-///   per-instance writers would leak fds and race on the same inode.
-/// - **Write ordering**: a single `actor` (one serialized executor) gives total
-///   ordering for free; multiple writers do not.
-/// - **In-place truncate**: `clear()` truncates the live handle. Two writers
-///   cannot share that operation; one would orphan the other's seek position.
-/// - **Rotation correctness**: 100,000-line rotation rewrites the same handle.
-///   Per-instance writers would corrupt the file.
-///
-/// `Log` itself is not a singleton — each call site builds its own `Log(category:)`
-/// value type. Only the file writer is shared.
+struct BoundedLogFile {
+    private let url: URL
+    private let handle: FileHandle
+    private var byteCount: UInt64
+    private let maximumBytes: Int
+    private let retainedBytes: Int
+    
+    init(url: URL, maximumBytes: Int, retainedBytes: Int) throws {
+        precondition(retainedBytes > 0 && maximumBytes > retainedBytes)
+        self.url = url
+        self.maximumBytes = maximumBytes
+        self.retainedBytes = retainedBytes
+        if !FileManager.default.fileExists(atPath: url.path) {
+            guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
+                throw LoggingError.fileCreationFailed(url)
+            }
+        }
+        handle = try FileHandle(forWritingTo: url)
+        byteCount = try handle.seekToEnd()
+        if byteCount > UInt64(maximumBytes) {
+            try rotate()
+        }
+    }
+    
+    mutating func append(_ data: Data) throws {
+        guard data.count <= maximumBytes else { throw LoggingError.invalidConfiguration }
+        byteCount = try handle.seekToEnd()
+        if byteCount + UInt64(data.count) > UInt64(maximumBytes) {
+            try rotate(retainingAtMost: maximumBytes - data.count)
+        }
+        try handle.write(contentsOf: data)
+        byteCount += UInt64(data.count)
+    }
+    
+    mutating func clear() throws {
+        try handle.truncate(atOffset: 0)
+        try handle.seek(toOffset: 0)
+        byteCount = 0
+    }
+    
+    func close() throws {
+        try handle.close()
+    }
+    
+    private mutating func rotate(retainingAtMost limit: Int? = nil) throws {
+        let keep = min(retainedBytes, limit ?? retainedBytes)
+        let tail = keep > 0 ? try LogFileTail.read(from: url, maximumBytes: keep) : Data()
+        try handle.seek(toOffset: 0)
+        try handle.write(contentsOf: tail)
+        try handle.truncate(atOffset: UInt64(tail.count))
+        byteCount = try handle.seekToEnd()
+    }
+}
+
+/// Owns rotation, writes and deletion on one executor (ADR-FileLogHandler-001).
 public actor FileLogHandler {
-    /// Shared instance created lazily; thread-safe via `static let` semantics.
-    private static let _shared: FileLogHandler? = {
+    public static let shared: FileLogHandler? = {
         guard let bundleID = Bundle.main.bundleIdentifier else { return nil }
-        let url = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+        let directory = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Logs", isDirectory: true)
             .appendingPathComponent(bundleID, isDirectory: true)
-            .appending(path: "log.log")
-        let directory = url.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
-        return try? FileLogHandler(label: "FileLogHandler", localFile: url)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return try? FileLogHandler(label: "FileLogHandler", localFile: directory.appending(path: "log.log"))
     }()
     
-    public static var shared: FileLogHandler? {
-        _shared
+    private struct Pending {
+        var entries: [Data] = []
+        var scheduled = false
     }
     
-    private var stream: TextOutputStream
-    private let label: String
+    private let pending = Mutex(Pending())
+    private var file: BoundedLogFile
+    private let logger: os.Logger
     
-    /// - Throws: `LoggingError.fileCreationFailed` if file setup fails.
     public init(label: String, localFile url: URL) throws {
-        self.label = label
-        stream = try FileHandlerOutputStream(localFile: url)
+        logger = os.Logger(subsystem: Bundle.main.bundleIdentifier ?? "WardAxis", category: label)
+        file = try BoundedLogFile(url: url, maximumBytes: LogFileLimits.maximumFileBytes, retainedBytes: LogFileLimits.retainedBytes)
     }
     
-    /// Fire-and-forget entry point for callers that cannot `await`.
-    /// The actor serializes writes automatically.
     public nonisolated func log(entry: String) {
-        Task { await _log(entry: entry) }
+        let data = Self.boundedEntry(entry)
+        let schedule = pending.withLock { state in
+            guard state.entries.count < LogFileLimits.maximumPendingEntries else { return false }
+            state.entries.append(data)
+            guard !state.scheduled else { return false }
+            state.scheduled = true
+            return true
+        }
+        if schedule {
+            Task { await drain() }
+        }
     }
     
-    private func _log(entry: String) {
-        var output = entry.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !output.hasSuffix("\n") {
-            output.append("\n")
-        }
-        stream.write(output)
+    /// Pending entries are discarded so an earlier log cannot reappear after deletion.
+    public func clear() throws {
+        pending.withLock { $0.entries.removeAll(keepingCapacity: true) }
+        try file.clear()
     }
     
-    /// Truncates the live log file to zero bytes via the open writer.
-    /// Pending writes complete before this runs (actor serialization).
-    public func clear() async {
-        if let outputStream = stream as? FileHandlerOutputStream {
-            outputStream.truncate()
+    func drain() {
+        let entries = pending.withLock { state in
+            defer { state.entries.removeAll(keepingCapacity: true) }
+            return state.entries
         }
+        for entry in entries {
+            do {
+                try file.append(entry)
+            } catch {
+                logger.error("Log file write failed")
+            }
+        }
+        let more = pending.withLock { state in
+            if state.entries.isEmpty {
+                state.scheduled = false
+                return false
+            }
+            return true
+        }
+        if more {
+            Task { drain() }
+        }
+    }
+    
+    static func boundedEntry(_ entry: String) -> Data {
+        let suffix = Data(" [truncated]\n".utf8)
+        let limit = LogFileLimits.maximumEntryBytes
+        if entry.utf8.count >= limit {
+            var bytes = Data(entry.utf8.prefix(limit - suffix.count))
+            // A cut UTF-8 scalar must not make the whole log unreadable.
+            while String(data: bytes, encoding: .utf8) == nil {
+                bytes.removeLast()
+            }
+            bytes.append(suffix)
+            return bytes
+        }
+        var bytes = Data(entry.utf8)
+        if bytes.last != 10 {
+            bytes.append(10)
+        }
+        return bytes
     }
 }

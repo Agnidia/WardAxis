@@ -7,26 +7,8 @@
 
 import Foundation
 
-/// Serializes secure item store access off the main actor and fences writes by
-/// generation.
-///
-/// The caller gives every write and erase a generation from one increasing
-/// counter, in the order it issues them. Actor jobs from different tasks do not
-/// run in that order, so a late write could otherwise bring back an item the
-/// app already erased (for example after unenrollment), or replace a rotated
-/// value with the one before it. The
-/// vault keeps two marks instead:
-/// - `floor`: the highest generation erased so far. A write at or below it is dropped.
-/// - `onDisk`: the generation of the stored item. An older write is dropped, and
-///   an older erase leaves the newer item in place.
-///
-/// The final store content therefore depends only on which generations wrote and
-/// erased, never on the order in which those calls arrive.
-///
-/// The vault also keeps the erase-pending marker, which outlives the process. It is
-/// set before an erase deletes and cleared once a delete or a newer save covers
-/// the erased item. The marker is written in the same actor turn as the fence
-/// check, so an erase fenced off by a newer item never sets it.
+/// Generation fences prevent late writes from reviving erased credentials.
+/// An erase failure suppresses restores until deletion or a newer save succeeds.
 public actor SecureItemVault<Value: SecurePayload> {
     // Existentials: the store and the marker are the seams that swap the Keychain
     // and the marker file for test doubles.
@@ -34,6 +16,7 @@ public actor SecureItemVault<Value: SecurePayload> {
     private let marker: any ErasePendingMarkerProtocol
     private var floor: UInt64 = 0
     private var onDisk: UInt64 = 0
+    private var erasePending = false
     
     /// - Parameter marker: Has no default, so a new production call site cannot
     ///   lose the persisted erase by omission.
@@ -42,19 +25,15 @@ public actor SecureItemVault<Value: SecurePayload> {
         self.marker = marker
     }
     
-    /// Finishes an erase that a previous launch could not complete.
-    ///
-    /// Deletes the stored item without reading it when the marker is set, then
-    /// clears the marker.
-    /// - Returns: `true` when an erase was pending and is now done; `false` when
-    ///   none was pending and nothing ran.
-    /// - Throws: The delete's error. The marker stays set for a later try.
+    /// Retries an erase retained in memory or on disk; failures remain pending.
     public func resumePendingErase() throws(SecureItemStoreError) -> Bool {
-        guard marker.isSet else {
+        guard erasePending || marker.isSet else {
             return false
         }
+        erasePending = true
         try store.delete()
-        marker.clear()
+        try marker.clear()
+        erasePending = false
         return true
     }
     
@@ -66,7 +45,7 @@ public actor SecureItemVault<Value: SecurePayload> {
     /// - Throws: ``SecureItemStoreError/osStatus(_:)`` or ``SecureItemStoreError/unavailable``
     ///   when the OS refused the read; the item, if any, stays for a later attempt.
     public func restore() throws(SecureItemStoreError) -> Value? {
-        guard !marker.isSet else {
+        guard !erasePending, !marker.isSet else {
             return nil
         }
         do throws(SecureItemStoreError) {
@@ -91,26 +70,35 @@ public actor SecureItemVault<Value: SecurePayload> {
         onDisk = generation
         // Cleared only after the save: a crash between the two drops the new
         // value at relaunch rather than reviving the erased one.
-        if marker.isSet {
-            marker.clear()
+        if erasePending || marker.isSet {
+            erasePending = true
+            try marker.clear()
         }
+        erasePending = false
         return true
     }
     
-    /// Deletes the stored item and blocks every later write at or below `generation`.
-    /// An item written by a newer generation stays, and the marker is not touched.
-    ///
-    /// The marker is set before the delete, so a quit during any try still
-    /// keeps the next launch from adopting the item. A failed delete leaves it set.
+    /// Success requires deletion and marker cleanup. A failed marker write still permits deletion.
+    /// If both stores fail, callers must report incomplete erasure and retry before restart.
     public func erase(generation: UInt64) throws(SecureItemStoreError) {
         floor = max(floor, generation)
         guard onDisk <= generation else {
             return
         }
+        erasePending = true
         if !marker.isSet {
-            marker.set()
+            do {
+                try marker.set()
+            } catch {
+                // Deletion can still establish safety when marker storage is unavailable.
+                try store.delete()
+                try marker.clear()
+                erasePending = false
+                return
+            }
         }
         try store.delete()
-        marker.clear()
+        try marker.clear()
+        erasePending = false
     }
 }

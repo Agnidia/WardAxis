@@ -136,4 +136,38 @@ struct AppCoordinatorTests {
         #expect(coordinator.selectedTab == .home)
         #expect(coordinator.presentedSheet == nil)
     }
+    
+    @Test(arguments: ["https://settings", "other://settings", "wardaxis://user@settings", "wardaxis://settings:42", "wardaxis://settings/path", "wardaxis://settings?token=secret", "wardaxis://settings#fragment"])
+    func `A link outside the registered grammar changes no navigation state`(link: String) throws {
+        let coordinator = AppCoordinator(deepLinkScheme: "wardaxis")
+        #expect(try !coordinator.handleDeepLink(#require(URL(string: link))))
+        #expect(coordinator.navigationPath.isEmpty)
+        #expect(coordinator.presentedSheet == nil)
+    }
+    
+    @Test
+    func `A settings link received during splash survives the phase transition`() throws {
+        let coordinator = AppCoordinator(deepLinkScheme: "wardaxis")
+        #expect(try coordinator.handleDeepLink(#require(URL(string: "wardaxis://settings"))))
+        coordinator.completeSplash()
+        #expect(coordinator.presentedSheet == .settings)
+    }
+    
+    @Test
+    func `Missing scheme and oversize links fail closed`() throws {
+        let coordinator = AppCoordinator(deepLinkScheme: nil)
+        #expect(try !coordinator.handleDeepLink(#require(URL(string: "wardaxis://settings"))))
+        let configured = AppCoordinator(deepLinkScheme: "wardaxis")
+        #expect(try !configured.handleDeepLink(#require(URL(string: "wardaxis://settings/" + String(repeating: "x", count: 2048)))))
+    }
+    
+    @Test
+    func `Repeated external help links keep one destination in the navigation stack`() throws {
+        let coordinator = AppCoordinator(deepLinkScheme: "wardaxis")
+        let link = try #require(URL(string: "wardaxis://help"))
+        for _ in 0..<100 {
+            #expect(coordinator.handleDeepLink(link))
+        }
+        #expect(coordinator.navigationPath.count == 1)
+    }
 }

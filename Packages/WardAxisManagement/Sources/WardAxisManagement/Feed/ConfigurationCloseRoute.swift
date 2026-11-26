@@ -34,7 +34,7 @@ enum ConfigurationCloseRoute: Sendable, Equatable {
             .identityRejected
         case .closeCode(1000), .closeCode(1001), .closeCode(1011):
             .reconnect
-        case .closeCode, .handshakeRejected, .connectionFailed:
+        case .closeCode, .handshakeRejected, .connectionFailed, .bufferOverflow:
             .backOff
         }
     }

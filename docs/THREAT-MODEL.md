@@ -86,6 +86,7 @@ flowchart LR
     APP -- TB4 mTLS --- SRV
     EXT -- TB4 mTLS --- SRV
     MDM -- TB13 --- Device
+    URL[External application URLs] -- TB14 --> APP
     PR[Pull request] -- TB9 --- CI[CI runner]
     PR -- TB11 --- BM[Build Mac]
 ```
@@ -105,6 +106,7 @@ flowchart LR
 | TB11 | Pull request code and the build Mac | PR code (X4) that a maintainer builds or tests locally | The local gate never runs code from a fork or an unreviewed PR on the build Mac. Such code builds only in a VM or a macOS user account with no signing identities | This file |
 | TB12 | AI gateway and the configured AI provider | The provider's responses; the integrated clients' requests | DLP before forwarding; explicit client integration only | Planned: roadmap ADR-009, Phase 4 |
 | TB13 | NanoMDM server and managed devices | Enrollment requests; the network | MDM protocol, APNs credentials, device identity | Planned: roadmap ADR-010, Phase 5 |
+| TB14 | External URL senders and app navigation | Any app, web page or user opening a registered URL | Registered per-build scheme, bounded navigation-only grammar, persistent root handler | [ADR 0012](adr/0012-bounded-client-processing.md) D4 |
 
 ## Threat register
 
@@ -130,6 +132,7 @@ STRIDE per boundary. A cell names the threat that covers it: an ADR threat (`ADR
 | TB11 | n/a | TM3 | n/a | TM3 | n/a | TM3 |
 | TB12 | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) |
 | TB13 | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) |
+| TB14 | ADR 0012 T4 | ADR 0012 T4 | n/a | ADR 0012 D4 | ADR 0012 D4 | Navigation only; no privileged actions |
 
 Threats that cross no single boundary. They are process and claim risks, so they have no STRIDE cell:
 
@@ -151,10 +154,13 @@ Threats that cross no single boundary. They are process and claim risks, so they
 | TM5 | Schemaless configuration values are treated as trusted structure | A detector reads a nested `ConfigurationValue` object as rules without a typed decode, and a server (X5) sends arbitrary structure | Each consumer reads a value with `ManagedConfiguration.document(_:forKey:)`: versioned, typed and strict, unknown fields refused ([ADR 0010](adr/0010-app-store-only-distribution.md) D3, [ADR 0011](adr/0011-versioned-schemas.md)) |
 | TM6 | A deployment runs with the committed development database password | `POSTGRES_PASSWORD` is unset, and compose falls back to `local-dev-not-a-secret` | Known gap |
 
+Client resource and deletion controls: [ADR 0012](adr/0012-bounded-client-processing.md). Log reads and queues have byte/count budgets. Configuration overflow reconnects for a snapshot; cache saves coalesce. Vault erasure failures suppress restores in memory and reach the caller.
+
 ## Known gaps
 
 | Gap | Boundary | Current mitigation | Owner |
 |---|---|---|---|
+| Both erase-marker persistence and Keychain deletion fail | TB3 | The vault returns an error and suppresses restores in memory. No restart guarantee exists without durable state; the enrollment caller must retry | Enrollment implementation |
 | No CRL or OCSP check of device certificates | TB4 | None for one device. The server reads the device-CA bundle only at start-up, so revoking one device needs a rotation of the whole device CA, a server restart and the re-enrollment of every device. The connection lifetime cap (15 min minus up to 3 min jitter) then limits how long an old connection survives the restart; it does not revoke anything by itself | Phase 5 PKI |
 | Authorization is "holds a device-CA certificate"; no per-device authorization | TB4 | The feed serves global configuration only; per-device data waits for the Phase 5 device API | Phase 5 |
 | With mTLS on, `/v1/health` also needs a client certificate, and the probe identity is a full device credential (A7, TM4) | TB4 | The probe key stays on the host with file permissions. Issue it from a separate CA, or limit it to `/v1/health`, in Phase 5 | Phase 5 |

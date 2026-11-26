@@ -44,10 +44,10 @@ struct RootView: View {
             case .main:
                 mainContent
                     .environment(\.coordinator, coordinator)
-                    .onOpenURL { url in coordinator.handleDeepLink(url) }
                     .modifier(AlertPresenterModifier(alertManager: container.alertManager))
             }
         }
+        .onOpenURL { url in coordinator.handleDeepLink(url) }
         .animation(.easeInOut(duration: AnimationDuration.normal), value: coordinator.appPhase)
         // No enrollment flow exists yet: report the device as unenrolled, which
         // also deletes a configuration cached by an earlier enrollment.

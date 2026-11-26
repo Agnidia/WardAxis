@@ -81,7 +81,7 @@ final class SettingsViewModel {
         hasEntries = !entries.isEmpty
     }
     
-    /// Loads ALL entries from disk and exports them to a temp file,
+    /// Loads bounded recent entries from disk and exports them to a temp file,
     /// then publishes the URL via `preparedShareURL`. On failure,
     /// populates `shareError` with a localised message.
     ///
