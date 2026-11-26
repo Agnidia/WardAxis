@@ -30,7 +30,7 @@ Logic that an extension or the future agent must share lives in the `WardAxis*` 
         │           AppContainer   @Observable           │
         │  alertManager · logReaderService ·             │
         │  hapticFeedback · telemetry ·                  │
-        │  configurationService                          │
+        │  configurationService · systemExtensionService │
         └───────────────┬────────────────────────────────┘
                         │ each slot is a Sendable protocol
                         ▼

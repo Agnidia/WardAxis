@@ -51,7 +51,8 @@ WardAxis/
 | `Views/` | `RootView.swift`: root view, splash-to-main switch, tab view |
 | `Features/<Name>/` | View and view model side by side. Folders: `Help`, `Home`, `Logs`, `Settings`, `Splash` |
 | `Services/Alert/` | `AlertManagerProtocol`, `AlertManager` (and `MockAlertManager`), `InAppAlert` |
-| `Mocks/` | `MockConfigurationService`, `MockLogReaderService`, `MockTelemetryService` |
+| `Services/SystemExtension/` | `SystemExtensionServiceProtocol`, `SystemExtensionService`, `SystemExtensionIdentifier` ([ADR 0006](adr/0006-debug-system-extension-activation.md)) |
+| `Mocks/` | `MockConfigurationService`, `MockLogReaderService`, `MockSystemExtensionService`, `MockTelemetryService` |
 | `Logger/` | Log reading and viewer parts: `Models/` (`LogEntry`, `LogDateRange`), `Service/` (`LogReaderService`, `LogEntryParser`, `LogReaderError`), `UI/` (rows, filter bars, unavailable view). See the [Logger README](../Source/Shared/Logger/README.md) |
 | `Localization/` | `LocalizedStrings.swift` (the `L` enum). Values live in `Resources/Localizable.xcstrings` |
 | `Design/` | `Topology.swift` (tokens), `Typography.swift`, `Font+Custom.swift`, `Buttons/`. See [DESIGN.md](DESIGN.md) |
