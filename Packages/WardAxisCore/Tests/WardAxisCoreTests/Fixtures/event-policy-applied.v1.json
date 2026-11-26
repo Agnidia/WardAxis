@@ -1,0 +1,11 @@
+{
+  "schema": "wardaxis.security-event",
+  "schemaVersion": 1,
+  "body": {
+    "identifier": "0D9E8F7A-6B5C-4D3E-9F10-FEDCBA987654",
+    "occurredAt": "2026-11-26T09:59:00Z",
+    "provenance": "lab",
+    "kind": "policyApplied",
+    "policy": {"identifier": "office-network", "revision": 7}
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "wardaxis.security-event",
+  "schemaVersion": 1,
+  "body": {
+    "identifier": "6F1C2D3E-4A5B-4C6D-8E7F-0123456789AB",
+    "occurredAt": "2026-11-26T10:00:00Z",
+    "provenance": "synthetic",
+    "kind": "flowDecision",
+    "application": {"signingIdentifier": "com.example.browser", "teamIdentifier": "EXAMPLE001", "isPlatformBinary": false, "bundleIdentifier": "com.example.browser"},
+    "flow": {"remoteHost": "tracker.example.net", "remotePort": 443, "transport": "tcp", "action": "deny", "ruleIdentifier": "block-tracker"}
+  }
+}

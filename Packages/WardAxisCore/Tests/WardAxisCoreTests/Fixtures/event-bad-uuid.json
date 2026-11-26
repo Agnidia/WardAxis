@@ -1,0 +1,1 @@
+{"schema": "wardaxis.security-event", "schemaVersion": 1, "body": {"identifier": "not-a-uuid", "occurredAt": "2026-11-26T10:00:00Z", "provenance": "synthetic", "kind": "flowDecision", "flow": {"remoteHost": "example.com", "remotePort": 443, "transport": "tcp", "action": "allow"}}}
