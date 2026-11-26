@@ -78,6 +78,7 @@ enum AccessibilityID: Sendable {
         case activateButton = "developer.activateButton"
         case deactivateButton = "developer.deactivateButton"
         case status = "developer.status"
+        case installState = "developer.installState"
         
         var id: String {
             rawValue

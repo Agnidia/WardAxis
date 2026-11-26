@@ -59,6 +59,21 @@ struct SystemExtensionServiceTests {
     }
 #endif
 
+    @Test(arguments: [
+        ([], SystemExtensionInstallState.notInstalled),
+        ([record(enabled: true)], .enabled),
+        ([record(awaiting: true)], .awaitingApproval),
+        ([record()], .disabled),
+        ([record(enabled: true, uninstalling: true)], .uninstalling),
+        // A replacement awaiting approval does not hide the enabled version.
+        ([record(enabled: true), record(awaiting: true)], .enabled),
+        // A version being removed does not count as the enabled one.
+        ([record(enabled: true, uninstalling: true), record(awaiting: true)], .awaitingApproval)
+    ])
+    func `OS records map to one install state`(records: [SystemExtensionRecord], expected: SystemExtensionInstallState) {
+        #expect(SystemExtensionInstallState(records: records) == expected)
+    }
+    
     @Test
     func `A bundle without the identifier key refuses every request`() async {
         let bundle = Bundle(for: BundleToken.self)
@@ -75,7 +90,14 @@ struct SystemExtensionServiceTests {
         await #expect(throws: expected) {
             for try await _ in service.deactivate() {}
         }
+        await #expect(throws: expected) {
+            try await service.installState()
+        }
     }
+}
+
+private func record(enabled: Bool = false, awaiting: Bool = false, uninstalling: Bool = false) -> SystemExtensionRecord {
+    SystemExtensionRecord(isEnabled: enabled, isAwaitingUserApproval: awaiting, isUninstalling: uninstalling)
 }
 
 /// Locates the test bundle, whose Info.plist has no extension identifier.

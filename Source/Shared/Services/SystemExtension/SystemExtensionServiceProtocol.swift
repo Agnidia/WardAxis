@@ -17,6 +17,43 @@ enum SystemExtensionEvent: Equatable, Sendable {
     case willCompleteAfterReboot
 }
 
+/// The extension's installed state as the OS reports it.
+enum SystemExtensionInstallState: Equatable, Sendable {
+    case notInstalled
+    case awaitingApproval
+    case enabled
+    /// Installed but not enabled, for example turned off in System Settings.
+    case disabled
+    /// Removal finishes at the next restart.
+    case uninstalling
+}
+
+/// The OS record of one installed version of the extension.
+struct SystemExtensionRecord: Equatable, Sendable {
+    var isEnabled: Bool
+    var isAwaitingUserApproval: Bool
+    var isUninstalling: Bool
+}
+
+extension SystemExtensionInstallState {
+    /// Several versions can be installed at once, for example while a replacement
+    /// awaits approval; a version that is not being removed decides.
+    init(records: [SystemExtensionRecord]) {
+        let live = records.filter { !$0.isUninstalling }
+        if live.contains(where: \.isEnabled) {
+            self = .enabled
+        } else if live.contains(where: \.isAwaitingUserApproval) {
+            self = .awaitingApproval
+        } else if !live.isEmpty {
+            self = .disabled
+        } else if !records.isEmpty {
+            self = .uninstalling
+        } else {
+            self = .notInstalled
+        }
+    }
+}
+
 /// Why a system extension request failed.
 enum SystemExtensionError: Error, Equatable, Sendable {
     /// The platform has no system extensions (iOS, iPadOS, tvOS).
@@ -52,4 +89,7 @@ protocol SystemExtensionServiceProtocol: Sendable {
     
     /// Asks the OS to deactivate and remove the NetworkFilter system extension.
     func deactivate() -> AsyncThrowingStream<SystemExtensionEvent, any Error>
+    
+    /// Reads the extension's installed state. Read-only: it changes nothing on the system.
+    func installState() async throws(SystemExtensionError) -> SystemExtensionInstallState
 }

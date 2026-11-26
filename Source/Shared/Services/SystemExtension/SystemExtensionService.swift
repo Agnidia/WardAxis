@@ -33,6 +33,18 @@ final class SystemExtensionService: SystemExtensionServiceProtocol {
         submit(.deactivate)
     }
     
+    func installState() async throws(SystemExtensionError) -> SystemExtensionInstallState {
+        let stream = queryInstallState()
+        do {
+            for try await state in stream {
+                return state
+            }
+        } catch {
+            throw error as? SystemExtensionError ?? .unknown(code: (error as NSError).code)
+        }
+        throw .endedWithoutResult
+    }
+    
     private enum Kind {
         case activate
         case deactivate
@@ -61,6 +73,27 @@ final class SystemExtensionService: SystemExtensionServiceProtocol {
                 OSSystemExtensionRequest.deactivationRequest(forExtensionWithIdentifier: extensionID, queue: Self.queue)
             }
             let delegate = RequestDelegate(continuation: continuation)
+            request.delegate = delegate
+            // The request holds its delegate weakly; the stream keeps it alive until it ends.
+            continuation.onTermination = { _ in withExtendedLifetime(delegate) {} }
+            OSSystemExtensionManager.shared.submitRequest(request)
+        }
+    }
+    
+    /// Not logged: the Developer section polls it every second.
+    private func queryInstallState() -> AsyncThrowingStream<SystemExtensionInstallState, any Error> {
+        AsyncThrowingStream { continuation in
+            let extensionID: String
+            switch identifier {
+            case .success(let value):
+                extensionID = value
+            case .failure(let error):
+                continuation.finish(throwing: error)
+                return
+            }
+            
+            let request = OSSystemExtensionRequest.propertiesRequest(forExtensionWithIdentifier: extensionID, queue: Self.queue)
+            let delegate = PropertiesDelegate(continuation: continuation)
             request.delegate = delegate
             // The request holds its delegate weakly; the stream keeps it alive until it ends.
             continuation.onTermination = { _ in withExtendedLifetime(delegate) {} }
@@ -134,8 +167,52 @@ final class SystemExtensionService: SystemExtensionServiceProtocol {
             continuation.finish(throwing: mapped)
         }
     }
+    
+    /// Called only on ``queue``. A properties request installs nothing, so it never
+    /// asks for approval and refuses any replacement.
+    private final class PropertiesDelegate: NSObject, OSSystemExtensionRequestDelegate, Sendable {
+        private let continuation: AsyncThrowingStream<SystemExtensionInstallState, any Error>.Continuation
+        
+        init(continuation: AsyncThrowingStream<SystemExtensionInstallState, any Error>.Continuation) {
+            self.continuation = continuation
+        }
+        
+        func request(
+            _ request: OSSystemExtensionRequest,
+            actionForReplacingExtension existing: OSSystemExtensionProperties,
+            withExtension ext: OSSystemExtensionProperties
+        ) -> OSSystemExtensionRequest.ReplacementAction {
+            .cancel
+        }
+        
+        func requestNeedsUserApproval(_ request: OSSystemExtensionRequest) {}
+        
+        func request(_ request: OSSystemExtensionRequest, foundProperties properties: [OSSystemExtensionProperties]) {
+            let records = properties.map {
+                SystemExtensionRecord(
+                    isEnabled: $0.isEnabled,
+                    isAwaitingUserApproval: $0.isAwaitingUserApproval,
+                    isUninstalling: $0.isUninstalling
+                )
+            }
+            continuation.yield(SystemExtensionInstallState(records: records))
+            continuation.finish()
+        }
+        
+        func request(_ request: OSSystemExtensionRequest, didFinishWithResult result: OSSystemExtensionRequest.Result) {
+            continuation.finish()
+        }
+        
+        func request(_ request: OSSystemExtensionRequest, didFailWithError error: any Error) {
+            continuation.finish(throwing: SystemExtensionService.map(error))
+        }
+    }
 #else
     private func submit(_ kind: Kind) -> AsyncThrowingStream<SystemExtensionEvent, any Error> {
+        AsyncThrowingStream { $0.finish(throwing: SystemExtensionError.unsupportedPlatform) }
+    }
+    
+    private func queryInstallState() -> AsyncThrowingStream<SystemExtensionInstallState, any Error> {
         AsyncThrowingStream { $0.finish(throwing: SystemExtensionError.unsupportedPlatform) }
     }
 #endif
