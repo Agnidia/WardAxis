@@ -105,6 +105,22 @@ struct EmbeddedBundlesTests {
         }
     }
     
+    /// The declaration covers the code in each bundle (ADR 0014 D1). A missing key
+    /// makes App Store Connect ask again, so require the boolean in every bundle.
+    @Test
+    func `Every bundle declares only exempt encryption`() throws {
+        let host = Embedded(
+            url: Bundle.main.bundleURL,
+            name: Bundle.main.bundleURL.lastPathComponent,
+            bundleID: Bundle.main.bundleIdentifier,
+            info: Bundle.main.infoDictionary ?? [:]
+        )
+        
+        for bundle in try [host] + Self.embedded() {
+            #expect(bundle.info["ITSAppUsesNonExemptEncryption"] as? Bool == false, "\(bundle.name)")
+        }
+    }
+    
     @Test
     func `A bundle without a privacy manifest is refused`() throws {
         let empty = FileManager.default.temporaryDirectory.appending(path: "NoManifest-\(UUID().uuidString).bundle")

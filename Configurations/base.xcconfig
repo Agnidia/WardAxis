@@ -67,6 +67,9 @@ COPY_PHASE_STRIP = NO
 
 //Info.plist Values
 INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.utilities
+// Every bundle uses only OS-provided or authentication-only encryption (ADR 0014).
+// One setting here keeps each target, the generated Agent plist included, in step.
+INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
 
 //Linking
 DEAD_CODE_STRIPPING = YES

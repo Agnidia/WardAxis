@@ -23,7 +23,7 @@
 - [x] PRE-009 — Define versioned event, policy and application identity schemas; introduce synthetic data sources and fixtures. See [ADR 0011](../docs/adr/0011-versioned-schemas.md).
 - [x] PRE-010 — Document how to disable and remove every extension, test recovery from an invalid configuration, and take a clean lab snapshot. See [RECOVERY.md](../docs/RECOVERY.md) and [TEST-DEVICES.md](../docs/TEST-DEVICES.md#clean-lab-snapshot).
 - [x] PRE-011 — Draft the privacy policy, consent-screen copy, App Privacy label inventory and privacy manifest (`PrivacyInfo.xcprivacy`) for the app and each extension. See [PRIVACY.md](../docs/PRIVACY.md) and [ADR 0013](../docs/adr/0013-privacy-disclosures.md).
-- [ ] PRE-012 — Decide export compliance (`ITSAppUsesNonExemptEncryption`) and record the rationale.
+- [x] PRE-012 — Decide export compliance (`ITSAppUsesNonExemptEncryption`) and record the rationale ([ADR 0014](../docs/adr/0014-export-compliance.md)).
 
 ## Capability dependencies
 
