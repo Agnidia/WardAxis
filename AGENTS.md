@@ -139,6 +139,7 @@ xcodebuild -project WardAxis.xcodeproj -scheme WardAxis -configuration Debug \
   -skipPackagePluginValidation -onlyUsePackageVersionsFromResolvedFile test
 
 # Package suites (the Xcode scheme does not run them)
+(cd Packages/WardAxisCore && swift test)
 (cd Packages/WardAxisTelemetry && swift test)
 (cd Packages/WardAxisManagement && swift test)
 (cd Packages/WardAxisManagementAPI && swift test)
@@ -159,6 +160,7 @@ swiftformat . \
   && xcodebuild -project WardAxis.xcodeproj -scheme WardAxis -configuration Debug \
        -destination 'platform=macOS' \
        -skipPackagePluginValidation -onlyUsePackageVersionsFromResolvedFile test \
+  && (cd Packages/WardAxisCore && swift test) \
   && (cd Packages/WardAxisTelemetry && swift test) \
   && (cd Packages/WardAxisManagement && swift test) \
   && (cd Packages/WardAxisManagementAPI && swift test)
@@ -199,8 +201,9 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 
 | Package | Products | Content |
 |---|---|---|
+| `WardAxisCore` | `WardAxisCore`, `WardAxisCoreSynthetic` | Versioned event, policy and application identity schemas, `SchemaCodec`, source protocols; synthetic sources ([ADR 0011](docs/adr/0011-versioned-schemas.md)) |
 | `WardAxisTelemetry` | `WardAxisTelemetry` | `Log` facade over `os.Logger`, file sink, `TelemetryService` (opt-in) |
-| `WardAxisManagement` | `WardAxisManagement`, `WardAxisManagementTestSupport` | Server endpoint configuration, configuration feed, client identity, Keychain storage |
+| `WardAxisManagement` | `WardAxisManagement`, `WardAxisManagementTestSupport` | Server endpoint configuration, configuration feed and its typed read, client identity, Keychain storage |
 | `WardAxisManagementAPI` | `WardAxisAPIClient`, `WardAxisAPIServer`, `WardAxisAPIFixtures` | OpenAPI contract and generated code; golden frames |
 
 ### Other folders

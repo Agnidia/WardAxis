@@ -13,11 +13,11 @@ import Testing
 @Suite("Localization coverage")
 struct LocalizationCoverageTests {
     private static let developmentLanguage = "en"
-
+    
     private static var shippedLanguages: [String] {
         Bundle.main.localizations.filter { $0 != "Base" && $0 != developmentLanguage }
     }
-
+    
     private static func keys(for language: String) -> Set<String> {
         guard let url = Bundle.main.url(
                   forResource: "Localizable",
@@ -31,16 +31,16 @@ struct LocalizationCoverageTests {
         }
         return Set(table.keys)
     }
-
+    
     @Test
     func `The development language ships a non-empty table`() {
         #expect(!Self.keys(for: Self.developmentLanguage).isEmpty)
     }
-
+    
     @Test(arguments: shippedLanguages)
     func `Every shipped language translates every key`(language: String) {
         let missing = Self.keys(for: Self.developmentLanguage).subtracting(Self.keys(for: language))
-
+        
         #expect(missing.isEmpty, "\(language) has no translation for \(missing.sorted())")
     }
 }

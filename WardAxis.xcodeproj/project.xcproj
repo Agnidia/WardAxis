@@ -15,6 +15,9 @@
   "packages": [
     {
       "kind": "local",
+      "path": "Packages/WardAxisCore",
+    }, {
+      "kind": "local",
       "path": "Packages/WardAxisManagementAPI",
     }, {
       "kind": "local",
