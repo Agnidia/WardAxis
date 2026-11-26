@@ -1,0 +1,3 @@
+# Vendored upstream files stay byte-identical to the release recorded in PROVENANCE.md,
+# so whitespace checks do not apply to them.
+Sources/ServerCore/Resources/APIDocs/redoc* -whitespace

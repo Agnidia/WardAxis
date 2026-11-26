@@ -1,0 +1,21 @@
+//
+//  Agent.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "extension.xcconfig"
+
+//Packaging
+PRODUCT_BUNDLE_IDENTIFIER = $(AGENT_BUNDLE_ID)
+INFOPLIST_KEY_CFBundleDisplayName = WardAxis Agent
+SUPPORTED_PLATFORMS = macosx
+// A login item has no Dock icon or menu bar.
+INFOPLIST_KEY_LSUIElement = YES
+
+//Signing
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = Configurations/Entitlements/Agent.entitlements

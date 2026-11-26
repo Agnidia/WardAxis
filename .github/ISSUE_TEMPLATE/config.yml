@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Roadmap
+    url: https://github.com/Agnidia/WardAxis/tree/master/roadmap
+    about: Find the task ID in the phase file before you open a task.
+  - name: Report a security vulnerability
+    url: https://github.com/Agnidia/WardAxis/security/policy
+    about: Do not open a public issue. Follow the security policy to report privately.

@@ -1,0 +1,26 @@
+//
+//  PacketTunnel.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "extension.xcconfig"
+
+//Packaging
+PRODUCT_BUNDLE_IDENTIFIER = $(PACKET_TUNNEL_BUNDLE_ID)
+INFOPLIST_FILE = Extensions/PacketTunnel/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = WardAxis Packet Tunnel
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator appletvos appletvsimulator
+TARGETED_DEVICE_FAMILY = 1,2,3
+// Xcode adds arm64 for the iOS extension but not the tvOS one; App Store validation requires it.
+INFOPLIST_KEY_UIRequiredDeviceCapabilities[sdk=appletv*] = arm64
+
+//Signing
+CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = Configurations/Entitlements/PacketTunnel.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*] = Configurations/Entitlements/PacketTunnel.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=appletvos*] = Configurations/Entitlements/PacketTunnel.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=appletvsimulator*] = Configurations/Entitlements/PacketTunnel.entitlements

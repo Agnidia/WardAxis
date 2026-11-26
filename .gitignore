@@ -10,6 +10,8 @@ xcuserdata/
 
 ## App packaging
 *.ipa
+*.xcarchive
+/build/
 *.dSYM.zip
 *.dSYM
 
@@ -30,6 +32,7 @@ playground.xcworkspace
 # .swiftpm
 
 .build/
+.swiftpm/
 
 # CocoaPods
 #
@@ -60,3 +63,7 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Local secrets and tool artifacts
+Server/.env
+.context/

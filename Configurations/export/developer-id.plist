@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Lab-only export (ADR 0003). The developer-id method signs only with a
+     Developer ID identity, which App Store Connect rejects, and the lab bundle
+     ID has no App Store record. The exported app is never distributed. -->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>developer-id</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.agnidia.wardaxis.lab</key>
+		<string>WardAxis Lab Developer ID</string>
+	</dict>
+	<key>destination</key>
+	<string>export</string>
+</dict>
+</plist>

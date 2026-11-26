@@ -1,0 +1,101 @@
+name: Bug report
+description: Something in WardAxis does not work as documented.
+title: "fix(scope): Summary"
+labels: ["bug"]
+type: Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search the open issues first. Report security vulnerabilities through the
+        [security policy](https://github.com/Agnidia/WardAxis/security/policy), not here.
+        Remove personal data, tokens and certificates from logs before you attach them.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - macOS
+        - iOS/iPadOS
+        - tvOS
+        - Server
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      placeholder: macOS 26.1 (25B78)
+    validations:
+      required: true
+  - type: dropdown
+    id: build
+    attributes:
+      label: Build
+      options:
+        - App Store
+        - TestFlight
+        - Lab build
+        - Local Xcode build
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      placeholder: 0.1.0 (42)
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      multiple: true
+      options:
+        - App
+        - Background agent
+        - Content filter / DNS proxy
+        - URL filter
+        - Packet tunnel
+        - Transparent proxy
+        - Safari extension
+        - Mail extension
+        - DLP engine
+        - Management agent
+        - Server (API, NanoMDM, dashboard)
+        - Lab EndpointSecurity client
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Output of `log show --predicate 'subsystem BEGINSWITH "com.agnidia.wardaxis"' --last 10m`, or the relevant excerpt.
+      render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, managed or supervised device, MDM profiles in use.

@@ -1,0 +1,103 @@
+# SwiftFormat Configuration
+# Swift 6.4, macOS 26, iOS 26, tvOS 26
+# Based on analyzed code style from project
+
+# === Version ===
+--swift-version 6.4
+
+# === File Exclusions ===
+--exclude .build,DerivedData,build,*.generated.swift,*.xcodeproj
+
+# === Indentation (Observed: consistent 4 spaces) ===
+--xcode-indentation disabled
+--indent 4
+--tab-width 4
+--smart-tabs enabled
+--indent-case false
+--ifdef outdent
+--trim-whitespace nonblank-lines
+
+# === Line Wrapping (Observed: manual wrapping, preserve existing style) ===
+--disable wrap
+--max-width 0
+--wrap-arguments preserve
+--wrap-collections preserve
+--wrap-parameters preserve
+--wrap-return-type preserve
+--wrap-conditions preserve
+--closing-paren balanced
+
+# === Spacing (Observed: standard Swift spacing) ===
+# trailingSpace rule disabled - preserves indented blank lines
+--disable trailingSpace
+--linebreaks lf
+--operator-func spaced
+--no-space-operators ...,..<
+--ranges no-space
+--semicolons never
+--trailing-commas never
+--empty-braces no-space
+
+# === Access Control (Observed: extensive use of private(set), internal(set)) ===
+--extension-acl on-extension
+
+# === Self Keyword (Observed: minimal self usage) ===
+--self remove
+--self-required @autoclosure,@escaping
+
+# === Type Inference (Observed: explicit types for properties, inferred for locals) ===
+--property-types explicit
+
+# === Modern Swift Patterns (Observed: same-line else, auto guard) ===
+--else-position same-line
+--guard-else auto
+--pattern-let inline
+
+# === Organization (Observed: class, struct, enum, extension) ===
+--organize-types class,struct,enum,extension
+--struct-threshold 0
+--class-threshold 0
+--enum-threshold 0
+--extension-threshold 0
+
+# === Imports (Observed: Foundation, SwiftUI, Combine, MultiPeerCoordinator) ===
+--import-grouping testable-last
+
+# === MARK Comments (Observed: extensive // MARK: - usage) ===
+--mark-types always
+--mark-extensions always
+--extension-mark "MARK: - %c"
+--category-mark "MARK: %c"
+--before-marks
+--grouped-extension "MARK: %c"
+
+# === Headers ===
+# Never rewrite file headers. Each file keeps the header it was created with.
+--header ignore
+--disable headerFileName
+
+# === Argument Handling (Observed: closure-only pattern) ===
+--strip-unused-args closure-only
+
+# === SwiftUI Specific ===
+--modifier-order
+
+# === Concurrency (Observed: modern async/await patterns) ===
+--async-capturing
+
+# === Attributes Formatting (Observed: function/type attributes on prev line) ===
+--func-attributes prev-line
+--type-attributes prev-line
+--stored-var-attributes preserve
+
+# === Blank Lines (Observed: blank lines between scopes) ===
+# Handled by enabled rules above
+
+# === Numeric Literals (10_000+: grouped, <10000: no grouping) ===
+--decimal-grouping 3,5
+--binary-grouping none
+--octal-grouping none
+--hex-grouping none
+--fraction-grouping disabled
+--exponent-grouping disabled
+--hex-literal-case uppercase

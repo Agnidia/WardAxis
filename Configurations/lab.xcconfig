@@ -1,0 +1,34 @@
+//
+//  lab.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+// Lab-only build (ADR 0003). Never archived by an App Store scheme.
+#include "release.xcconfig"
+
+//Identifiers
+// A disjoint root: every derived ID (App Group, shared Keychain group, extension
+// IDs) moves with it, so a lab build on a dev Mac cannot read the shipped app's
+// secrets or container. App Store Connect has no record for it, so an upload fails.
+APP_BUNDLE_ID = $(APP_DOMAIN).wardaxis.lab
+
+//Architectures
+// EndpointSecurity exists only on macOS.
+SUPPORTED_PLATFORMS = macosx
+
+//Swift Compiler - Custom Flags
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = WARDAXIS_LAB
+
+//Signing
+// Manual: a restricted entitlement reaches a signature only through a manually
+// generated Developer ID profile, and keychain-access-groups needs a profile on macOS.
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Developer ID Application
+PROVISIONING_PROFILE_SPECIFIER = WardAxis Lab Developer ID
+
+APP_URL_SCHEME = wardaxis-lab

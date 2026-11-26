@@ -1,0 +1,1 @@
+{"schema": "wardaxis.application-identity", "schemaVersion": 1, "body": {"signingIdentifier": "com.example.browser", "teamIdentifier": "EXAMPLE001", "isPlatformBinary": false, "bundleIdentifier": "com.example.browser"}}

@@ -1,0 +1,23 @@
+//
+//  SafariWebExtension.xcconfig
+//  WardAxis
+//
+//  Created on 25.11.2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "extension.xcconfig"
+
+//Packaging
+PRODUCT_BUNDLE_IDENTIFIER = $(SAFARI_EXTENSION_BUNDLE_ID)
+INFOPLIST_FILE = Extensions/SafariWebExtension/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = WardAxis for Safari
+SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator
+TARGETED_DEVICE_FAMILY = 1,2
+
+//Signing
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = Configurations/Entitlements/SafariWebExtension-macOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = Configurations/Entitlements/SafariWebExtension-iOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*] = Configurations/Entitlements/SafariWebExtension-iOS.entitlements

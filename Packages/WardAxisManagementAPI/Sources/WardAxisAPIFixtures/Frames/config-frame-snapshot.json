@@ -1,0 +1,1 @@
+{"type":"snapshot","values":{"kind.array":[1,"two",true],"kind.bool":true,"kind.integer":42,"kind.null":null,"kind.number":1.5,"kind.object":{"nested":"value"},"kind.string":"dark"},"version":41}
