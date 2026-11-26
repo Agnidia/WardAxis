@@ -24,8 +24,6 @@ Add Platform): one record for all three platforms gives Universal Purchase (ADR 
 
 | Item | State |
 |---|---|
-| App icon | `Resources/Assets.xcassets/AppIcon.appiconset` has no images. App Store validation fails (ITMS 90236) |
-| Safari extension icons | `Extensions/SafariWebExtension/Resources/manifest.json` has no `icons` field. App Store validation fails |
 | Privacy policy, terms, portfolio pages | The policy source is [docs/privacy/PRIVACY-POLICY.md](../docs/privacy/PRIVACY-POLICY.md); it needs a contact address and an effective date. `policy.html` and `terms.html` are drafted in the site repo (`public/info/app/wardaxis/`, branch `feature/wardaxis-legal-pages`); bring `policy.html` in line with the source and deploy both before submission. The portfolio page `agnidia.com/portfolio/wardaxis` needs the app icon and screenshots first |
 | Description | Describes the 1.0 scope of the [roadmap](../roadmap/README.md). The listing must match what the build does (Guideline 2.3); trim it to the shipped features before submission |
 | Ukrainian keywords | 85 characters, 139 bytes. If App Store Connect rejects them as too long, shorten them to 100 bytes |

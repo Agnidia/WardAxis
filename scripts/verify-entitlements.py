@@ -199,6 +199,24 @@ def check_privacy_manifest(bundle: Path, platform: str) -> list[str]:
     return problems
 
 
+def check_device_capabilities(bundle: Path, platform: str) -> list[str]:
+    """App Store validation refuses an iOS or tvOS bundle with a 64-bit slice that
+    does not require arm64; Xcode adds the value to some bundles only."""
+    if platform == "macos":
+        return []
+    capabilities = info_plist(bundle).get("UIRequiredDeviceCapabilities", [])
+    # The key is either an array of names or a dictionary of name to required flag.
+    if isinstance(capabilities, dict):
+        required = [name for name, flag in capabilities.items() if flag is True]
+    elif isinstance(capabilities, list):
+        required = capabilities
+    else:
+        required = []
+    if "arm64" not in required:
+        return [f"{bundle.name}: UIRequiredDeviceCapabilities does not include arm64"]
+    return []
+
+
 def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
     problems: list[str] = []
     name = bundle.name
@@ -235,6 +253,7 @@ def check_bundle(bundle: Path, root_id: str, platform: str) -> list[str]:
         problems.append(f"{name}: bundle ID {bundle_id} is in the lab namespace")
     problems.extend(check_network_extension(name, values, bundle_id, root_id, platform))
     problems.extend(check_privacy_manifest(bundle, platform))
+    problems.extend(check_device_capabilities(bundle, platform))
 
     allowed_app_groups = {f"group.{root_id}", f"{team}.{root_id}"}
     for group in values.get("com.apple.security.application-groups", []):

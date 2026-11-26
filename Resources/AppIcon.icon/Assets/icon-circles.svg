@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1024"
+   height="1024"
+   viewBox="0 0 1024 1024"
+   role="img"
+   aria-label="WardAxis emerald app icon"
+   version="1.1"
+   id="svg14"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8">
+    <radialGradient
+       id="halo"
+       cx="512"
+       cy="510"
+       fx="512"
+       fy="510"
+       r="480"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#159b79"
+         stop-opacity=".26"
+         id="stop7" />
+      <stop
+         offset="1"
+         stop-color="#159b79"
+         stop-opacity="0"
+         id="stop8" />
+    </radialGradient>
+  </defs>
+  <circle
+     cx="512"
+     cy="510"
+     r="480"
+     fill="url(#halo)"
+     id="circle8"
+     style="display:inline;fill:url(#halo)" />
+  <g
+     fill="none"
+     stroke="#59f4bf"
+     opacity="0.12"
+     stroke-width="2"
+     id="g10"
+     style="display:inline">
+    <circle
+       cx="512"
+       cy="512"
+       r="404"
+       id="circle9" />
+    <circle
+       cx="512"
+       cy="512"
+       r="350"
+       id="circle10" />
+    <path
+       d="M 512,74 V 950 M 74,512 h 876"
+       stroke-dasharray="5, 15"
+       id="path10" />
+  </g>
+</svg>

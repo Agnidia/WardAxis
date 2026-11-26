@@ -1,0 +1,52 @@
+{
+  "fill" : {
+    "automatic-gradient" : "display-p3:0.13467,0.41004,0.22508,1.00000"
+  },
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "icon-path-front.svg",
+          "name" : "icon-path-front"
+        },
+        {
+          "glass" : false,
+          "image-name" : "icon-w.svg",
+          "name" : "icon-w"
+        },
+        {
+          "glass" : false,
+          "image-name" : "icon-axis.svg",
+          "name" : "icon-axis"
+        },
+        {
+          "glass" : false,
+          "image-name" : "icon-path-back.svg",
+          "name" : "icon-path-back"
+        },
+        {
+          "blend-mode" : "normal",
+          "fill" : "none",
+          "glass" : false,
+          "image-name" : "icon-circles.svg",
+          "name" : "icon-circles"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "iOS"
+    ]
+  }
+}

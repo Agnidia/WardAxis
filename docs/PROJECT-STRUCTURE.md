@@ -112,8 +112,10 @@ The app target links `WardAxisTelemetry` and `WardAxisManagement`. `WardAxisMana
 
 | File / folder | Purpose |
 |---|---|
-| `Assets.xcassets/` | Images, app icon, accent color |
-| `Colors.xcassets/` | Semantic color tokens (light and dark). Never hardcode a color |
+| `AppIcon.icon` | App icon for iOS and macOS (Icon Composer): five SVG layers in `Assets/` |
+| `AppIconTV.xcassets/` | tvOS `Brand Assets`: layered app icon (Back, Middle, Front) and Top Shelf images, rendered from the `AppIcon.icon` layers |
+| `Assets.xcassets/` | Images |
+| `Colors.xcassets/` | Semantic color tokens (light and dark), including `AccentColor`. Never hardcode a color |
 | `Localizable.xcstrings` | App String Catalog |
 | `InfoPlist.xcstrings` | Localized `Info.plist` values |
 | `Info.plist` | `APIBaseURL` (from `API_BASE_URL`), scene manifest, `ITSAppUsesNonExemptEncryption` |
