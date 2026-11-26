@@ -12,11 +12,11 @@ import Security
 public struct KeychainItemLocation: Sendable, Equatable {
     public let service: String
     public let account: String
-
+    
     /// The shared Keychain access group, for an item the app and its extensions
     /// all read; `nil` keeps it in the process's default group.
     public let accessGroup: String?
-
+    
     public init(service: String, account: String, accessGroup: String? = nil) {
         self.service = service
         self.account = account
@@ -43,14 +43,14 @@ enum KeychainQuery {
         }
         return query
     }
-
+    
     static func load(_ location: KeychainItemLocation) -> [String: Any] {
         item(location).merging([
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]) { _, new in new }
     }
-
+    
     /// Attributes written by an update of an existing item.
     static func updateAttributes(payload: Data) -> [String: Any] {
         [
@@ -60,7 +60,7 @@ enum KeychainQuery {
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
     }
-
+    
     /// Creates the item when no update target exists.
     static func add(_ location: KeychainItemLocation, payload: Data) -> [String: Any] {
         item(location).merging(updateAttributes(payload: payload)) { _, new in new }
@@ -72,11 +72,11 @@ enum KeychainQuery {
 /// Every call blocks on `securityd`, so call it only from ``SecureItemVault``.
 public struct KeychainItemStore<Value: SecurePayload>: SecureItemStoreProtocol {
     public let location: KeychainItemLocation
-
+    
     public init(location: KeychainItemLocation) {
         self.location = location
     }
-
+    
     public func load() throws(SecureItemStoreError) -> Value? {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(KeychainQuery.load(location) as CFDictionary, &result)
@@ -92,7 +92,7 @@ public struct KeychainItemStore<Value: SecurePayload>: SecureItemStoreProtocol {
             throw .osStatus(status)
         }
     }
-
+    
     public func save(_ value: Value) throws(SecureItemStoreError) {
         let payload = try SecurePayloadCoding.encode(value)
         let updateStatus = SecItemUpdate(
@@ -111,7 +111,7 @@ public struct KeychainItemStore<Value: SecurePayload>: SecureItemStoreProtocol {
             throw .osStatus(updateStatus)
         }
     }
-
+    
     public func delete() throws(SecureItemStoreError) {
         let status = SecItemDelete(KeychainQuery.item(location) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {

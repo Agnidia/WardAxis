@@ -40,7 +40,7 @@ struct BackButton: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Back Button") {
     VStack(spacing: .spacing.xxl) {
@@ -54,7 +54,7 @@ struct BackButton: View {
             action: {}
         )
         .padding(.padding.s)
-        .background(Color.Brand.primary)
+        .background(Color.Background.secondary)
         .clipShape(RoundedRectangle(cornerRadius: .radius.m))
     }
     .padding(.padding.l)

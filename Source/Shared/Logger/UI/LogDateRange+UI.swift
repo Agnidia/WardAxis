@@ -21,7 +21,7 @@ extension LogDateRange {
         case .all: L.Settings.Logs.DateRange.all
         }
     }
-
+    
     /// Accessibility identifier for the filter chip.
     var filterAccessibility: any AccessibilityProtocol {
         switch self {

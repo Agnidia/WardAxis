@@ -14,9 +14,9 @@ import Foundation
 public protocol ConfigurationCacheProtocol: Sendable {
     /// The cached configuration, or `nil` when there is none or it is unreadable.
     func load() async -> ManagedConfiguration?
-
+    
     func save(_ configuration: ManagedConfiguration) async throws
-
+    
     /// Removes the cache. A missing cache is success.
     func delete() async throws
 }
@@ -25,12 +25,12 @@ public protocol ConfigurationCacheProtocol: Sendable {
 /// and by a container that must never touch the user's cache.
 public struct NoConfigurationCache: ConfigurationCacheProtocol {
     public init() {}
-
+    
     public func load() async -> ManagedConfiguration? {
         nil
     }
-
+    
     public func save(_: ManagedConfiguration) async throws {}
-
+    
     public func delete() async throws {}
 }

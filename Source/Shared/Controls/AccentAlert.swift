@@ -36,16 +36,15 @@ struct AccentAlert: View {
     let message: String
     let style: Style
     let isLoading: Bool
-    let onTap: (() -> Void)?
+    let onTap: Closure.EmptyBlock?
     
     // MARK: - Initialization
     
-    init(
-        message: String,
-        style: Style = .accent,
-        isLoading: Bool = false,
-        onTap: (() -> Void)? = nil
-    ) {
+    init(message: String,
+         style: Style = .accent,
+         isLoading: Bool = false,
+         onTap: Closure.EmptyBlock? = nil)
+    {
         self.message = message
         self.style = style
         self.isLoading = isLoading
@@ -56,12 +55,11 @@ struct AccentAlert: View {
     
     var body: some View {
         HStack(spacing: .spacing.m) {
-            if isLoading {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .tint(labelColor)
-                    .scaleEffect(0.8)
-            }
+            ProgressView()
+                .progressViewStyle(.circular)
+                .tint(labelColor)
+                .scaleEffect(0.8)
+                .isHidden(!isLoading)
             
             Text(message.uppercased())
                 .bodySmall()
@@ -72,9 +70,7 @@ struct AccentAlert: View {
         .padding(.horizontal, .padding.xxl)
         .background(backgroundColor)
         .contentShape(Rectangle())
-        .onTapGesture {
-            onTap?()
-        }
+        .onTapGesture { onTap?() }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(message)
         .accessibilityAddTraits(.isStaticText)
@@ -85,25 +81,25 @@ struct AccentAlert: View {
     
     private var backgroundColor: Color {
         switch style {
-        case .accent: .Brand.primary
+        case .accent: .Background.primary
         case .alert: .State.accent
         }
     }
     
     private var labelColor: Color {
         switch style {
-        case .accent: .white
-        case .alert: .white
+        case .accent: .Label.primary
+        case .alert: .Label.secondary
         }
     }
 }
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Accent Alert - Dark") {
-    VStack(spacing: 0) {
+    VStack(spacing: .zero) {
         AccentAlert(message: "Text", style: .accent, isLoading: true)
         
         Spacer()
@@ -112,7 +108,7 @@ struct AccentAlert: View {
 }
 
 #Preview("Accent Alert - Orange") {
-    VStack(spacing: 0) {
+    VStack(spacing: .zero) {
         AccentAlert(
             message: "Please ensure you're connected to the internet",
             style: .alert
@@ -124,7 +120,7 @@ struct AccentAlert: View {
 }
 
 #Preview("Accent Alert States") {
-    VStack(spacing: 16) {
+    VStack(spacing: .spacing.xxxl) {
         AccentAlert(message: "Loading...", style: .accent, isLoading: true)
         
         AccentAlert(message: "Processing your request", style: .accent)

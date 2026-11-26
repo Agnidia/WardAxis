@@ -19,34 +19,34 @@ public final class MockErasePendingMarker: ErasePendingMarkerProtocol {
         case set
         case clear
     }
-
+    
     private struct State {
         var isSet: Bool
         var operations: [Operation] = []
     }
-
+    
     private let state: Mutex<State>
-
+    
     public init(isSet: Bool = false) {
         state = Mutex(State(isSet: isSet))
     }
-
+    
     public var isSet: Bool {
         state.withLock { $0.isSet }
     }
-
+    
     /// Every write so far, in order.
     public var operations: [Operation] {
         state.withLock { $0.operations }
     }
-
+    
     public func set() {
         state.withLock { state in
             state.isSet = true
             state.operations.append(.set)
         }
     }
-
+    
     public func clear() {
         state.withLock { state in
             state.isSet = false

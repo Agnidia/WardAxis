@@ -20,7 +20,7 @@ struct ProgressDots<Step: CaseIterable & RawRepresentable & Hashable>: View wher
     
     init(
         currentStep: Step,
-        activeColor: Color = .Brand.primary,
+        activeColor: Color = .Label.primary,
         inactiveColor: Color = .Label.secondary
     ) {
         self.currentStep = currentStep
@@ -67,7 +67,7 @@ struct SimpleProgressDots: View {
     init(
         totalSteps: Int,
         currentStep: Int,
-        activeColor: Color = .Brand.primary,
+        activeColor: Color = .Label.primary,
         inactiveColor: Color = .Label.secondary
     ) {
         self.totalSteps = totalSteps
@@ -91,7 +91,7 @@ struct SimpleProgressDots: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Progress Dots") {
     VStack(spacing: 24) {
@@ -100,7 +100,7 @@ struct SimpleProgressDots: View {
         SimpleProgressDots(totalSteps: 5, currentStep: 4)
     }
     .padding()
-    .background(Color.Background.primary)
+    .background(Color.Background.secondary)
 }
 
 #endif

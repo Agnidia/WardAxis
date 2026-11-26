@@ -28,7 +28,7 @@ public protocol TelemetryServiceProtocol: Sendable {
 public final class TelemetryService: TelemetryServiceProtocol {
     private let hasConsent: @Sendable () -> Bool
     private let sink: @Sendable (TelemetryEvent) -> Void
-
+    
     /// - Parameters:
     ///   - hasConsent: Whether the user currently allows telemetry.
     ///   - sink: Receives consented events. The default writes them to the debug log only.
@@ -41,7 +41,7 @@ public final class TelemetryService: TelemetryServiceProtocol {
             Log(category: .application).debug("Telemetry event: \(String(describing: event))")
         }
     }
-
+    
     public func track(_ event: TelemetryEvent) {
         guard hasConsent() else { return }
         sink(event)

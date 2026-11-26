@@ -19,11 +19,11 @@ struct LabExclusionTests {
         Issue.record("WARDAXIS_LAB is defined in an App Store configuration")
 #endif
     }
-
+    
     @Test
     func `The host bundle ID is outside the lab namespace`() throws {
         let bundleID = try #require(Bundle.main.bundleIdentifier)
-
+        
         #expect(!bundleID.split(separator: ".").contains("lab"))
     }
 }

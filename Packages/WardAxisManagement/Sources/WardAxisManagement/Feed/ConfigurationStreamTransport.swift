@@ -22,10 +22,10 @@ public protocol ConfigurationStreamTransport: Sendable {
 public enum ConfigurationStreamEvent: Sendable, Equatable {
     /// The WebSocket handshake completed.
     case opened
-
+    
     /// One frame's payload.
     case message(Data)
-
+    
     /// The connection ended. Always the last event.
     case closed(ConfigurationStreamClose)
 }
@@ -34,14 +34,14 @@ public enum ConfigurationStreamEvent: Sendable, Equatable {
 public enum ConfigurationStreamClose: Sendable, Equatable {
     /// The WebSocket closed with this close code.
     case closeCode(Int)
-
+    
     /// The server answered the upgrade with this HTTP status instead of `101`.
     case handshakeRejected(statusCode: Int)
-
+    
     /// The TLS handshake failed because the server refused, or required and did
     /// not get, the client certificate.
     case clientCertificateRejected
-
+    
     /// The connection failed without a close code or an HTTP status.
     case connectionFailed
 }

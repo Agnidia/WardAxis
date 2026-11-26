@@ -35,7 +35,7 @@ package struct ConfigStreamPolicy: Sendable, Equatable {
     /// How long a new session waits for the change relay to start before it closes with
     /// 1013. Only streams opened in the first moments after start-up wait at all.
     package var relayReadyTimeout: Duration
-
+    
     package static let standard: ConfigStreamPolicy = .init(
         maxConnectionsPerClient: 5,
         heartbeatInterval: .seconds(30),
@@ -49,7 +49,7 @@ package struct ConfigStreamPolicy: Sendable, Equatable {
         closeGracePeriod: .seconds(5),
         relayReadyTimeout: .seconds(10)
     )
-
+    
     package init(
         maxConnectionsPerClient: Int,
         heartbeatInterval: Duration,
@@ -75,14 +75,14 @@ package struct ConfigStreamPolicy: Sendable, Equatable {
         self.closeGracePeriod = closeGracePeriod
         self.relayReadyTimeout = relayReadyTimeout
     }
-
+    
     /// The WebSocket auto-ping period. The library closes a connection whose pong has not
     /// arrived one period after its ping, so half the idle timeout closes it at
     /// ``idleTimeout``.
     package var pingInterval: Duration {
         idleTimeout / 2
     }
-
+    
     /// One stream's lifetime: ``maximumConnectionLifetime`` less a random share of
     /// ``connectionLifetimeJitter``, never above the maximum and never below zero.
     package func connectionLifetime() -> Duration {

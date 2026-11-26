@@ -16,12 +16,12 @@ import Security
 public struct KeychainClientIdentityProvider: ClientIdentityProvider {
     public let label: String
     public let accessGroup: String?
-
+    
     public init(label: String, accessGroup: String?) {
         self.label = label
         self.accessGroup = accessGroup
     }
-
+    
     public func currentIdentity() async throws(ClientIdentityError) -> ClientIdentity? {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(Self.query(label: label, accessGroup: accessGroup) as CFDictionary, &result)
@@ -38,7 +38,7 @@ public struct KeychainClientIdentityProvider: ClientIdentityProvider {
             throw .osStatus(status)
         }
     }
-
+    
     static func query(label: String, accessGroup: String?) -> [String: Any] {
         var query: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
@@ -58,7 +58,7 @@ public struct KeychainClientIdentityProvider: ClientIdentityProvider {
 /// The provider for a device that is not enrolled: the feed never connects.
 public struct NoClientIdentityProvider: ClientIdentityProvider {
     public init() {}
-
+    
     public func currentIdentity() async throws(ClientIdentityError) -> ClientIdentity? {
         nil
     }

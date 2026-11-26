@@ -25,7 +25,7 @@ package struct ServerDependencies: Sendable {
     /// mounts the docs routes only in ``ServerEnvironment/development``, whatever
     /// ``apiDocs`` holds.
     package var environment: ServerEnvironment
-
+    
     package init(
         databaseProbe: any DatabaseHealthProbe,
         configStore: any ConfigStore,

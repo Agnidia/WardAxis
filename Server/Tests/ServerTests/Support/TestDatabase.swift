@@ -17,20 +17,20 @@ enum TestDatabase {
     static let url: String? = ProcessInfo.processInfo.environment["TEST_DATABASE_URL"].flatMap {
         $0.isEmpty ? nil : $0
     }
-
+    
     /// Runs `body` with a running client for `TEST_DATABASE_URL`.
     static func withClient(logger: Logger, _ body: @Sendable (PostgresClient) async throws -> Void) async throws {
         let url = try #require(url)
         let configuration = try DatabaseConfiguration(url: url, variable: "TEST_DATABASE_URL")
         let client = PostgresClientFactory.makeClient(configuration: configuration, logger: logger)
-
+        
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask { await client.run() }
             defer { group.cancelAll() }
             try await body(client)
         }
     }
-
+    
     /// Brings the schema to the shipped migrations and empties the configuration at version 0.
     ///
     /// Test-only: the server has no way around the change triggers. One transaction, so a

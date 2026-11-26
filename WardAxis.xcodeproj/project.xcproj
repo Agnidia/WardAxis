@@ -57,7 +57,10 @@
             "UnitTests/Core/EntitlementsTests.swift",
             "UnitTests/Core/HostConfigurationTests.swift",
             "UnitTests/Core/LabExclusionTests.swift",
+            "UnitTests/Core/SystemExtensionIdentifierTests.swift",
+            "UnitTests/Core/SystemExtensionServiceTests.swift",
             "UnitTests/Features/Settings/SettingsViewModelTests.swift",
+            "UnitTests/Features/Settings/SystemExtensionDebugViewModelTests.swift",
             "UnitTests/Logger/LogEntryParserTests.swift",
             "UnitTests/Logger/LogReaderServiceTests.swift",
             "UnitTests/Logger/LogsViewerViewModelTests.swift",
@@ -179,9 +182,9 @@
         { "path": "<PRODUCTS>/WardAxis.app", "id": "A5C24CE329B20A4200B8D860", "type": "wrapper.application", "index": false },
         { "path": "<PRODUCTS>/UnitTests.xctest", "id": "A5C24CF929B20A4500B8D860", "type": "wrapper.cfbundle", "index": false },
         { "path": "<PRODUCTS>/UITests.xctest", "id": "A5C24D0329B20A4500B8D860", "type": "wrapper.cfbundle", "index": false },
-        { "path": "<PRODUCTS>/NetworkFilter.systemextension", "id": "4C4AFAC97C1B6C41C53F1239", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
-        { "path": "<PRODUCTS>/TransparentProxy.systemextension", "id": "81CDE310E1A9B0194F142913", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
-        { "path": "<PRODUCTS>/DNSProxy.systemextension", "id": "A59D494939EC23390A0EDDA8", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/com.agnidia.wardaxis.networkfilter.systemextension", "id": "4C4AFAC97C1B6C41C53F1239", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/com.agnidia.wardaxis.transparentproxy.systemextension", "id": "81CDE310E1A9B0194F142913", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/com.agnidia.wardaxis.dnsproxy.systemextension", "id": "A59D494939EC23390A0EDDA8", "type": "wrapper.system-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed System Extensions", "platforms": [ "macos" ], "code-sign-on-copy": true } ] },
         { "path": "<PRODUCTS>/URLFilter.appex", "id": "248347AD5556DF8742AB5135", "type": "wrapper.extensionkit-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed ExtensionKit Extensions", "platforms": [ "ios", "macos" ], "code-sign-on-copy": true } ] },
         { "path": "<PRODUCTS>/PacketTunnel.appex", "id": "27130B1A6FCC49AB7A40E026", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed Foundation Extensions", "platforms": [ "ios", "tvos" ], "code-sign-on-copy": true } ] },
         { "path": "<PRODUCTS>/SafariWebExtension.appex", "id": "3846850F0826784ECB0C32E4", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "WardAxis/copy/Embed Foundation Extensions", "platforms": [ "ios", "macos" ], "code-sign-on-copy": true } ] },
@@ -269,7 +272,7 @@
     }, {
       "name": "NetworkFilter",
       "id": "976ACEF1521BF346789DF90F",
-      "product": "Products/NetworkFilter.systemextension",
+      "product": "Products/com.agnidia.wardaxis.networkfilter.systemextension",
       "product-type": "system-extension",
       "specialized-configurations": [
         { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/NetworkFilter.xcconfig" } },
@@ -290,7 +293,7 @@
     }, {
       "name": "TransparentProxy",
       "id": "5BB44BDE72F82A7EB7166739",
-      "product": "Products/TransparentProxy.systemextension",
+      "product": "Products/com.agnidia.wardaxis.transparentproxy.systemextension",
       "product-type": "system-extension",
       "specialized-configurations": [
         { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/TransparentProxy.xcconfig" } },
@@ -311,7 +314,7 @@
     }, {
       "name": "DNSProxy",
       "id": "EAE09F6FBB41C26B62F87565",
-      "product": "Products/DNSProxy.systemextension",
+      "product": "Products/com.agnidia.wardaxis.dnsproxy.systemextension",
       "product-type": "system-extension",
       "specialized-configurations": [
         { "name": "Debug", "file": { "anchor": "Configurations", "relative-path": "extensions/DNSProxy.xcconfig" } },

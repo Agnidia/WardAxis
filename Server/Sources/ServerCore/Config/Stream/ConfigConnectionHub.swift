@@ -11,7 +11,7 @@ import NIOConcurrencyHelpers
 package struct ConfigDeltaFrame: Sendable, Equatable {
     package let version: Int64
     package let text: String
-
+    
     package init(version: Int64, text: String) {
         self.version = version
         self.text = text
@@ -44,7 +44,7 @@ package final class ConfigConnectionHub: Sendable {
         let client: ConfigStreamClient
         let continuation: AsyncStream<ConfigDeltaFrame>.Continuation
     }
-
+    
     private struct State {
         var nextID: UInt64 = 0
         var subscribers: [UInt64: Subscriber] = [:]
@@ -53,16 +53,16 @@ package final class ConfigConnectionHub: Sendable {
         var nextWaiterID: UInt64 = 0
         var readinessWaiters: [UInt64: CheckedContinuation<Bool, Never>] = [:]
     }
-
+    
     package let maxConnectionsPerClient: Int
     private let bufferSize: Int
     private let state: NIOLockedValueBox<State> = .init(State())
-
+    
     package init(maxConnectionsPerClient: Int, bufferSize: Int) {
         self.maxConnectionsPerClient = maxConnectionsPerClient
         self.bufferSize = bufferSize
     }
-
+    
     /// Takes a connection slot for `client` and subscribes to deltas, in one atomic step.
     ///
     /// - Returns: `nil` when the client already holds ``maxConnectionsPerClient`` slots.
@@ -81,7 +81,7 @@ package final class ConfigConnectionHub: Sendable {
             return ConfigSubscription(id: id, client: client, frames: frames)
         }
     }
-
+    
     /// Releases the slot and ends the subscription's stream. Calling it twice is harmless.
     package func unregister(_ subscription: ConfigSubscription) {
         let removed = state.withLockedValue { state -> Subscriber? in
@@ -92,7 +92,7 @@ package final class ConfigConnectionHub: Sendable {
         }
         removed?.continuation.finish()
     }
-
+    
     /// Hands `frame` to every subscriber without waiting. Under the lock, so concurrent
     /// publishers cannot interleave frames out of version order.
     package func publish(_ frame: ConfigDeltaFrame) {
@@ -102,22 +102,22 @@ package final class ConfigConnectionHub: Sendable {
             }
         }
     }
-
+    
     package func connectionCount(for client: ConfigStreamClient) -> Int {
         state.withLockedValue { $0.connectionsPerClient[client, default: 0] }
     }
-
+    
     package var subscriberCount: Int {
         state.withLockedValue { $0.subscribers.count }
     }
-
+    
     // MARK: Relay readiness
-
+    
     /// Whether the relay has read its start version, so it publishes every later version.
     package var isRelayReady: Bool {
         state.withLockedValue { $0.relayReady }
     }
-
+    
     /// Records that the relay has read its start version and wakes every waiting session.
     /// Calling it again changes nothing.
     package func markRelayReady() {
@@ -131,7 +131,7 @@ package final class ConfigConnectionHub: Sendable {
             waiter.resume(returning: true)
         }
     }
-
+    
     /// Suspends until ``markRelayReady()`` runs.
     ///
     /// - Returns: `true` once the relay is ready; `false` when the calling task is

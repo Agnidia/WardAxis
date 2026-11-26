@@ -23,7 +23,7 @@ struct TagPill: View {
     }
 }
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview {
     VStack {
@@ -33,6 +33,7 @@ struct TagPill: View {
         
         TagPill(tag: "1")
     }
+    .padding()
 }
 
 #endif

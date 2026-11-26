@@ -13,7 +13,7 @@ import Security
 /// enrollment record the vault will hold.
 struct TestSecret: SecurePayload {
     static let payloadVersion = 1
-
+    
     let secret: String
     let nonce: String
     let expiresAt: Date

@@ -54,6 +54,8 @@ The scheme, the group membership per component and the rationale are in [ADR 000
 
 The lab-only Developer ID build (`WardAxisLab` scheme) has its own setup: see [LAB.md](LAB.md).
 
+Test devices, the macOS test VM and the system extension approval procedure are in [TEST-DEVICES.md](TEST-DEVICES.md). Approval needs the NetworkFilter App ID registered with the Network Extensions capability.
+
 ### App Store archive
 
 An iOS or tvOS device build needs the App ID and the App Group registered on the team. The first archive with `-allowProvisioningUpdates` registers them through automatic signing.

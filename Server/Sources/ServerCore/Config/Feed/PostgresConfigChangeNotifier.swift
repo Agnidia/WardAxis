@@ -17,17 +17,17 @@ import PostgresNIO
 package struct PostgresConfigChangeNotifier: ConfigChangeNotifier {
     /// The channel migration 6's trigger notifies.
     package static let channel: String = "config_changes"
-
+    
     private let client: PostgresClient
     private let backoff: RetryBackoff
     private let logger: Logger
-
+    
     package init(client: PostgresClient, backoff: RetryBackoff, logger: Logger) {
         self.client = client
         self.backoff = backoff
         self.logger = logger
     }
-
+    
     package func wakeUps() -> AsyncStream<Void> {
         // One pending wake-up is enough: the relay reads every change after its last one.
         let (stream, continuation) = AsyncStream.makeStream(of: Void.self, bufferingPolicy: .bufferingNewest(1))
@@ -37,7 +37,7 @@ package struct PostgresConfigChangeNotifier: ConfigChangeNotifier {
         continuation.onTermination = { _ in listener.cancel() }
         return stream
     }
-
+    
     private func listen(into continuation: AsyncStream<Void>.Continuation) async {
         var attempt = 0
         while !Task.isCancelled {

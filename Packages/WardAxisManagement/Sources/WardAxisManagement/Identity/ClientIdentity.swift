@@ -16,17 +16,17 @@ import Security
 public struct ClientIdentity: @unchecked Sendable {
     // @unchecked: the credential wraps immutable SecIdentity and SecCertificate
     // objects, which the Security framework documents as safe from any thread.
-
+    
     /// The credential for a client-certificate challenge. Scoped to the URL
     /// session, which the feed creates per connection.
     public let credential: URLCredential
-
+    
     /// - Parameter intermediates: Sent after the leaf, so the server can build the
     ///   chain to its device CA without fetching anything.
     public init(identity: SecIdentity, intermediates: [SecCertificate] = []) {
         credential = URLCredential(identity: identity, certificates: intermediates, persistence: .forSession)
     }
-
+    
     /// A stand-in for tests that never reach a TLS stack.
     init(testCredential: URLCredential) {
         credential = testCredential

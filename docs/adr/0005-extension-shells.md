@@ -50,6 +50,8 @@ A shell can start only by an explicit system action: the user approves a system 
 | Agent | Exits at launch. Nothing registers it with `SMAppService` |
 | Safari manifest | Manifest V3 with empty `permissions` and `host_permissions` |
 
+A DEBUG build can activate the NetworkFilter shell to test approval on a test Mac. It saves no filter configuration, so the shell still receives no flow ([ADR 0006](0006-debug-system-extension-activation.md)).
+
 ### D3: The package holds exactly the reviewed set (T2)
 
 `EmbeddedBundlesTests` checks the running host. `scripts/verify-entitlements.py` (`EXPECTED_NESTED`) checks every archive. Both require exactly the set of D1 for the platform: no more, no fewer, no duplicate. A new embedded bundle needs an amendment to this ADR first.

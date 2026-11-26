@@ -1,6 +1,6 @@
 # Lab build
 
-The lab build is a macOS-only, Developer ID signed build of WardAxis for the EndpointSecurity (ES) track. It is never distributed and never uploaded to App Store Connect. Decisions and rationale: [ADR 0003](adr/0003-lab-build-signing.md).
+The lab build is a macOS-only, Developer ID signed build of WardAxis for the EndpointSecurity (ES) track. It is never distributed and never uploaded to App Store Connect. Decisions and rationale: [ADR 0003](adr/0003-lab-build-signing.md). The test devices and the macOS test VM are in [TEST-DEVICES.md](TEST-DEVICES.md).
 
 | Item | Value |
 |---|---|

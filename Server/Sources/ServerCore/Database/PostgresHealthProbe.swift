@@ -14,17 +14,17 @@ import PostgresNIO
 /// timeout; health checks need a fast "not ready" instead.
 package struct PostgresHealthProbe: DatabaseHealthProbe {
     package static let defaultTimeout: Duration = .seconds(2)
-
+    
     private let client: PostgresClient
     private let timeout: Duration
     private let logger: Logger
-
+    
     package init(client: PostgresClient, timeout: Duration = Self.defaultTimeout, logger: Logger) {
         self.client = client
         self.timeout = timeout
         self.logger = logger
     }
-
+    
     package func isReachable() async -> Bool {
         await withTaskGroup(of: Bool.self) { group in
             group.addTask { [client, logger] in

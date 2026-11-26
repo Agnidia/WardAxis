@@ -13,7 +13,7 @@ public enum GoldenConfigFrame: String, CaseIterable, Sendable {
     case snapshot
     case delta
     case heartbeat
-
+    
     public var expectedVersion: Int64 {
         switch self {
         case .snapshot:
@@ -25,7 +25,7 @@ public enum GoldenConfigFrame: String, CaseIterable, Sendable {
             9_007_199_254_740_993
         }
     }
-
+    
     /// The bytes without the file's trailing newline. Throws only when the bundle lacks the
     /// frame file; a consumer that does not carry the bundle traps in `Bundle.module` instead.
     public func data() throws -> Data {

@@ -17,7 +17,7 @@ struct TestAuthority: Sendable {
     let name: String
     let key: P256.Signing.PrivateKey
     let certificate: Certificate
-
+    
     init(name: String) throws {
         self.name = name
         key = P256.Signing.PrivateKey()
@@ -41,19 +41,19 @@ struct TestAuthority: Sendable {
             issuerPrivateKey: Certificate.PrivateKey(key)
         )
     }
-
+    
     var pem: String {
         get throws {
             try certificate.serializeAsPEM().pemString
         }
     }
-
+    
     var nioCertificate: NIOSSLCertificate {
         get throws {
             try NIOSSLCertificate(bytes: Array(pem.utf8), format: .pem)
         }
     }
-
+    
     /// A server leaf for `localhost` and `127.0.0.1`, as the listener presents it.
     func issueServerLeaf() throws -> (certificate: Certificate, key: P256.Signing.PrivateKey) {
         let leafKey = P256.Signing.PrivateKey()
@@ -69,7 +69,7 @@ struct TestAuthority: Sendable {
         )
         return (certificate, leafKey)
     }
-
+    
     /// A device client identity, as enrollment would issue it: no host name, client auth only.
     func issueClientIdentity(commonName: String = "device-\(UUID().uuidString.lowercased())") throws -> TestClientIdentity {
         let leafKey = P256.Signing.PrivateKey()
@@ -87,7 +87,7 @@ struct TestAuthority: Sendable {
             key: NIOSSLPrivateKey(bytes: Array(leafKey.pemRepresentation.utf8), format: .pem)
         )
     }
-
+    
     private func issue(subject: DistinguishedName, key leafKey: P256.Signing.PrivateKey, extensions: Certificate.Extensions) throws -> Certificate {
         let now = Date()
         return try Certificate(
@@ -109,7 +109,7 @@ struct TestAuthority: Sendable {
 struct TestClientIdentity: Sendable {
     let certificate: NIOSSLCertificate
     let key: NIOSSLPrivateKey
-
+    
     /// The slot key the server derives from this certificate.
     var streamClient: ConfigStreamClient {
         get throws {
@@ -121,7 +121,7 @@ struct TestClientIdentity: Sendable {
 /// The listener's TLS files under a private temporary directory, removed after `body`.
 enum TestServerFiles {
     struct FileNotCreated: Error {}
-
+    
     /// Writes the server chain, its key and, when `clientCA` is set, the device CA bundle.
     ///
     /// - Parameters:
@@ -136,7 +136,7 @@ enum TestServerFiles {
         let directory = fileManager.temporaryDirectory.appendingPathComponent("server-mtls-\(UUID().uuidString)", isDirectory: true)
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         defer { try? fileManager.removeItem(at: directory) }
-
+        
         let leaf = try serverAuthority.issueServerLeaf()
         let chainURL = directory.appendingPathComponent("chain.pem")
         let keyURL = directory.appendingPathComponent("key.pem")
@@ -153,7 +153,7 @@ enum TestServerFiles {
         let files = TLSFiles(certificateChainPath: chainURL.path, privateKeyPath: keyURL.path, clientCertificateAuthorityPath: clientCAPath)
         return try await body(files, directory)
     }
-
+    
     /// The listener's TLS configuration, loaded by the production loader; the files are
     /// removed before this returns.
     static func serverConfiguration(serverAuthority: TestAuthority, clientCAs: [TestAuthority]?) async throws -> TLSConfiguration {

@@ -19,7 +19,7 @@ public final class InMemorySecureItemStore<Value: SecurePayload>: SecureItemStor
         case save
         case delete
     }
-
+    
     private struct State {
         var value: Value?
         var loadError: SecureItemStoreError?
@@ -29,9 +29,9 @@ public final class InMemorySecureItemStore<Value: SecurePayload>: SecureItemStor
         var deleteFailuresRemaining: Int?
         var operations: [Operation] = []
     }
-
+    
     private let state: Mutex<State>
-
+    
     public init(
         value: Value? = nil,
         loadError: SecureItemStoreError? = nil,
@@ -40,27 +40,27 @@ public final class InMemorySecureItemStore<Value: SecurePayload>: SecureItemStor
     ) {
         state = Mutex(State(value: value, loadError: loadError, saveError: saveError, deleteError: deleteError))
     }
-
+    
     /// The stored value right now.
     public var value: Value? {
         state.withLock { $0.value }
     }
-
+    
     /// Every operation so far, in order.
     public var operations: [Operation] {
         state.withLock { $0.operations }
     }
-
+    
     /// Replaces the error the next loads throw; `nil` lets them succeed.
     public func failLoads(with error: SecureItemStoreError?) {
         state.withLock { $0.loadError = error }
     }
-
+    
     /// Replaces the error the next saves throw; `nil` lets them succeed.
     public func failSaves(with error: SecureItemStoreError?) {
         state.withLock { $0.saveError = error }
     }
-
+    
     /// Replaces the error deletes throw; `nil` lets them succeed.
     /// - Parameter times: fail only the next `times` deletes, then succeed;
     ///   `nil` fails every delete until replaced.
@@ -71,7 +71,7 @@ public final class InMemorySecureItemStore<Value: SecurePayload>: SecureItemStor
             state.deleteFailuresRemaining = isFailing ? times : nil
         }
     }
-
+    
     public func load() throws(SecureItemStoreError) -> Value? {
         let result: Result<Value?, SecureItemStoreError> = state.withLock { state in
             state.operations.append(.load)
@@ -82,7 +82,7 @@ public final class InMemorySecureItemStore<Value: SecurePayload>: SecureItemStor
         }
         return try result.get()
     }
-
+    
     public func save(_ value: Value) throws(SecureItemStoreError) {
         let error: SecureItemStoreError? = state.withLock { state in
             state.operations.append(.save)
@@ -94,7 +94,7 @@ public final class InMemorySecureItemStore<Value: SecurePayload>: SecureItemStor
             throw error
         }
     }
-
+    
     public func delete() throws(SecureItemStoreError) {
         let error: SecureItemStoreError? = state.withLock { state in
             state.operations.append(.delete)

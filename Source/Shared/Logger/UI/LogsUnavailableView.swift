@@ -16,7 +16,7 @@ struct LogsUnavailableView: View {
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: IconSize.l))
                 .foregroundStyle(.secondary)
-
+            
             Text(L.Settings.Logs.unsupportedPlatform)
                 .bodyLarge()
                 .foregroundStyle(.secondary)
@@ -29,7 +29,7 @@ struct LogsUnavailableView: View {
     }
 }
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview {
     LogsUnavailableView()

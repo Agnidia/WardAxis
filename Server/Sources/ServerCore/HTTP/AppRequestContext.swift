@@ -25,7 +25,7 @@ package struct AppRequestContext: RequestContext, WebSocketRequestContext {
     /// Set by ``ConfigStreamAdmissionMiddleware`` on `GET /v1/config/stream`. The upgrade
     /// handler reads it, because task-locals bound in middleware do not reach it.
     package var configStreamClient: ConfigStreamClient?
-
+    
     package init(source: ApplicationRequestContextSource) {
         coreContext = .init(source: source)
         requestID = nil

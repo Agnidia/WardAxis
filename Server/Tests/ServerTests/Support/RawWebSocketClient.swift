@@ -29,7 +29,7 @@ enum RawWebSocketClient {
         case maskedServerFrame
         case frameTooLong
     }
-
+    
     private enum Opcode {
         static let continuation: UInt8 = 0x0
         static let text: UInt8 = 0x1
@@ -38,7 +38,7 @@ enum RawWebSocketClient {
         static let ping: UInt8 = 0x9
         static let pong: UInt8 = 0xA
     }
-
+    
     /// Runs one connection until the server's close frame or the end of the stream.
     ///
     /// Answers pings unless `answerPings` is `false`, as WSClient does while its inbound
@@ -116,7 +116,7 @@ enum RawWebSocketClient {
             return nil
         }
     }
-
+    
     private static func handshake(port: Int, path: String, extraHeaders: [String]) -> String {
         let key = Data((0..<16).map { _ in UInt8.random(in: .min ... .max) }).base64EncodedString()
         var lines = [
@@ -130,7 +130,7 @@ enum RawWebSocketClient {
         lines.append(contentsOf: extraHeaders)
         return lines.joined(separator: "\r\n") + "\r\n\r\n"
     }
-
+    
     /// A masked frame, as RFC 6455 requires of a client. The client sends control frames
     /// only, whose payload is at most 125 bytes.
     private static func clientFrame(opcode: UInt8, payload: ByteBuffer) -> ByteBuffer {
@@ -156,11 +156,11 @@ private struct ServerFrame {
 private struct ByteReader {
     private var iterator: NIOAsyncChannelInboundStream<ByteBuffer>.AsyncIterator
     private var buffer = ByteBuffer()
-
+    
     init(_ iterator: NIOAsyncChannelInboundStream<ByteBuffer>.AsyncIterator) {
         self.iterator = iterator
     }
-
+    
     /// The status code of the response head; `nil` when the stream ends first or the
     /// status line is malformed.
     mutating func readResponseStatus() async throws -> Int? {
@@ -173,7 +173,7 @@ private struct ByteReader {
             guard try await readChunk() else { return nil }
         }
     }
-
+    
     /// The next server frame; `nil` when the stream ends between frames.
     mutating func readFrame() async throws -> ServerFrame? {
         guard try await fill(2) else {
@@ -201,7 +201,7 @@ private struct ByteReader {
         }
         return ServerFrame(fin: first & 0x80 != 0, opcode: first & 0x0F, payload: payload)
     }
-
+    
     /// Reads until `count` bytes are buffered; `false` when the stream ends first.
     private mutating func fill(_ count: Int) async throws -> Bool {
         while buffer.readableBytes < count {
@@ -209,13 +209,13 @@ private struct ByteReader {
         }
         return true
     }
-
+    
     private mutating func readChunk() async throws -> Bool {
         guard var chunk = try await iterator.next() else { return false }
         buffer.writeBuffer(&chunk)
         return true
     }
-
+    
     /// The length of the response head including its blank line, once it is buffered.
     private func headLength() -> Int? {
         let bytes = Array(buffer.readableBytesView)

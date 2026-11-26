@@ -24,10 +24,10 @@ import WardAxisTelemetry
 @MainActor
 struct SplashView: View {
     /// Closure called when splash animation completes.
-    var onComplete: (() -> Void)?
+    var onComplete: Closure.EmptyBlock?
     
-    @State private var logoScale: CGFloat = 0.8
-    @State private var contentOpacity: CGFloat = 0
+    @State private var logoScale: CGFloat = Scale.x0_75
+    @State private var contentOpacity: CGFloat = .zero
     
     private let logger = Log(category: .ui)
     
@@ -86,7 +86,7 @@ struct SplashView: View {
     // MARK: - Animations
     
     private func startAnimations() {
-        logoScale = 1.0
+        logoScale = Scale.base
         contentOpacity = Double.opacity.opaque
         
         // Complete splash after animations finish
@@ -99,6 +99,8 @@ struct SplashView: View {
 
 // MARK: - Preview
 
+#if PREVIEW_DEBUG
 #Preview {
     SplashView()
 }
+#endif

@@ -16,10 +16,10 @@ import Foundation
 public protocol ErasePendingMarkerProtocol: Sendable {
     /// `true` while an erase is due and no delete or newer save has covered it.
     var isSet: Bool { get }
-
+    
     /// Records that an erase is due.
     func set()
-
+    
     /// Records that no erase is due.
     func clear()
 }

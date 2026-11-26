@@ -25,7 +25,7 @@ struct AlertPresenterModifier: ViewModifier {
                 alertContent
             })
             .animation(
-                .spring(response: 0.4, dampingFraction: 0.8),
+                .spring(response: AnimationDuration.normal, dampingFraction: AnimationDuration.slow),
                 value: alertManager.currentAlert?.id
             )
     }
@@ -76,7 +76,7 @@ extension View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Alert Presenter - Accent") {
     @Previewable @State var alertManager = AlertManager()
@@ -111,7 +111,7 @@ extension View {
 #Preview("Alert Presenter - Interactive") {
     @Previewable @State var alertManager = AlertManager()
     
-    VStack(spacing: 16) {
+    VStack(spacing: .spacing.xxxl) {
         Button("Show Accent Alert") {
             alertManager.show(.accent(message: "Processing...", isLoading: true))
         }

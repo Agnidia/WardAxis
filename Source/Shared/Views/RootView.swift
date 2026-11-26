@@ -158,7 +158,7 @@ struct CoordinatedMainTabView: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 #Preview {
     @MainActor
     func makeView() -> some View {

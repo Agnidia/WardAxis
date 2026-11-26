@@ -38,8 +38,8 @@ struct SelectableChip: View {
         .buttonStyle(.plain)
         .padding(.horizontal, .spacing.xl)
         .padding(.vertical, .spacing.m)
-        .foregroundStyle(isSelected ? Color.Brand.base : Color.Brand.primary)
-        .background(isSelected ? Color.Brand.primary : Color.Brand.primary.opacity(.opacity.faint))
+        .foregroundStyle(isSelected ? Color.Background.primary : Color.Background.secondary)
+        .background(isSelected ? Color.Background.secondary : Color.Background.secondary.opacity(.opacity.faint))
         .clipShape(Capsule())
         .accessibleSelectable(
             label: accessibilityConfig.label,
@@ -51,7 +51,7 @@ struct SelectableChip: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Selectable Chip") {
     HStack(spacing: 8) {

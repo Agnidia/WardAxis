@@ -26,6 +26,9 @@ struct SettingsView: View {
     
     @State private var viewModel: SettingsViewModel?
     @State private var isShowingClearConfirmation: Bool = false
+#if DEBUG && os(macOS)
+    @State private var systemExtensionViewModel: SystemExtensionDebugViewModel?
+#endif
 
     private let logger = Log(category: .ui)
     
@@ -50,7 +53,11 @@ struct SettingsView: View {
                         Label(L.Settings.Logs.title, systemImage: "doc.text.magnifyingglass")
                     }
                 }
+#if DEBUG && os(macOS)
+                developerSection
+#endif
             }
+            .padding(.padding.xl)
             .navigationTitle(L.Settings.title)
             .navigationDestination(for: Route.self) { route in
                 destinationView(for: route)
@@ -92,6 +99,11 @@ struct SettingsView: View {
                 if viewModel == nil {
                     viewModel = SettingsViewModel(logReader: container.logReaderService)
                 }
+#if DEBUG && os(macOS)
+                if systemExtensionViewModel == nil {
+                    systemExtensionViewModel = SystemExtensionDebugViewModel(service: container.systemExtensionService)
+                }
+#endif
                 await viewModel?.refreshHasEntries()
             }
         }
@@ -130,7 +142,36 @@ struct SettingsView: View {
     }
     
     // MARK: - Subviews
-    
+
+#if DEBUG && os(macOS)
+    /// Absent from release builds: a shipped control that installs extensions is attack surface (ADR 0006 D1).
+    private var developerSection: some View {
+        let isBusy = systemExtensionViewModel?.isBusy ?? true
+        return Section {
+            Button(L.Settings.Developer.activate) {
+                Task { await systemExtensionViewModel?.activate() }
+            }
+            .disabled(isBusy)
+            .accessibilityIdentifier(AccessibilityID.Developer.activateButton.id)
+            
+            Button(L.Settings.Developer.deactivate) {
+                Task { await systemExtensionViewModel?.deactivate() }
+            }
+            .disabled(isBusy)
+            .accessibilityIdentifier(AccessibilityID.Developer.deactivateButton.id)
+            
+            Text(systemExtensionViewModel?.statusText ?? L.Settings.Developer.statusIdle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier(AccessibilityID.Developer.status.id)
+        } header: {
+            Text(L.Settings.Developer.title)
+        } footer: {
+            Text(L.Settings.Developer.footer)
+        }
+    }
+#endif
+
     private var placeholderContent: some View {
         VStack(alignment: .leading, spacing: CGFloat.spacing.m) {
             Text(L.Settings.placeholder)
@@ -143,7 +184,7 @@ struct SettingsView: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 #Preview {
     SettingsView()
         .environment(\.appContainer, AppContainer.preview())

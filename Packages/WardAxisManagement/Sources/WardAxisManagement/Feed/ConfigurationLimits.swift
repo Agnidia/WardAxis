@@ -16,13 +16,13 @@ import Foundation
 enum ConfigurationLimits {
     /// Deepest array or object nesting in a whole document, envelope included.
     static let maximumNestingDepth = 32
-
+    
     /// Most settings one configuration may hold.
     static let maximumEntryCount = 1024
-
+    
     /// Largest frame or cache file, in bytes.
     static let maximumMessageSize = 256 * 1024
-
+    
     /// `true` when `data` fits the size bound, never nests deeper than
     /// ``maximumNestingDepth``, and is a strict subset of what `JSONDecoder`
     /// accepts: UTF-8 starting with `{`, no NUL byte (which would make the
@@ -84,7 +84,7 @@ enum ConfigurationLimits {
         }
         return !isInString && depth == 0
     }
-
+    
     /// `true` when `values` encodes to at most ``maximumMessageSize`` bytes, so a
     /// run of deltas cannot grow the configuration past what a snapshot may carry.
     static func fitsByteLimit(_ values: [String: ConfigurationValue]) -> Bool {
@@ -93,7 +93,7 @@ enum ConfigurationLimits {
         }
         return data.count <= maximumMessageSize
     }
-
+    
     private static func isHexDigit(_ byte: UInt8) -> Bool {
         switch byte {
         case UInt8(ascii: "0")...UInt8(ascii: "9"), UInt8(ascii: "a")...UInt8(ascii: "f"), UInt8(ascii: "A")...UInt8(ascii: "F"):

@@ -17,27 +17,27 @@ final class GatedConfigStore: ConfigStore, Sendable {
     let base: InMemoryConfigStore
     let gate: Gate = .init()
     private let waiting: NIOLockedValueBox<Int> = .init(0)
-
+    
     init(base: InMemoryConfigStore) {
         self.base = base
     }
-
+    
     /// `currentVersion()` calls now waiting at the gate.
     var waitingReads: Int {
         waiting.withLockedValue { $0 }
     }
-
+    
     func snapshot() async throws -> ConfigSnapshotRecord {
         try await base.snapshot()
     }
-
+    
     func currentVersion() async throws -> Int64 {
         waiting.withLockedValue { $0 += 1 }
         defer { waiting.withLockedValue { $0 -= 1 } }
         try await gate.wait()
         return try await base.currentVersion()
     }
-
+    
     func changes(after version: Int64, limit: Int) async throws -> [ConfigChange] {
         try await base.changes(after: version, limit: limit)
     }

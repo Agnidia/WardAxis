@@ -185,9 +185,9 @@ struct FormTextField: View {
     
     private var borderColor: Color {
         switch currentState {
-        case .default: .Textfield.Border.secondary
-        case .focused: .Textfield.Border.primary
-        case .active: .Textfield.Border.primary
+        case .default: .Textfield.Border.primary
+        case .focused: .Textfield.Border.focused
+        case .active: .Textfield.Border.focused
         case .error: .Textfield.Border.accent
         }
     }
@@ -195,7 +195,7 @@ struct FormTextField: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Form Text Field States") {
     VStack(spacing: 24) {

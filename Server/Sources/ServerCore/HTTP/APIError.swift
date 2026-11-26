@@ -15,24 +15,24 @@ package struct APIError: Error, Sendable, Equatable {
     package let status: HTTPResponse.Status
     package let code: String
     package let message: String
-
+    
     package init(status: HTTPResponse.Status, code: String, message: String) {
         self.status = status
         self.code = code
         self.message = message
     }
-
+    
     package static func invalidRequest(message: String) -> APIError {
         APIError(status: .badRequest, code: "invalid_request", message: message)
     }
-
+    
     package static let malformedRequest: APIError = .invalidRequest(message: "The request is malformed.")
     package static let internalError: APIError = .init(
         status: .internalServerError,
         code: "internal_error",
         message: "Something went wrong. Try again later."
     )
-
+    
     /// The contract's code for a status the router or a framework produced.
     package static func forStatus(_ status: HTTPResponse.Status) -> APIError {
         switch status.code {

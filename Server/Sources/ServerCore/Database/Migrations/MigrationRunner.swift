@@ -16,15 +16,15 @@ import PostgresNIO
 package struct MigrationRunner: Sendable {
     /// ASCII `another1`. Shared by every server instance that migrates this database.
     package static let advisoryLockKey: Int64 = 0x616E6F7468657231
-
+    
     private let migrations: [Migration]
     private let logger: Logger
-
+    
     package init(migrations: [Migration] = Migrations.all, logger: Logger) {
         self.migrations = migrations
         self.logger = logger
     }
-
+    
     /// Applies every pending migration in version order.
     ///
     /// - Returns: The migrations this call applied; empty when the schema is current.
@@ -48,7 +48,7 @@ package struct MigrationRunner: Sendable {
             return applied
         }
     }
-
+    
     private func migrate(on connection: PostgresConnection) async throws -> [Migration] {
         try await connection.query(
             """
@@ -60,19 +60,19 @@ package struct MigrationRunner: Sendable {
             """,
             logger: logger
         )
-
+        
         var recorded: [AppliedMigration] = []
         let rows = try await connection.query("SELECT version, name FROM schema_migrations", logger: logger)
         for try await (version, name) in rows.decode((Int, String).self) {
             recorded.append(AppliedMigration(version: version, name: name))
         }
-
+        
         let pending = try MigrationPlanner.pending(all: migrations, applied: recorded)
         if pending.isEmpty {
             logger.info("Database schema is current", metadata: ["migrations.applied": "\(recorded.count)"])
             return []
         }
-
+        
         for migration in pending {
             try await connection.withTransaction(logger: logger) { transaction in
                 for statement in migration.statements {
@@ -90,7 +90,7 @@ package struct MigrationRunner: Sendable {
         }
         return pending
     }
-
+    
     private func unlock(_ connection: PostgresConnection) async {
         do {
             try await connection.query("SELECT pg_advisory_unlock(\(Self.advisoryLockKey))", logger: logger)

@@ -20,17 +20,17 @@ public protocol ConfigurationServiceProtocol: AnyObject, Sendable {
     /// The configuration in effect, or `nil` before the first snapshot or cache
     /// load and after unenrollment. Observable from SwiftUI.
     @MainActor var configuration: ManagedConfiguration? { get }
-
+    
     /// `true` once the server refused this device's identity. The feed stays idle
     /// until the enrollment changes, because retrying the same certificate cannot succeed.
     @MainActor var isIdentityRejected: Bool { get }
-
+    
     /// Enrolled connects (in the foreground); unenrolled tears down, deletes the
     /// cache and clears ``configuration``; a different enrollment counts as an
     /// unenrollment followed by an enrollment.
     @MainActor
     func enrollmentDidChange(to state: EnrollmentState)
-
+    
     /// The background closes the connection and schedules no reconnect; the
     /// foreground connects at once.
     @MainActor

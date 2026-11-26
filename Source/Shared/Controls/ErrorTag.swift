@@ -37,10 +37,10 @@ struct ErrorTag: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Error Tag") {
-    VStack(spacing: 16) {
+    VStack(spacing: .spacing.xxxl) {
         ErrorTag(message: "Invalid code")
         ErrorTag(message: "Phone number is required")
         ErrorTag(message: "Please enter a valid email address")

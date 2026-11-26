@@ -21,7 +21,7 @@ package struct DocsController: Sendable {
     package static let redocVersion: String = "2.5.4"
     /// Versioned, so the script can be cached as immutable and an upgrade changes the URL.
     package static let redocScriptPath: String = "/docs/redoc/\(redocVersion)/redoc.standalone.js"
-
+    
     /// Sent on `/v1/docs` only. Redoc's styled-components inject `<style>` elements, its
     /// search index runs in a `blob:` worker, and its icons are `data:` SVG images; nothing
     /// else is relaxed, and no remote origin or string evaluation is ever allowed. Redoc's
@@ -39,12 +39,12 @@ package struct DocsController: Sendable {
         "frame-ancestors 'none'",
         "form-action 'none'"
     ].joined(separator: "; ")
-
+    
     package static let pageContentType: String = "text/html; charset=utf-8"
     /// RFC 9512.
     package static let documentContentType: String = "application/yaml"
     package static let scriptContentType: String = "text/javascript; charset=utf-8"
-
+    
     /// No inline script and no URL with an origin: the CSP forbids the first, and the page
     /// must load nothing from another origin. System fonts only, so no font link.
     ///
@@ -67,19 +67,19 @@ package struct DocsController: Sendable {
         </html>
         """
     }
-
+    
     private static let referrerPolicy = HTTPField.Name("Referrer-Policy")!
-
+    
     private let docs: APIDocs
     private let pageBody: ByteBuffer
-
+    
     /// - Parameter basePath: The prefix of the group ``addRoutes(to:)`` receives, which the
     ///   page needs for its absolute URLs.
     package init(docs: APIDocs, basePath: String) {
         self.docs = docs
         pageBody = ByteBuffer(string: Self.page(basePath: basePath))
     }
-
+    
     package func addRoutes(to group: RouterGroup<AppRequestContext>) {
         group.get(RouterPath(Self.pagePath)) { _, _ in
             Response(

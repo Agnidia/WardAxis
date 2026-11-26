@@ -26,15 +26,11 @@ struct BannerAlert: View {
     
     let message: String
     let type: BannerAlertType
-    let onTap: (() -> Void)?
+    let onTap: Closure.EmptyBlock?
     
     // MARK: - Initialization
     
-    init(
-        message: String,
-        type: BannerAlertType,
-        onTap: (() -> Void)? = nil
-    ) {
+    init(message: String, type: BannerAlertType, onTap: Closure.EmptyBlock? = nil) {
         self.message = message
         self.type = type
         self.onTap = onTap
@@ -102,10 +98,10 @@ struct BannerAlert: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Banner Alert - Info") {
-    VStack {
+    VStack(spacing: .spacing.xxxl) {
         Spacer()
         
         BannerAlert(
@@ -120,7 +116,7 @@ struct BannerAlert: View {
 }
 
 #Preview("Banner Alert - Error") {
-    VStack {
+    VStack(spacing: .spacing.xxxl) {
         Spacer()
         
         BannerAlert(message: "Verification failed", type: .error)
@@ -132,7 +128,7 @@ struct BannerAlert: View {
 }
 
 #Preview("Banner Alert - Success") {
-    VStack {
+    VStack(spacing: .spacing.xxxl) {
         Spacer()
         
         BannerAlert(message: "Profile updated successfully", type: .success)
@@ -144,7 +140,7 @@ struct BannerAlert: View {
 }
 
 #Preview("Banner Alert - All Types") {
-    VStack(spacing: 16) {
+    VStack(spacing: .spacing.xxxl) {
         BannerAlert(
             message: "Due to limited stock, we are currently capping this item at 5 per order.",
             type: .info

@@ -72,6 +72,18 @@ enum AccessibilityID: Sendable {
         }
     }
     
+    // MARK: - Developer (DEBUG, macOS)
+    
+    enum Developer: String, AccessibilityProtocol, CaseIterable, Sendable {
+        case activateButton = "developer.activateButton"
+        case deactivateButton = "developer.deactivateButton"
+        case status = "developer.status"
+        
+        var id: String {
+            rawValue
+        }
+    }
+    
     // MARK: - Logs Viewer
     
     enum Logs: String, AccessibilityProtocol, CaseIterable, Sendable {

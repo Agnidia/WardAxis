@@ -20,7 +20,7 @@ actor LogReaderService: LogReaderServiceProtocol {
     private let streamingThresholdBytes: Int
     private let maxStreamedEntries: Int
     private let now: @Sendable () -> Date
-
+    
     /// - Parameters:
     ///   - fileURL: Absolute URL of the log file. Defaults to the live
     ///     `Log.logDirectoryUrl/log.log` location.
@@ -42,38 +42,38 @@ actor LogReaderService: LogReaderServiceProtocol {
         self.maxStreamedEntries = maxStreamedEntries
         self.now = now
     }
-
+    
     func loadEntries() async throws -> [LogEntry] {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return []
         }
-
+        
         guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
             throw LogReaderError.permissionDenied(fileURL)
         }
-
+        
         let content: String
         do {
             content = try String(contentsOf: fileURL, encoding: .utf8)
         } catch {
             throw LogReaderError.readFailed(underlying: String(describing: error))
         }
-
+        
         let byteCount = content.utf8.count
         let entries = parser.parseAll(content)
-
+        
         if byteCount >= streamingThresholdBytes, entries.count > maxStreamedEntries {
             return Array(entries.suffix(maxStreamedEntries))
         }
         return entries
     }
-
+    
     func exportEntries(_ entries: [LogEntry]) async throws -> URL {
         let filename = Self.exportFilename(for: now())
         let url = FileManager.default.temporaryDirectory.appending(path: filename)
-
+        
         let body = entries.map(\.rawLine).joined(separator: "\n").appending("\n")
-
+        
         do {
             try body.write(to: url, atomically: true, encoding: .utf8)
         } catch {
@@ -81,13 +81,13 @@ actor LogReaderService: LogReaderServiceProtocol {
         }
         return url
     }
-
+    
     func clearEntries() async throws {
         if let handler = FileLogHandler.shared {
             await handler.clear()
             return
         }
-
+        
         // Fallback path — the shared writer is unavailable (no bundle id).
         // Atomic replace is acceptable here precisely because there is no
         // long-lived handle to orphan.
@@ -98,9 +98,9 @@ actor LogReaderService: LogReaderServiceProtocol {
             throw LogReaderError.writeFailed(underlying: String(describing: error))
         }
     }
-
+    
     // MARK: - Filename helper
-
+    
     private static let exportFilenameFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -108,7 +108,7 @@ actor LogReaderService: LogReaderServiceProtocol {
         formatter.dateFormat = "yyyyMMdd-HHmmss"
         return formatter
     }()
-
+    
     /// Produces the export filename for a given clock instant.
     /// Format: `wardaxis-logs-YYYYMMDD-HHmmss.txt` (device-local timezone).
     /// Exposed `internal static` so tests can verify pattern compliance.

@@ -121,9 +121,9 @@ struct SearchField: View {
     
     private var borderColor: Color {
         switch currentState {
-        case .default: .Textfield.Border.search
-        case .pressed: .Textfield.Border.primary
-        case .entered: .Textfield.Border.search
+        case .default: .Textfield.Border.primary
+        case .pressed: .Textfield.Border.focused
+        case .entered: .Textfield.Border.focused
         }
     }
     
@@ -138,7 +138,7 @@ struct SearchField: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Search Field States") {
     VStack(spacing: 24) {

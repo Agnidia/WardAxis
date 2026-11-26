@@ -24,7 +24,7 @@ package struct ConfigChangeRelay: Service {
     private let hub: ConfigConnectionHub
     private let policy: ConfigStreamPolicy
     private let logger: Logger
-
+    
     package init(
         store: any ConfigStore,
         notifier: any ConfigChangeNotifier,
@@ -38,7 +38,7 @@ package struct ConfigChangeRelay: Service {
         self.policy = policy
         self.logger = logger
     }
-
+    
     /// Returns only on graceful shutdown or cancellation: a service that returns early
     /// ends the whole application.
     package func run() async throws {
@@ -46,7 +46,7 @@ package struct ConfigChangeRelay: Service {
             await relay()
         }
     }
-
+    
     private func relay() async {
         guard let startVersion = await startingVersion() else { return }
         // From here every version above `startVersion` reaches the hub, so a snapshot read
@@ -76,7 +76,7 @@ package struct ConfigChangeRelay: Service {
             group.cancelAll()
         }
     }
-
+    
     /// The store's version at start; `nil` when cancelled before a read succeeds.
     private func startingVersion() async -> Int64? {
         var attempt = 0
@@ -101,7 +101,7 @@ package struct ConfigChangeRelay: Service {
         }
         return nil
     }
-
+    
     /// Publishes every stored change after `version` and returns the last version
     /// published. A read error stops early; the next trigger resumes from the same place.
     private func catchUp(after version: Int64) async -> Int64 {

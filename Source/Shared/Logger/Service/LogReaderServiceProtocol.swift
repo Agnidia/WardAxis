@@ -22,7 +22,7 @@ protocol LogReaderServiceProtocol: Sendable {
     /// - Returns: All parsed entries (or up to the streaming cap for very
     ///   large files; see `LogReaderService.maxStreamedEntries`).
     func loadEntries() async throws -> [LogEntry]
-
+    
     /// Serialises `entries` back to one-line-per-entry text and writes to
     /// `FileManager.default.temporaryDirectory` with filename
     /// `wardaxis-logs-YYYYMMDD-HHmmss.txt` (device-local timezone).
@@ -30,7 +30,7 @@ protocol LogReaderServiceProtocol: Sendable {
     /// - Returns: URL of the written temp file, suitable for `ShareLink`.
     /// - Throws: `LogReaderError.writeFailed` on I/O failure.
     func exportEntries(_ entries: [LogEntry]) async throws -> URL
-
+    
     /// Truncates the persisted log file to zero bytes. Done in-place via
     /// the live `FileLogHandler` so the long-lived writer is not orphaned —
     /// callers continue to log normally; entries flushed after this call

@@ -18,15 +18,15 @@ import WardAxisTelemetry
 final class MockTelemetryService: TelemetryServiceProtocol, @unchecked Sendable {
     private let lock = NSLock()
     private var _recorded: [TelemetryEvent] = []
-
+    
     init() {}
-
+    
     func track(_ event: TelemetryEvent) {
         lock.lock()
         _recorded.append(event)
         lock.unlock()
     }
-
+    
     /// Snapshot of every event recorded so far.
     var recorded: [TelemetryEvent] {
         lock.lock()

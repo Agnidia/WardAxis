@@ -42,7 +42,7 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
         self.regular = regular
         self.compact = compact
     }
-
+    
     public var body: some View {
         if resolvedSizeClass == .compact {
             compact()
@@ -50,7 +50,7 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
             regular()
         }
     }
-
+    
     private var resolvedSizeClass: AdaptiveSizeClass {
         if let sizeClassOverride {
             return sizeClassOverride
@@ -63,12 +63,14 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
     }
 }
 
+#if PREVIEW_DEBUG
 #Preview("Regular") {
     SizeClassAdaptiveView(sizeClass: .regular) {
         Text(verbatim: "Regular")
     } compact: {
         Text(verbatim: "Compact")
     }
+    .padding()
 }
 
 #Preview("Compact") {
@@ -77,4 +79,6 @@ public struct SizeClassAdaptiveView<RegularContent: View, CompactContent: View>:
     } compact: {
         Text(verbatim: "Compact")
     }
+    .padding()
 }
+#endif

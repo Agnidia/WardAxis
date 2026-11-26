@@ -24,7 +24,7 @@ package protocol ConfigStore: Sendable {
 package struct ConfigSnapshotRecord: Sendable, Equatable {
     package let version: Int64
     package let values: Components.Schemas.ConfigEntries
-
+    
     package init(version: Int64, values: Components.Schemas.ConfigEntries) {
         self.version = version
         self.values = values
@@ -36,7 +36,7 @@ package struct ConfigChange: Sendable, Equatable {
     package let version: Int64
     package let changed: Components.Schemas.ConfigEntries
     package let removed: [String]
-
+    
     package init(version: Int64, changed: Components.Schemas.ConfigEntries, removed: [String]) {
         self.version = version
         self.changed = changed

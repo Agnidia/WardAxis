@@ -44,6 +44,9 @@ final class AppContainer {
     /// The live configuration from the management server, cached for offline launches.
     let configurationService: any ConfigurationServiceProtocol
     
+    /// Activates and removes the macOS NetworkFilter system extension.
+    let systemExtensionService: any SystemExtensionServiceProtocol
+    
     // MARK: - Initialization
     
     private init(
@@ -51,13 +54,15 @@ final class AppContainer {
         logReaderService: any LogReaderServiceProtocol,
         hapticFeedback: any HapticFeedbackServiceProtocol,
         telemetry: any TelemetryServiceProtocol,
-        configurationService: any ConfigurationServiceProtocol
+        configurationService: any ConfigurationServiceProtocol,
+        systemExtensionService: any SystemExtensionServiceProtocol
     ) {
         self.alertManager = alertManager
         self.logReaderService = logReaderService
         self.hapticFeedback = hapticFeedback
         self.telemetry = telemetry
         self.configurationService = configurationService
+        self.systemExtensionService = systemExtensionService
     }
     
     // MARK: - Factories
@@ -71,7 +76,8 @@ final class AppContainer {
             telemetry: TelemetryService(),
             // No enrollment flow exists yet, so the device has no client identity
             // and the feed stays idle rather than connecting unauthenticated.
-            configurationService: ConfigurationService.live(bundle: .main, identityProvider: NoClientIdentityProvider())
+            configurationService: ConfigurationService.live(bundle: .main, identityProvider: NoClientIdentityProvider()),
+            systemExtensionService: SystemExtensionService(bundle: .main)
         )
     }
 
@@ -83,7 +89,8 @@ final class AppContainer {
             logReaderService: MockLogReaderService(scenario: .sampleEntries),
             hapticFeedback: MockHapticFeedbackService(),
             telemetry: MockTelemetryService(),
-            configurationService: configurationService
+            configurationService: configurationService,
+            systemExtensionService: MockSystemExtensionService()
         )
     }
     
@@ -94,7 +101,8 @@ final class AppContainer {
             logReaderService: MockLogReaderService(scenario: .empty),
             hapticFeedback: MockHapticFeedbackService(),
             telemetry: MockTelemetryService(),
-            configurationService: MockConfigurationService()
+            configurationService: MockConfigurationService(),
+            systemExtensionService: MockSystemExtensionService()
         )
     }
 #endif
@@ -123,7 +131,9 @@ final class AppContainer {
                     identityProvider: NoClientIdentityProvider(),
                     transport: URLSessionWebSocketTransport(),
                     cache: NoConfigurationCache()
-                )
+                ),
+                // Inert until called; only a DEBUG view calls it.
+                systemExtensionService: SystemExtensionService(bundle: .main)
             )
 #endif
         }

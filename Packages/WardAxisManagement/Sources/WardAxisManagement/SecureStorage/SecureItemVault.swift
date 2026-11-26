@@ -34,14 +34,14 @@ public actor SecureItemVault<Value: SecurePayload> {
     private let marker: any ErasePendingMarkerProtocol
     private var floor: UInt64 = 0
     private var onDisk: UInt64 = 0
-
+    
     /// - Parameter marker: Has no default, so a new production call site cannot
     ///   lose the persisted erase by omission.
     public init(store: any SecureItemStoreProtocol<Value>, marker: any ErasePendingMarkerProtocol) {
         self.store = store
         self.marker = marker
     }
-
+    
     /// Finishes an erase that a previous launch could not complete.
     ///
     /// Deletes the stored item without reading it when the marker is set, then
@@ -57,7 +57,7 @@ public actor SecureItemVault<Value: SecurePayload> {
         marker.clear()
         return true
     }
-
+    
     /// Reads the stored value once at launch.
     ///
     /// An item that can never be decoded is deleted and reads as no item. While
@@ -79,7 +79,7 @@ public actor SecureItemVault<Value: SecurePayload> {
             return nil
         }
     }
-
+    
     /// Writes `value` unless a newer generation already wrote or erased.
     /// - Returns: `false` when the write was fenced off and nothing was stored.
     @discardableResult
@@ -96,7 +96,7 @@ public actor SecureItemVault<Value: SecurePayload> {
         }
         return true
     }
-
+    
     /// Deletes the stored item and blocks every later write at or below `generation`.
     /// An item written by a newer generation stays, and the marker is not touched.
     ///

@@ -31,7 +31,6 @@ import AppKit
 struct LogRowView: View {
     private enum Constants {
         static let longPressDuration: Double = 0.4
-        static let copyFeedbackScaleHidden: CGFloat = 0.7
         static let copyFeedbackDisplayDuration: Duration = .seconds(1.2)
     }
     
@@ -79,7 +78,7 @@ struct LogRowView: View {
             .padding(.spacing.s)
             .background(.regularMaterial, in: Circle())
             .opacity(isCopied ? .opacity.opaque : .opacity.transparent)
-            .scaleEffect(isCopied ? 1.0 : Constants.copyFeedbackScaleHidden)
+            .scaleEffect(isCopied ? Scale.base : Scale.x0_75)
             .allowsHitTesting(false)
     }
     
@@ -120,10 +119,8 @@ struct LogRowView: View {
     @ViewBuilder
     private var content: some View {
         switch entry.kind {
-        case .parsed(let parsed):
-            parsedRow(parsed)
-        case .raw(let text):
-            rawRow(text)
+        case .parsed(let parsed): parsedRow(parsed)
+        case .raw(let text): rawRow(text)
         }
     }
     
@@ -249,7 +246,7 @@ struct LogLevelBadge: View {
 
 // MARK: - Preview
 
-#if DEBUG
+#if PREVIEW_DEBUG
 
 #Preview("Parsed entries") {
     VStack(spacing: .spacing.m) {

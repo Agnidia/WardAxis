@@ -13,7 +13,7 @@ import ServerCore
 /// A health probe with a fixed answer, so router tests need no database.
 struct StubHealthProbe: DatabaseHealthProbe {
     let reachable: Bool
-
+    
     func isReachable() async -> Bool {
         reachable
     }
@@ -46,11 +46,11 @@ struct EmptyConfigStore: ConfigStore {
     func snapshot() async throws -> ConfigSnapshotRecord {
         ConfigSnapshotRecord(version: 0, values: .init())
     }
-
+    
     func currentVersion() async throws -> Int64 {
         0
     }
-
+    
     func changes(after _: Int64, limit _: Int) async throws -> [ConfigChange] {
         []
     }

@@ -118,6 +118,54 @@ enum L {
             "settings.diagnostics"
         }
         
+        // MARK: - Developer (DEBUG, macOS)
+        
+        enum Developer {
+            static var title: LocalizedStringKey {
+                "settings.developer.title"
+            }
+            
+            static var footer: LocalizedStringKey {
+                "settings.developer.footer"
+            }
+            
+            static var activate: LocalizedStringKey {
+                "settings.developer.activate"
+            }
+            
+            static var deactivate: LocalizedStringKey {
+                "settings.developer.deactivate"
+            }
+            
+            static var statusIdle: LocalizedStringKey {
+                "settings.developer.status.idle"
+            }
+            
+            static var statusInProgress: LocalizedStringKey {
+                "settings.developer.status.inProgress"
+            }
+            
+            static var statusNeedsApproval: LocalizedStringKey {
+                "settings.developer.status.needsApproval"
+            }
+            
+            static var statusActivated: LocalizedStringKey {
+                "settings.developer.status.activated"
+            }
+            
+            static var statusDeactivated: LocalizedStringKey {
+                "settings.developer.status.deactivated"
+            }
+            
+            static var statusPendingReboot: LocalizedStringKey {
+                "settings.developer.status.pendingReboot"
+            }
+            
+            static func statusFailed(_ reason: String) -> LocalizedStringKey {
+                "settings.developer.status.failed \(reason)"
+            }
+        }
+        
         // MARK: - Logs Viewer
         
         enum Logs {

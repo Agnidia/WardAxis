@@ -41,6 +41,7 @@ The `docs/` directory holds the long-form reference. Read these instead of guess
 | [Source/Shared/Logger/README.md](Source/Shared/Logger/README.md) | Logger module reference and the `FileLogHandler` singleton decision |
 | [Server/README.md](Server/README.md) | Running and configuring the management server |
 | [docs/LAB.md](docs/LAB.md) | Lab-only Developer ID build, EndpointSecurity entitlement request status |
+| [docs/TEST-DEVICES.md](docs/TEST-DEVICES.md) | Test device inventory, macOS VM, system extension approval, iPad supervision |
 | [docs/adr/](docs/adr/) | Recorded architecture decisions |
 | [roadmap/README.md](roadmap/README.md) | Product scope and phase plan |
 
@@ -57,6 +58,7 @@ The `docs/` directory holds the long-form reference. Read these instead of guess
 - **MUST** inject services through `AppContainer`; never construct them inside views or view models
 - **MUST** define every service as a `Sendable` protocol with a concrete implementation and a mock. Put it in a `WardAxis*` package when an extension or the agent needs it; otherwise in `Source/Shared/Services/<Name>/`
 - **MUST** run SwiftFormat before committing: `swiftformat .`
+- **MUST** guard every `#Preview` with `#if PREVIEW_DEBUG`. `Configurations/debug.xcconfig` defines it together with `DEBUG`, and `Source/Shared/Core/BuildConditions.swift` fails the build when the two differ. Keep `#if DEBUG` for mocks, container factories and other debug-only code
 - **MUST NOT** commit secrets, API keys, or credentials
 - **MUST NOT** use hardcoded colors; use the semantic colors in `Resources/Colors.xcassets`
 
@@ -93,6 +95,7 @@ The `docs/` directory holds the long-form reference. Read these instead of guess
 | `hapticFeedback` | `HapticFeedbackServiceProtocol` | `HapticFeedbackService` (no-op off iOS) | `MockHapticFeedbackService` |
 | `telemetry` | `TelemetryServiceProtocol` (`WardAxisTelemetry`) | `TelemetryService` (drops every event without consent) | `MockTelemetryService` |
 | `configurationService` | `ConfigurationServiceProtocol` (`WardAxisManagement`) | `ConfigurationService.live(bundle:identityProvider:)` with `NoClientIdentityProvider` | `MockConfigurationService` |
+| `systemExtensionService` | `SystemExtensionServiceProtocol` | `SystemExtensionService(bundle:)` (macOS NetworkFilter; fails as unsupported elsewhere) | `MockSystemExtensionService` |
 
 ### Reading services from a view
 
@@ -181,8 +184,8 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
   - Views: `Views/RootView.swift` (root view, tab container)
   - Features: `Features/<Name>/`, view and view model side by side. Folders: Help, Home, Logs, Settings, Splash
   - Navigation: `Navigation/` (`AppCoordinator`, `Route`, `RoutePresentation`, `RouteResolver`)
-  - Services: `Services/Alert/` (`AlertManager`, `AlertManagerProtocol`, `InAppAlert`)
-  - Mocks: `Mocks/` (`MockConfigurationService`, `MockLogReaderService`, `MockTelemetryService`). `MockAlertManager` and `MockHapticFeedbackService` sit next to their implementations
+  - Services: `Services/Alert/` (`AlertManager`, `AlertManagerProtocol`, `InAppAlert`), `Services/SystemExtension/` (`SystemExtensionService`, `SystemExtensionIdentifier`; [ADR 0006](docs/adr/0006-debug-system-extension-activation.md))
+  - Mocks: `Mocks/` (`MockConfigurationService`, `MockLogReaderService`, `MockSystemExtensionService`, `MockTelemetryService`). `MockAlertManager` and `MockHapticFeedbackService` sit next to their implementations
   - Logger UI and log reading: `Logger/` (`Models/`, `Service/`, `UI/`). The `Log` API itself is in the `WardAxisTelemetry` package
   - Design system: `Design/` (`Topology`, `Typography`, `Font+Custom`, `Buttons/`); controls in `Controls/`
   - Accessibility: `Accessibility/` (`AccessibilityModifiers`, `AccessibilityIdentifiers`, `AccessibilityAnnouncer`, `HapticFeedbackService`)
