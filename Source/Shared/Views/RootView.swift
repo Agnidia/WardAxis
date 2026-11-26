@@ -42,16 +42,10 @@ struct RootView: View {
             case .splash: 
                 splashOverlay
             case .main:
-                if let manager = container.alertManager as? AlertManager {
-                    mainContent
-                        .environment(\.coordinator, coordinator)
-                        .onOpenURL { url in coordinator.handleDeepLink(url) }
-                        .modifier(AlertPresenterModifier(alertManager: manager))
-                } else {
-                    mainContent
-                        .environment(\.coordinator, coordinator)
-                        .onOpenURL { url in coordinator.handleDeepLink(url) }
-                }
+                mainContent
+                    .environment(\.coordinator, coordinator)
+                    .onOpenURL { url in coordinator.handleDeepLink(url) }
+                    .modifier(AlertPresenterModifier(alertManager: container.alertManager))
             }
         }
         .animation(.easeInOut(duration: AnimationDuration.normal), value: coordinator.appPhase)
@@ -116,7 +110,6 @@ struct CoordinatedMainTabView: View {
         // Through switchTab(to:), so a tab with unsaved changes can hold the switch.
         TabView(selection: Binding(get: { coordinator.selectedTab }, set: { coordinator.switchTab(to: $0) })) {
             homeTab
-            settingsTab
         }
         .onAppear {
             logger.debug("CoordinatedMainTabView appeared")
