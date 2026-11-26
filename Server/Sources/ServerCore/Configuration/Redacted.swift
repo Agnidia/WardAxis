@@ -11,7 +11,7 @@
 /// (the database driver). Every textual form is `<redacted>`.
 package struct Redacted<Value: Sendable>: Sendable {
     package let value: Value
-
+    
     package init(_ value: Value) {
         self.value = value
     }

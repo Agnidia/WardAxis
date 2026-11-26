@@ -14,14 +14,14 @@ import Foundation
 /// container: a second reader of a shared secret is a second party able to use it.
 public struct UnavailableItemStore<Value: SecurePayload>: SecureItemStoreProtocol {
     public init() {}
-
+    
     public func load() throws(SecureItemStoreError) -> Value? {
         nil
     }
-
+    
     public func save(_: Value) throws(SecureItemStoreError) {
         throw .unavailable
     }
-
+    
     public func delete() throws(SecureItemStoreError) {}
 }

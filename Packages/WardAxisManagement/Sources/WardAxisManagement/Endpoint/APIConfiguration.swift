@@ -16,7 +16,7 @@ import WardAxisAPIClient
 public struct APIConfiguration: Sendable, Equatable {
     /// Info.plist key that carries the `API_BASE_URL` build setting.
     public static let infoPlistKey: String = "APIBaseURL"
-
+    
     /// Release builds accept only `https`; Debug also accepts `http` to a loopback host.
     public static var requiresHTTPS: Bool {
 #if DEBUG
@@ -25,17 +25,17 @@ public struct APIConfiguration: Sendable, Equatable {
         true
 #endif
     }
-
+    
     /// Hosts that `http` may reach when https is not required. A LAN or `.local`
     /// host would carry credentials in cleartext over a shared network, and ATS
     /// exempts such hosts, so it would not stop them either.
     static let loopbackHosts: Set<String> = ["localhost", "127.0.0.1", "::1", "[::1]"]
-
+    
     /// The host of `API_BASE_URL` followed by ``contractBasePath()``, for example
     /// `https://api.invalid/v1`. The HTTP client and the configuration stream both
     /// append their operation paths to it.
     public let baseURL: URL
-
+    
     /// Validates a raw base URL string and composes ``baseURL`` from it.
     ///
     /// Accepts an absolute `https` URL with a host, or `http` to a loopback host
@@ -73,7 +73,7 @@ public struct APIConfiguration: Sendable, Equatable {
         }
         return APIConfiguration(baseURL: url)
     }
-
+    
     /// The path every API route is served under: the path of the contract's
     /// `servers` URL, `/v1`.
     ///
@@ -89,7 +89,7 @@ public struct APIConfiguration: Sendable, Equatable {
         // Percent-encoded: `URL.path` drops a trailing slash, which must fail here.
         return try validateContractPath(serverURL.path(percentEncoded: true))
     }
-
+    
     /// Accepts `/v1` and `/api/v1`, the same rule as the server's `APIBasePath`.
     ///
     /// A spec edit to `/` would call the API unversioned, and `/v1/` or `//v1`

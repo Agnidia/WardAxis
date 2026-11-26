@@ -112,17 +112,17 @@ public struct Log: Sendable {
         urlComponents = components
         fileLogHandler = configuration.saveToFileByDefault && Self.mayWriteLogFile ? FileLogHandler.shared : nil
     }
-
+    
     /// A signposter on this log's subsystem and category, for `OSSignposter` intervals
     /// that Instruments correlates with the messages.
     public var signposter: OSSignposter {
         OSSignposter(logger: logger)
     }
-
+    
     /// Extensions see flows, DNS queries and mail: their logs go to the unified log
     /// only, never to a plain-text file that a backup or sysdiagnose could carry away.
     static let mayWriteLogFile: Bool = isAppBundle(path: Bundle.main.bundlePath)
-
+    
     static func isAppBundle(path: String) -> Bool {
         !(path.hasSuffix(".appex") || path.hasSuffix(".systemextension") || path.hasSuffix(".xpc"))
     }

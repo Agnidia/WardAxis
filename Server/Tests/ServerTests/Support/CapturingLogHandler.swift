@@ -13,7 +13,7 @@ struct CapturedLogRecord: Sendable {
     let level: Logger.Level
     let message: String
     let metadata: Logger.Metadata
-
+    
     /// The message and every metadata key and value, for "never appears" assertions.
     var renderedText: String {
         let pairs = metadata.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
@@ -24,15 +24,15 @@ struct CapturedLogRecord: Sendable {
 /// Thread-safe store shared by every copy of a ``CapturingLogHandler``.
 final class LogCapture: Sendable {
     private let storage: NIOLockedValueBox<[CapturedLogRecord]> = NIOLockedValueBox([])
-
+    
     var records: [CapturedLogRecord] {
         storage.withLockedValue { $0 }
     }
-
+    
     func append(_ record: CapturedLogRecord) {
         storage.withLockedValue { $0.append(record) }
     }
-
+    
     /// A logger that writes here. Injected directly, so tests never touch
     /// the process-wide `LoggingSystem.bootstrap`.
     func makeLogger(label: String = "test", level: Logger.Level = .trace) -> Logger {
@@ -47,12 +47,12 @@ struct CapturingLogHandler: LogHandler {
     let capture: LogCapture
     var metadata: Logger.Metadata = [:]
     var logLevel: Logger.Level = .trace
-
+    
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { metadata[key] }
         set { metadata[key] = newValue }
     }
-
+    
     func log(event: LogEvent) {
         let merged = metadata.merging(event.metadata ?? [:]) { _, callSite in callSite }
         capture.append(CapturedLogRecord(level: event.level, message: event.message.description, metadata: merged))

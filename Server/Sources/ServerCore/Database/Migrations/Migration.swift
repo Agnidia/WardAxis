@@ -16,7 +16,7 @@ package struct Migration: Sendable, Equatable {
     /// Recorded in `schema_migrations`; a later rename is reported as drift.
     package let name: String
     package let statements: [String]
-
+    
     package init(version: Int, name: String, statements: [String]) {
         self.version = version
         self.name = name
@@ -28,7 +28,7 @@ package struct Migration: Sendable, Equatable {
 package struct AppliedMigration: Sendable, Equatable {
     package let version: Int
     package let name: String
-
+    
     package init(version: Int, name: String) {
         self.version = version
         self.name = name

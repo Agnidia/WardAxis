@@ -46,7 +46,7 @@ package func buildRouter(
     router.add(middleware: ErrorHandlingMiddleware())
     // The limit runs before routing and matches the raw request path, prefix included.
     router.add(middleware: RequestBodyLimitMiddleware())
-
+    
     let api = router.group(RouterPath(basePath))
     HealthController(probe: dependencies.databaseProbe).addRoutes(to: api)
     if clientCertificates == .required {

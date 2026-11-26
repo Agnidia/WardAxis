@@ -13,67 +13,67 @@ import WardAxisManagement
 /// ``Connection`` that a test drives by hand. Never touches the network.
 public final class ScriptedStreamTransport: ConfigurationStreamTransport {
     public init() {}
-
+    
     /// One opened connection: the request it was opened with, and the server side.
     public final class Connection: Sendable {
         public let request: URLRequest
         private let continuation: AsyncStream<ConfigurationStreamEvent>.Continuation
         private let termination = Signal()
-
+        
         fileprivate init(request: URLRequest, continuation: AsyncStream<ConfigurationStreamEvent>.Continuation) {
             self.request = request
             self.continuation = continuation
         }
-
+        
         /// `true` once the client side has ended the stream or the server closed it.
         public var isTerminated: Bool {
             termination.isRaised
         }
-
+        
         public func send(_ event: ConfigurationStreamEvent) {
             continuation.yield(event)
         }
-
+        
         /// Sends one text frame.
         public func send(frame json: String) {
             continuation.yield(.message(Data(json.utf8)))
         }
-
+        
         /// Ends the connection from the server side.
         public func close(_ reason: ConfigurationStreamClose) {
             continuation.yield(.closed(reason))
             continuation.finish()
         }
-
+        
         public func close(code: Int) {
             close(.closeCode(code))
         }
-
+        
         /// Returns once the stream has ended.
         public func terminated() async {
             await termination.wait()
         }
-
+        
         fileprivate func markTerminated() {
             termination.raise()
         }
     }
-
+    
     private struct State {
         var connections: [Connection] = []
         var waiters: [(count: Int, continuation: CheckedContinuation<Connection, Never>)] = []
     }
-
+    
     private let state = Mutex(State())
-
+    
     public var openCount: Int {
         state.withLock { $0.connections.count }
     }
-
+    
     public var connections: [Connection] {
         state.withLock { $0.connections }
     }
-
+    
     /// The `number`-th connection (1-based), once it has been opened.
     public func connection(_ number: Int) async -> Connection {
         await withCheckedContinuation { continuation in
@@ -89,7 +89,7 @@ public final class ScriptedStreamTransport: ConfigurationStreamTransport {
             }
         }
     }
-
+    
     public func open(_ request: URLRequest, identity _: ClientIdentity) -> AsyncStream<ConfigurationStreamEvent> {
         let (stream, continuation) = AsyncStream.makeStream(of: ConfigurationStreamEvent.self, bufferingPolicy: .unbounded)
         let connection = Connection(request: request, continuation: continuation)
@@ -114,13 +114,13 @@ private final class Signal: Sendable {
         var isRaised = false
         var waiters: [CheckedContinuation<Void, Never>] = []
     }
-
+    
     private let state = Mutex(State())
-
+    
     var isRaised: Bool {
         state.withLock { $0.isRaised }
     }
-
+    
     func raise() {
         let waiters = state.withLock { state in
             state.isRaised = true
@@ -129,7 +129,7 @@ private final class Signal: Sendable {
         }
         waiters.forEach { $0.resume() }
     }
-
+    
     func wait() async {
         await withCheckedContinuation { continuation in
             let passes = state.withLock { state in

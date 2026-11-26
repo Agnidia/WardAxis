@@ -19,17 +19,17 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
     static let directoryName = "Configuration"
     static let fileName = "configuration.json"
     static let schemaVersion = 1
-
+    
     let directory: URL
     let fileURL: URL
     private let logger = Log(category: .cache)
-
+    
     /// - Parameter directory: Tests pass a throwaway directory.
     public init(directory: URL) {
         self.directory = directory
         fileURL = directory.appending(path: Self.fileName, directoryHint: .notDirectory)
     }
-
+    
     /// The cache for the main bundle: `<Application Support>/<bundle identifier>/Configuration`,
     /// or under Caches on tvOS, which gives an app no other local storage.
     public static func live() -> any ConfigurationCacheProtocol {
@@ -40,7 +40,7 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
 #endif
         return live(in: base, bundleIdentifier: Bundle.main.bundleIdentifier)
     }
-
+    
     /// The cache under `base/<bundleIdentifier>`. Without App Sandbox `base` is
     /// shared by every app of the user, so a missing or unsafe identifier gets
     /// ``NoConfigurationCache`` rather than a shared fallback folder.
@@ -52,16 +52,16 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
             .appending(path: directoryName, directoryHint: .isDirectory)
         return Self(directory: directory)
     }
-
+    
     /// Letters, digits, hyphen and period, with at least one letter or digit, so
     /// the identifier can be neither a separator nor `.` or `..`.
     private static func isSinglePathComponent(_ identifier: String) -> Bool {
         identifier.contains { $0.isLetter || $0.isNumber }
             && identifier.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == ".") }
     }
-
+    
     // MARK: - ConfigurationCacheProtocol
-
+    
     @concurrent
     public func load() async -> ManagedConfiguration? {
         let data: Data
@@ -88,7 +88,7 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
         }
         return ManagedConfiguration(version: file.version, values: file.values)
     }
-
+    
     @concurrent
     public func save(_ configuration: ManagedConfiguration) async throws {
         let file = CacheFile(schema: Self.schemaVersion, version: configuration.version, values: configuration.values)
@@ -100,12 +100,12 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
         try excludedDirectory.setResourceValues(resourceValues)
         try data.write(to: fileURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
-
+    
     @concurrent
     public func delete() async throws {
         try removeFile()
     }
-
+    
     private func removeFile() throws {
         do {
             try FileManager.default.removeItem(at: fileURL)
@@ -113,7 +113,7 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
             return
         }
     }
-
+    
     private static func isMissingFile(_ error: any Error) -> Bool {
         let error = error as NSError
         switch (error.domain, error.code) {
@@ -123,7 +123,7 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
             return false
         }
     }
-
+    
     /// The error domain and code only: a file error's description holds the
     /// container path, which names the user on macOS.
     static func logName(of error: any Error) -> String {

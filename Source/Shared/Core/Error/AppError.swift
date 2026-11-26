@@ -23,19 +23,19 @@ import Foundation
 enum AppError: Error, Sendable {
     /// The device cannot reach the network.
     case networkUnavailable
-
+    
     /// The server did not accept this device's identity.
     case unauthorized
-
+    
     /// The server rejected the request as malformed or invalid.
     case invalidRequest
-
+    
     /// Too many requests. `retryAfter` is the server's suggested wait in seconds, if it sent one.
     case rateLimited(retryAfter: Int?)
-
+    
     /// The server failed, answered outside its contract, or is not configured.
     case serverError
-
+    
     /// An unexpected error from a lower layer. Kept for logging at the catch site;
     /// never shown to the user.
     case unknown(any Error)

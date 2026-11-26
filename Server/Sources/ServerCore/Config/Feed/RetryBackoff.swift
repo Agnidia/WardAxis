@@ -9,14 +9,14 @@
 package struct RetryBackoff: Sendable, Equatable {
     package var initial: Duration
     package var maximum: Duration
-
+    
     package static let standard: RetryBackoff = .init(initial: .milliseconds(250), maximum: .seconds(30))
-
+    
     package init(initial: Duration, maximum: Duration) {
         self.initial = initial
         self.maximum = maximum
     }
-
+    
     /// The wait before retry `attempt` (1-based): between half and all of
     /// `min(maximum, initial × 2^(attempt − 1))`. The random half spreads the retries of
     /// many server instances after a shared database restart.

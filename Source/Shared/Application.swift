@@ -15,7 +15,7 @@ struct Application: App {
     
     /// Dependency-injection container holding all long-lived services.
     @State private var container: AppContainer
-
+    
     /// Aggregate over every scene: background only when no scene is in the foreground.
     @Environment(\.scenePhase) private var scenePhase
     

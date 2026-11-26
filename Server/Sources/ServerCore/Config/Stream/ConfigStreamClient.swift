@@ -14,16 +14,16 @@
 /// that client's private key.
 package struct ConfigStreamClient: Hashable, Sendable, CustomStringConvertible, CustomReflectable {
     private let certificateDER: [UInt8]
-
+    
     package init(certificateDER: [UInt8]) {
         self.certificateDER = certificateDER
     }
-
+    
     /// Never prints the certificate, so the key cannot reach a log line.
     package var description: String {
         "ConfigStreamClient(redacted)"
     }
-
+    
     /// No children, so `dump` and debugger output cannot print the certificate either.
     package var customMirror: Mirror {
         Mirror(self, children: [])

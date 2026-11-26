@@ -16,12 +16,12 @@ package struct APIDocs: Sendable {
     package let openAPIDocument: ByteBuffer
     /// The vendored Redoc bundle at ``DocsController/redocVersion``.
     package let redocScript: ByteBuffer
-
+    
     package init(openAPIDocument: ByteBuffer, redocScript: ByteBuffer) {
         self.openAPIDocument = openAPIDocument
         self.redocScript = redocScript
     }
-
+    
     /// The embedded contract and the script from the `ServerCore` resource bundle.
     ///
     /// Traps when the script is missing: that is a packaging defect, the same failure

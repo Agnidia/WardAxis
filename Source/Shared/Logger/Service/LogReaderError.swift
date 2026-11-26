@@ -12,13 +12,13 @@ import Foundation
 enum LogReaderError: Error, Equatable, Sendable {
     /// The log file does not exist at the expected URL (fresh install).
     case fileMissing(URL)
-
+    
     /// Sandbox / file-protection denied access.
     case permissionDenied(URL)
-
+    
     /// Disk read failed for reasons other than missing/denied.
     case readFailed(underlying: String)
-
+    
     /// Export write to the temporary directory failed.
     case writeFailed(underlying: String)
 }

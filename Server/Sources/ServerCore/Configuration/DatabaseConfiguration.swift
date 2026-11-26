@@ -25,7 +25,7 @@ package enum DatabaseTLSMode: String, Sendable, Equatable {
 /// `PostgresClientFactory` is the only place that maps it to a driver configuration.
 package struct DatabaseConfiguration: Sendable, Equatable {
     package static let defaultPort: Int = 5432
-
+    
     package let host: String
     package let port: Int
     package let username: String
@@ -33,7 +33,7 @@ package struct DatabaseConfiguration: Sendable, Equatable {
     package let password: Redacted<String>?
     package let database: String
     package let tls: DatabaseTLSMode
-
+    
     /// Parses a URL of the form `postgres://user:password@host:port/database?sslmode=mode`.
     ///
     /// - Parameters:
@@ -61,7 +61,7 @@ package struct DatabaseConfiguration: Sendable, Equatable {
         guard !database.isEmpty, !database.contains("/") else {
             throw .invalid(variable: variable, reason: "must name exactly one database in its path")
         }
-
+        
         let sslMode = components.queryItems?.last { $0.name == "sslmode" }?.value
         let tls: DatabaseTLSMode
         if let sslMode {
@@ -73,7 +73,7 @@ package struct DatabaseConfiguration: Sendable, Equatable {
             // Fail closed: a missing sslmode must not allow a plain-text downgrade.
             tls = .require
         }
-
+        
         self.host = host
         self.port = port
         self.username = username

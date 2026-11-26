@@ -11,7 +11,7 @@ import Foundation
 enum ConfigurationStreamRequest {
     /// Relative to ``APIConfiguration/baseURL``, which already carries the contract prefix.
     static let path = "config/stream"
-
+    
     /// The upgrade request, or `nil` when no connection may be attempted.
     ///
     /// Only `https` (sent as `wss`) is accepted, for every host and build: the

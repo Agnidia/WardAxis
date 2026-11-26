@@ -75,11 +75,11 @@ extension Migration {
                     INTO removed_keys
                     FROM old_rows AS o;
                 END IF;
-            
+                
                 IF changed_values = '{}'::jsonb AND cardinality(removed_keys) = 0 THEN
                     RETURN NULL;
                 END IF;
-            
+                
                 UPDATE config_version SET version = version + 1 WHERE singleton
                 RETURNING version INTO next_version;
                 INSERT INTO config_changes (version, changed, removed)

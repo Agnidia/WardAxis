@@ -26,10 +26,10 @@ import NIOWebSocket
 /// silent client holds the shutdown for the full `timeout`.
 struct FirstRequestDeadlineChannel: ServerChildChannel {
     typealias Value = HTTP1WebSocketUpgradeChannel.Value
-
+    
     let base: HTTP1WebSocketUpgradeChannel
     let timeout: TimeAmount
-
+    
     func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         let deadline = channel.eventLoop.scheduleTask(in: timeout) {
             guard !Self.hasNegotiated(channel) else { return }
@@ -46,11 +46,11 @@ struct FirstRequestDeadlineChannel: ServerChildChannel {
         }
         return base.setup(channel: channel, logger: logger)
     }
-
+    
     func handle(value: Value, logger: Logger) async {
         await base.handle(value: value, logger: logger)
     }
-
+    
     /// Whether the pipeline holds the HTTP/1 connection handler or the WebSocket frame
     /// encoder. The upgrade channel adds the first when it serves plain HTTP and the
     /// second when it upgrades. A pipeline with neither is still waiting for the first
@@ -72,13 +72,13 @@ struct FirstRequestDeadlineChannel: ServerChildChannel {
 /// shutdown.
 private final class CloseUnnegotiatedOnShutdownHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = NIOAny
-
+    
     private let logger: Logger
-
+    
     init(logger: Logger) {
         self.logger = logger
     }
-
+    
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         guard event is ChannelShouldQuiesceEvent, !FirstRequestDeadlineChannel.hasNegotiated(context.channel) else {
             context.fireUserInboundEventTriggered(event)

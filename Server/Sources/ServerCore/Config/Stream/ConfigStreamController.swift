@@ -20,11 +20,11 @@ import HummingbirdWebSocket
 /// when the listener requires client certificates.
 package struct ConfigStreamController {
     private let dependencies: ServerDependencies
-
+    
     package init(dependencies: ServerDependencies) {
         self.dependencies = dependencies
     }
-
+    
     package func addRoutes(to group: RouterGroup<AppRequestContext>) {
         let dependencies = dependencies
         group.group("config/stream")

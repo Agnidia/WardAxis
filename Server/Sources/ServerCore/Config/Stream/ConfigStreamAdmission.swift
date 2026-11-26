@@ -20,9 +20,9 @@ import NIOSSL
 /// handshake.
 package struct ConfigStreamAdmissionMiddleware: RouterMiddleware {
     package typealias Context = AppRequestContext
-
+    
     package init() {}
-
+    
     package func handle(
         _ request: Request,
         context: Context,
@@ -43,7 +43,7 @@ package struct ConfigStreamAdmissionMiddleware: RouterMiddleware {
         context.configStreamClient = ConfigStreamClient(certificateDER: der)
         return try await next(request, context)
     }
-
+    
     /// Whether the request asks for the WebSocket protocol (`Upgrade: websocket`, any case).
     package static func requestsWebSocket(_ headers: HTTPFields) -> Bool {
         headers[values: .upgrade].contains { value in

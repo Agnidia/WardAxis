@@ -17,9 +17,9 @@ import Logging
 /// ``RequestIDMiddleware``, so each line carries `request.id`.
 package struct RequestLoggingMiddleware: RouterMiddleware {
     package typealias Context = AppRequestContext
-
+    
     package init() {}
-
+    
     package func handle(
         _ request: Request,
         context: Context,
@@ -36,7 +36,7 @@ package struct RequestLoggingMiddleware: RouterMiddleware {
             throw error
         }
     }
-
+    
     private func log(_ request: Request, context: Context, status: HTTPResponse.Status, since start: ContinuousClock.Instant) {
         let elapsed = start.duration(to: .now).components
         let milliseconds = Double(elapsed.seconds) * 1000 + Double(elapsed.attoseconds) / 1e15
