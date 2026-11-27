@@ -101,6 +101,14 @@ public enum FieldRules {
     /// leading zero (0–32 or 0–128). Every bit after the prefix must be zero, so
     /// `192.0.2.1/24` is refused and one network has one spelling.
     public static func isCanonicalNetwork(_ value: String) -> Bool {
+        canonicalNetwork(value) != nil
+    }
+    
+    /// The address bytes (4 for IPv4, 16 for IPv6) and prefix length of a
+    /// network that passes ``isCanonicalNetwork(_:)``; `nil` for any other
+    /// string. Validation and matching share this one parse, so a matcher
+    /// never reads a network that validation would refuse.
+    public static func canonicalNetwork(_ value: String) -> (bytes: [UInt8], prefixLength: Int)? {
         let parts = value.split(separator: "/", omittingEmptySubsequences: false)
         guard parts.count == 2,
               (1...3).contains(parts[1].utf8.count),
@@ -108,21 +116,33 @@ public enum FieldRules {
               parts[1].utf8.count == 1 || parts[1].utf8.first != UInt8(ascii: "0"),
               let prefix = Int(parts[1])
         else {
-            return false
+            return nil
         }
         let address = String(parts[0])
+        let bytes: [UInt8]
+        let width: Int
         if isCanonicalIPv4(address) {
-            let octets = address.split(separator: ".").compactMap { UInt8($0) }
-            return prefix <= 32 && hostBitsAreZero(octets, prefix: prefix)
+            bytes = address.split(separator: ".").compactMap { UInt8($0) }
+            width = 32
+        } else if isCanonicalIPv6(address), let groups = ipv6Groups(address) {
+            bytes = groups.flatMap { [UInt8($0 >> 8), UInt8($0 & 0xFF)] }
+            width = 128
+        } else {
+            return nil
         }
-        guard isCanonicalIPv6(address), let groups = ipv6Groups(address) else {
-            return false
+        guard prefix <= width, hostBitsAreZero(bytes, prefix: prefix), !isIPv4MappedNetwork(bytes, prefix: prefix) else {
+            return nil
         }
-        let bytes = groups.flatMap { [UInt8($0 >> 8), UInt8($0 & 0xFF)] }
-        return prefix <= 128 && hostBitsAreZero(bytes, prefix: prefix)
+        return (bytes, prefix)
     }
     
     // MARK: - Private
+    
+    /// A network inside `::ffff:0:0/96` names IPv4 destinations, but a plain
+    /// IPv4 flow never meets an IPv6 rule. It must be written as IPv4 (ADR 0018 D1).
+    private static func isIPv4MappedNetwork(_ bytes: [UInt8], prefix: Int) -> Bool {
+        bytes.count == 16 && prefix >= 96 && bytes[..<10].allSatisfy { $0 == 0 } && bytes[10] == 0xFF && bytes[11] == 0xFF
+    }
     
     private static func hostBitsAreZero(_ bytes: [UInt8], prefix: Int) -> Bool {
         for (index, byte) in bytes.enumerated() {

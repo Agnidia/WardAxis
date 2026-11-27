@@ -4,6 +4,8 @@
 
 Accepted on 2026-11-27 (NET-007, #13).
 
+Amended on 2026-11-27 (NET-010, #16): D4 also refuses an IPv6 network inside `::ffff:0:0/96` in its hex spelling. See [D4](#d4-one-spelling-per-network-t3) and [ADR 0018](0018-cidr-network-matching.md) D1.
+
 ## Context
 
 PRE-009 ([ADR 0011](0011-versioned-schemas.md)) put a first `SecurityPolicy` in `WardAxisCore`. Its rules run in array order, the first match wins, and a rule names only an application and destination hosts. The policy engine (NET-008 to NET-015) needs explicit priority, an enabled flag, an audit mode, networks, transport and ports. It must also live in its own pure package.
@@ -62,9 +64,9 @@ A higher `priority` wins. Equal priorities fall to the more specific rule, then 
 
 ### D4: One spelling per network (T3)
 
-A network is `<address>/<prefix>`. The address is a canonical IPv4 or IPv6 literal (ADR 0011 D3). The prefix is a decimal number with no leading zero, `0–32` or `0–128`. Every bit after the prefix is zero. A zone (`%en0`) or an embedded IPv4 tail (`::ffff:192.0.2.0`) is refused. The refusal reason is `malformedNetwork`.
+A network is `<address>/<prefix>`. The address is a canonical IPv4 or IPv6 literal (ADR 0011 D3). The prefix is a decimal number with no leading zero, `0–32` or `0–128`. Every bit after the prefix is zero. A zone (`%en0`), an embedded IPv4 tail (`::ffff:192.0.2.0`) and, since [ADR 0018](0018-cidr-network-matching.md) D1, any IPv6 network inside `::ffff:0:0/96` are refused. The refusal reason is `malformedNetwork`.
 
-Networks stay strings in the model, and `validate()` checks them. A refusal therefore reports a schema path (ADR 0011 D5). NET-010 parses them into a typed form for matching.
+Networks stay strings in the model, and `validate()` checks them. A refusal therefore reports a schema path (ADR 0011 D5). NET-010 parses them into a typed form for matching ([ADR 0018](0018-cidr-network-matching.md) D1).
 
 ### D5: Version 1 is redefined before release
 
@@ -74,7 +76,7 @@ No build has shipped, so this change redefines the body of `schemaVersion` 1 in 
 
 - **Keep the models in `WardAxisCore` and add `WardAxisPolicy` with the engine.** A smaller change. The issue and the roadmap name the package, and the engine would split one domain over two packages. Rejected.
 - **Ordered rules, first match wins.** Simple, and the earlier model did it. Ordering survives no merge of two policies, and the roadmap requires explicit priority (T2). Rejected.
-- **Typed `IPNetwork` decoded from a string.** Matching code gets a parsed value. A parse failure would then surface as `wrongShape` and lose the violation reason. The parse also belongs to NET-010. Rejected for now; NET-010 parses validated strings.
+- **Typed `IPNetwork` decoded from a string.** Matching code gets a parsed value. A parse failure would then surface as `wrongShape` and lose the violation reason. The parse also belongs to NET-010. Rejected for now; NET-010 parses validated strings ([ADR 0018](0018-cidr-network-matching.md)).
 - **Bump the policy to schema version 2.** The rule of ADR 0011 for a shipped schema. Nothing has shipped, so a v1 reader to keep compatible does not exist. Rejected (D5).
 - **Optional `enabled` and `priority` with defaults.** Shorter documents. A default is a value that the issuer did not write, so two writers can disagree about it (T1). Rejected.
 

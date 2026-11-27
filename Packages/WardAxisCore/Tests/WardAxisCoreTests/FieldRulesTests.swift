@@ -72,9 +72,24 @@ struct FieldRulesTests {
     @Test(arguments: [
         "", "192.0.2.0", "/24", "192.0.2.0/", "192.0.2.0/24/8", "192.0.2.1/24", "192.0.2.0/33", "192.0.2.0/024", "192.0.2.0/-1",
         "192.0.2.0/+8", "192.0.2.0/ 24", "192.000.2.0/24", "0x7f.0.0.0/8", "127.1/8", "2001:DB8::/32", "2001:0db8::/32",
-        "2001:db8::1/32", "2001:db8::/129", "fe80::%en0/64", "::ffff:192.0.2.0/120", "example.com/24", "2001:db8::/0032"
+        "2001:db8::1/32", "2001:db8::/129", "fe80::%en0/64", "::ffff:192.0.2.0/120", "::ffff:c000:200/120", "::ffff:0:0/96",
+        "::ffff:c000:201/128", "example.com/24", "2001:db8::/0032"
     ])
     func `Any other network spelling is refused`(network: String) {
         #expect(!FieldRules.isCanonicalNetwork(network))
+        #expect(FieldRules.canonicalNetwork(network) == nil)
+    }
+    
+    @Test
+    func `A canonical network parses to its address bytes and prefix length`() throws {
+        let ipv4 = try #require(FieldRules.canonicalNetwork("192.0.2.0/24"))
+        #expect(ipv4.bytes == [192, 0, 2, 0])
+        #expect(ipv4.prefixLength == 24)
+        let ipv6 = try #require(FieldRules.canonicalNetwork("2001:db8::/32"))
+        #expect(ipv6.bytes == [0x20, 0x01, 0x0D, 0xB8] + Array(repeating: 0, count: 12))
+        #expect(ipv6.prefixLength == 32)
+        let any = try #require(FieldRules.canonicalNetwork("::/0"))
+        #expect(any.bytes == Array(repeating: 0, count: 16))
+        #expect(any.prefixLength == 0)
     }
 }
