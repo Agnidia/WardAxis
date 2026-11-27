@@ -54,7 +54,7 @@ package struct DatabaseConfiguration: Sendable, Equatable {
             throw .invalid(variable: variable, reason: "must include a user name")
         }
         let port = components.port ?? Self.defaultPort
-        guard (1...65_535).contains(port) else {
+        guard AppConfiguration.validPorts.contains(port) else {
             throw .invalid(variable: variable, reason: "must use a port between 1 and 65535")
         }
         let database = String(components.path.drop { $0 == "/" })

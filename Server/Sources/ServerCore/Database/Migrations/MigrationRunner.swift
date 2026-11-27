@@ -97,7 +97,7 @@ package struct MigrationRunner: Sendable {
         } catch {
             // An unlock failure almost always means the connection is gone, and a
             // closed session frees its advisory locks.
-            logger.warning("Could not release the migration lock", metadata: ["error.type": "\(type(of: error))"])
+            logger.warning("Could not release the migration lock", metadata: .errorType(error))
         }
     }
 }

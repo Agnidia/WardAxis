@@ -92,7 +92,7 @@ struct ConfigStreamSession {
         do {
             snapshot = try await store.snapshot()
         } catch {
-            logger.error("Config stream cannot read the snapshot", metadata: ["error.type": "\(type(of: error))"])
+            logger.error("Config stream cannot read the snapshot", metadata: .errorType(error))
             await close(outbound, code: .unexpectedServerError, reason: nil, cause: "store_error")
             return
         }
@@ -103,7 +103,7 @@ struct ConfigStreamSession {
             await close(outbound, code: .unexpectedServerError, reason: nil, cause: "frame_out_of_bounds")
             return
         } catch {
-            logger.debug("Config stream ended before the snapshot was sent", metadata: ["error.type": "\(type(of: error))"])
+            logger.debug("Config stream ended before the snapshot was sent", metadata: .errorType(error))
             return
         }
         
@@ -215,7 +215,7 @@ struct ConfigStreamSession {
             await close(outbound, code: .unexpectedServerError, reason: nil, cause: "frame_out_of_bounds")
             return .serverClosed
         } catch {
-            logger.debug("Config stream write failed", metadata: ["error.type": "\(type(of: error))"])
+            logger.debug("Config stream write failed", metadata: .errorType(error))
             return .writeFailed
         }
         return .idle
@@ -232,7 +232,7 @@ struct ConfigStreamSession {
             do {
                 changes = try await store.changes(after: currentVersion, limit: policy.catchUpBatchSize)
             } catch {
-                logger.error("Config stream cannot read changes", metadata: ["error.type": "\(type(of: error))"])
+                logger.error("Config stream cannot read changes", metadata: .errorType(error))
                 return nil
             }
             guard !changes.isEmpty else { return nil }
@@ -265,7 +265,7 @@ struct ConfigStreamSession {
         do {
             for try await _ in inbound {}
         } catch {
-            logger.debug("Config stream inbound ended with an error", metadata: ["error.type": "\(type(of: error))"])
+            logger.debug("Config stream inbound ended with an error", metadata: .errorType(error))
         }
     }
     
@@ -285,7 +285,7 @@ struct ConfigStreamSession {
         do {
             try await outbound.close(code, reason: reason)
         } catch {
-            logger.debug("Config stream close frame not sent", metadata: ["error.type": "\(type(of: error))"])
+            logger.debug("Config stream close frame not sent", metadata: .errorType(error))
         }
     }
 }

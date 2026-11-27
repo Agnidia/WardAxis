@@ -21,6 +21,7 @@ import plistlib
 import subprocess
 import sys
 from pathlib import Path
+from typing import NoReturn
 
 NESTED_SUFFIXES = (".app", ".appex", ".systemextension", ".xpc")
 
@@ -67,14 +68,14 @@ NE_ALLOWED: dict[str, dict[str, frozenset[str]]] = {
     },
 }
 
-# The exact set of nested bundles per platform (ADR 0005), keyed like NE_ALLOWED.
-# A missing shell means a provider the app configures is not in the package; an
-# extra one is code that no ADR reviewed.
 PRIVACY_MANIFEST = "PrivacyInfo.xcprivacy"
 # A real manifest is a few hundred bytes; the bound keeps a planted file from
 # making the parser read an unbounded input.
 PRIVACY_MANIFEST_MAX_BYTES = 64 * 1024
 
+# The exact set of nested bundles per platform (ADR 0005), keyed like NE_ALLOWED.
+# A missing shell means a provider the app configures is not in the package; an
+# extra one is code that no ADR reviewed.
 EXPECTED_NESTED: dict[str, frozenset[str]] = {
     "macos": frozenset({".agent", ".dnsproxy", ".mail", ".networkfilter", ".safari", ".transparentproxy", ".urlfilter"}),
     "ios": frozenset({".packettunnel", ".safari", ".urlfilter"}),
@@ -82,7 +83,7 @@ EXPECTED_NESTED: dict[str, frozenset[str]] = {
 }
 
 
-def fail(message: str) -> None:
+def fail(message: str) -> NoReturn:
     print(f"error: {message}", file=sys.stderr)
     sys.exit(1)
 
@@ -96,7 +97,6 @@ def resolve_app(path: Path) -> Path:
             fail(f"expected one app in {path}, found {len(apps)}")
         return apps[0]
     fail(f"not an .app or .xcarchive: {path}")
-    raise AssertionError("unreachable")
 
 
 def info_plist(bundle: Path) -> dict:
@@ -105,7 +105,6 @@ def info_plist(bundle: Path) -> dict:
             with candidate.open("rb") as handle:
                 return plistlib.load(handle)
     fail(f"no Info.plist in {bundle}")
-    raise AssertionError("unreachable")
 
 
 def codesign(arguments: list[str]) -> subprocess.CompletedProcess[bytes]:
@@ -152,7 +151,6 @@ def platform_of(app: Path) -> str:
         return "tvos"
     # The NE allowlist differs per platform; guessing would check the wrong one.
     fail(f"unknown platform {platforms!r} in {app.name}")
-    raise AssertionError("unreachable")
 
 
 def check_network_extension(name: str, values: dict, bundle_id: str, root_id: str, platform: str) -> list[str]:

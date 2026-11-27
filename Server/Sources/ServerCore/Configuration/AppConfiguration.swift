@@ -27,6 +27,8 @@ package struct AppConfiguration: Sendable {
     
     package static let defaultHost: String = "0.0.0.0"
     package static let defaultPort: Int = 8080
+    /// TCP ports a listener or a database URL may name.
+    package static let validPorts: ClosedRange<Int> = 1...65_535
     package static let defaultLogLevel: Logger.Level = .info
     package static let defaultServerEnvironment: ServerEnvironment = .production
     
@@ -57,7 +59,7 @@ package struct AppConfiguration: Sendable {
         host = value(Variable.host) ?? Self.defaultHost
         
         if let rawPort = value(Variable.port) {
-            guard let parsed = Int(rawPort), (1...65_535).contains(parsed) else {
+            guard let parsed = Int(rawPort), AppConfiguration.validPorts.contains(parsed) else {
                 throw .invalid(variable: Variable.port, reason: "must be an integer between 1 and 65535")
             }
             port = parsed
@@ -122,7 +124,7 @@ package struct AppConfiguration: Sendable {
             guard clientCAPath == nil else {
                 throw .invalid(
                     variable: Variable.tlsClientCAPath,
-                    reason: "needs TLS_CERTIFICATE_CHAIN_PATH and TLS_PRIVATE_KEY_PATH"
+                    reason: "needs \(Variable.tlsCertificateChainPath) and \(Variable.tlsPrivateKeyPath)"
                 )
             }
             guard self.environment == .development else {

@@ -8,6 +8,20 @@
 import XCTest
 
 final class LaunchUITests: XCTestCase {
+    /// The screen identifiers of `AccessibilityID.Screen`, which this target does not
+    /// compile; an independent copy, so a renamed identifier fails here.
+    private enum Screen {
+        static let home = "screen.home"
+        static let settings = "screen.settings"
+        static let help = "screen.help"
+    }
+    
+    /// `APP_URL_SCHEME` of the App Store build; the lab build's scheme differs.
+    private static let scheme = "wardaxis"
+    
+    /// Cold launch and a deep link both finish well inside this on a loaded runner.
+    private static let appearanceTimeout: TimeInterval = 10
+    
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
@@ -29,20 +43,29 @@ final class LaunchUITests: XCTestCase {
     func testSettingsDeepLinkOnColdLaunch() throws {
         let app = XCUIApplication()
         app.terminate()
-        try open(XCTUnwrap(URL(string: "wardaxis://settings")), in: app)
-        XCTAssertTrue(app.descendants(matching: .any)["screen.settings"].firstMatch.waitForExistence(timeout: 10))
+        try open(link("settings"), in: app)
+        XCTAssertTrue(screen(Screen.settings, in: app).waitForExistence(timeout: Self.appearanceTimeout))
     }
     
     @MainActor
     func testHelpDeepLinkOnWarmLaunch() throws {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.descendants(matching: .any)["screen.home"].firstMatch.waitForExistence(timeout: 10))
-        try open(XCTUnwrap(URL(string: "wardaxis://help")), in: app)
-        XCTAssertTrue(app.descendants(matching: .any)["screen.help"].firstMatch.waitForExistence(timeout: 10))
-        try open(XCTUnwrap(URL(string: "wardaxis://home")), in: app)
-        XCTAssertTrue(app.descendants(matching: .any)["screen.home"].firstMatch.waitForExistence(timeout: 10))
-        XCTAssertFalse(app.descendants(matching: .any)["screen.help"].firstMatch.exists)
+        XCTAssertTrue(screen(Screen.home, in: app).waitForExistence(timeout: Self.appearanceTimeout))
+        try open(link("help"), in: app)
+        XCTAssertTrue(screen(Screen.help, in: app).waitForExistence(timeout: Self.appearanceTimeout))
+        try open(link("home"), in: app)
+        XCTAssertTrue(screen(Screen.home, in: app).waitForExistence(timeout: Self.appearanceTimeout))
+        XCTAssertFalse(screen(Screen.help, in: app).exists)
+    }
+    
+    private func link(_ host: String) throws -> URL {
+        try XCTUnwrap(URL(string: "\(Self.scheme)://\(host)"))
+    }
+    
+    @MainActor
+    private func screen(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any)[identifier].firstMatch
     }
     
     @MainActor

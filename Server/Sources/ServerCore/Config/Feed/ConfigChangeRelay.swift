@@ -92,9 +92,7 @@ package struct ConfigChangeRelay: Service {
                     "Config relay cannot read the configuration version; retrying",
                     metadata: ["error.type": "\(type(of: error))", "retry.attempt": "\(attempt)"]
                 )
-                do {
-                    try await Task.sleep(for: policy.retryBackoff.delay(forAttempt: attempt))
-                } catch {
+                guard await policy.retryBackoff.wait(beforeAttempt: attempt) else {
                     return nil
                 }
             }
@@ -112,7 +110,7 @@ package struct ConfigChangeRelay: Service {
                 changes = try await store.changes(after: lastVersion, limit: policy.catchUpBatchSize)
             } catch {
                 if !Task.isCancelled {
-                    logger.error("Config relay cannot read changes", metadata: ["error.type": "\(type(of: error))"])
+                    logger.error("Config relay cannot read changes", metadata: .errorType(error))
                 }
                 return lastVersion
             }
@@ -128,7 +126,7 @@ package struct ConfigChangeRelay: Service {
                 do {
                     try hub.publish(ConfigFrameEncoder.delta(change))
                 } catch {
-                    logger.error("Config relay cannot encode a change", metadata: ["error.type": "\(type(of: error))"])
+                    logger.error("Config relay cannot encode a change", metadata: .errorType(error))
                 }
                 lastVersion = change.version
             }

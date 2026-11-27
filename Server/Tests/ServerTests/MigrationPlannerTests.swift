@@ -109,4 +109,11 @@ struct MigrationPlannerTests {
         #expect(sql.contains("BEFORE TRUNCATE ON config_entries"))
         #expect(sql.contains("pg_notify('config_changes'"))
     }
+    
+    @Test
+    func `The configuration migration's trigger notifies the channel the listener listens on`() throws {
+        let migration = try #require(Migrations.all.first { $0.name == "create_configuration" })
+        let sql = migration.statements.joined(separator: "\n")
+        #expect(sql.contains("pg_notify('\(PostgresConfigChangeNotifier.channel)'"))
+    }
 }

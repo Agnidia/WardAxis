@@ -41,11 +41,6 @@ struct DocsRouteTests {
     ]
     
     /// Small stand-in bytes, so header tests do not depend on the 1 MB bundle.
-    private static let stubDocs = APIDocs(
-        openAPIDocument: ByteBuffer(string: "openapi: 3.1.0\n"),
-        redocScript: ByteBuffer(string: "/* redoc */")
-    )
-    
     private static func application(docs: APIDocs?, environment: ServerEnvironment = .development) async throws -> some ApplicationProtocol {
         var dependencies = ServerDependencies.testing(environment: environment)
         dependencies.apiDocs = docs
@@ -93,7 +88,7 @@ struct DocsRouteTests {
     
     @Test
     func `GET /v1/docs serves an HTML page that loads the spec and the script from this origin only`() async throws {
-        let application = try await Self.application(docs: Self.stubDocs)
+        let application = try await Self.application(docs: APIDocs.stub)
         try await application.test(.router) { client in
             let response = try await client.executeRequest(uri: "/v1/docs", method: .get, headers: [:], body: nil)
             #expect(response.status == .ok)
@@ -117,7 +112,7 @@ struct DocsRouteTests {
     
     @Test
     func `GET /v1/docs sends one strict Content-Security-Policy with no remote origin and no eval`() async throws {
-        let application = try await Self.application(docs: Self.stubDocs)
+        let application = try await Self.application(docs: APIDocs.stub)
         try await application.test(.router) { client in
             let response = try await client.executeRequest(uri: "/v1/docs", method: .get, headers: [:], body: nil)
             let policies = response.headers[values: .contentSecurityPolicy]
@@ -161,7 +156,7 @@ struct DocsRouteTests {
     
     @Test
     func `Only /docs carries the CSP; the document and the script do not need one`() async throws {
-        let application = try await Self.application(docs: Self.stubDocs)
+        let application = try await Self.application(docs: APIDocs.stub)
         try await application.test(.router) { client in
             for path in ["/v1/openapi.yaml", Self.scriptPath] {
                 let response = try await client.executeRequest(uri: path, method: .get, headers: [:], body: nil)
@@ -173,12 +168,6 @@ struct DocsRouteTests {
     
     // MARK: - Docs off
     
-    private struct ErrorBody: Decodable, Equatable {
-        let code: String
-        let message: String
-        let requestId: String?
-    }
-    
     @Test(arguments: docsPaths)
     func `With docs off, each docs path answers exactly like a path that was never registered`(path: String) async throws {
         try await Self.expectUnregistered(path, application: Self.application(docs: nil))
@@ -186,12 +175,12 @@ struct DocsRouteTests {
     
     @Test(arguments: docsPaths)
     func `In production, each docs path answers 404 even when the docs assets are set`(path: String) async throws {
-        try await Self.expectUnregistered(path, application: Self.application(docs: Self.stubDocs, environment: .production))
+        try await Self.expectUnregistered(path, application: Self.application(docs: APIDocs.stub, environment: .production))
     }
     
     @Test
     func `In development with the docs assets set, every docs path answers 200`() async throws {
-        let application = try await Self.application(docs: Self.stubDocs, environment: .development)
+        let application = try await Self.application(docs: APIDocs.stub, environment: .development)
         try await application.test(.router) { client in
             for path in Self.docsPaths {
                 let response = try await client.executeRequest(uri: path, method: .get, headers: [:], body: nil)
@@ -202,7 +191,7 @@ struct DocsRouteTests {
     
     @Test(arguments: unversionedDocsPaths)
     func `With docs on, each unversioned docs path answers 404`(path: String) async throws {
-        try await Self.expectUnregistered(path, application: Self.application(docs: Self.stubDocs))
+        try await Self.expectUnregistered(path, application: Self.application(docs: APIDocs.stub))
     }
     
     @Test
@@ -212,7 +201,7 @@ struct DocsRouteTests {
             databaseProbe: base.databaseProbe,
             configStore: base.configStore,
             configNotifier: base.configNotifier,
-            apiDocs: Self.stubDocs
+            apiDocs: APIDocs.stub
         )
         #expect(dependencies.environment == .production)
         let application = try Application(router: buildRouter(dependencies: dependencies))

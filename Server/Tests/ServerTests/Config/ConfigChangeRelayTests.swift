@@ -55,7 +55,7 @@ struct ConfigChangeRelayTests {
         let store = try InMemoryConfigStore(version: 5)
         try store.commit(changedJSON: #"{"a":1}"#)
         let notifier = ManualConfigChangeNotifier()
-        let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
+        let hub = ConfigConnectionHub.testing()
         let subscription = try #require(hub.register(client: .sample()))
         try await Self.withRelay(store: store, notifier: notifier, hub: hub, policy: Self.policy()) {
             try await waitUntil("the relay listens") { notifier.listenerCount == 1 }
@@ -70,7 +70,7 @@ struct ConfigChangeRelayTests {
     func `Without any notification the poll relays a change`() async throws {
         let store = try InMemoryConfigStore(version: 0)
         let notifier = ManualConfigChangeNotifier()
-        let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
+        let hub = ConfigConnectionHub.testing()
         let subscription = try #require(hub.register(client: .sample()))
         try await Self.withRelay(store: store, notifier: notifier, hub: hub, policy: Self.policy(pollInterval: .milliseconds(50))) {
             try await waitUntil("the relay listens") { notifier.listenerCount == 1 }
@@ -83,7 +83,7 @@ struct ConfigChangeRelayTests {
     func `A read error loses nothing: the next trigger relays from the same version`() async throws {
         let store = try InMemoryConfigStore(version: 0)
         let notifier = ManualConfigChangeNotifier()
-        let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
+        let hub = ConfigConnectionHub.testing()
         let subscription = try #require(hub.register(client: .sample()))
         try await Self.withRelay(store: store, notifier: notifier, hub: hub, policy: Self.policy()) {
             try await waitUntil("the relay listens") { notifier.listenerCount == 1 }
@@ -103,7 +103,7 @@ struct ConfigChangeRelayTests {
         let store = try InMemoryConfigStore(version: 3)
         store.setFailing(true)
         let notifier = ManualConfigChangeNotifier()
-        let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
+        let hub = ConfigConnectionHub.testing()
         try await Self.withRelay(store: store, notifier: notifier, hub: hub, policy: Self.policy()) {
             try await Task.sleep(for: .milliseconds(100))
             #expect(notifier.listenerCount == 0)
@@ -117,7 +117,7 @@ struct ConfigChangeRelayTests {
         let store = try InMemoryConfigStore(version: 3)
         store.setFailing(true)
         let notifier = ManualConfigChangeNotifier()
-        let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
+        let hub = ConfigConnectionHub.testing()
         try await Self.withRelay(store: store, notifier: notifier, hub: hub, policy: Self.policy()) {
             try await Task.sleep(for: .milliseconds(100))
             #expect(!hub.isRelayReady)
@@ -162,7 +162,7 @@ struct ConfigChangeRelayTests {
     func `A backlog larger than one batch is relayed completely, in order`() async throws {
         let store = try InMemoryConfigStore(version: 0)
         let notifier = ManualConfigChangeNotifier()
-        let hub = ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
+        let hub = ConfigConnectionHub.testing()
         let subscription = try #require(hub.register(client: .sample()))
         try await Self.withRelay(store: store, notifier: notifier, hub: hub, policy: Self.policy(batchSize: 2)) {
             try await waitUntil("the relay listens") { notifier.listenerCount == 1 }

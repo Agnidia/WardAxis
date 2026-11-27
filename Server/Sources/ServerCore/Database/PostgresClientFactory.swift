@@ -13,9 +13,8 @@ package enum PostgresClientFactory {
     /// Creates a client. It serves no query until its `run()` starts, which the
     /// application's service group does.
     package static func makeClient(configuration: DatabaseConfiguration, logger: Logger) -> PostgresClient {
-        // The NIOSSL client default still accepts TLS 1.0 and 1.1.
         var tlsConfiguration: TLSConfiguration = .makeClientConfiguration()
-        tlsConfiguration.minimumTLSVersion = .tlsv12
+        tlsConfiguration.minimumTLSVersion = ServerTLS.minimumVersion
         let tls: PostgresClient.Configuration.TLS = switch configuration.tls {
         case .disable:
             .disable

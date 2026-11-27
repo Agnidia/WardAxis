@@ -75,7 +75,7 @@ struct TLSListenerTests {
         let weakOnly = "AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA:AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA"
         try await TestCertificate.withFiles { certificate in
             try await Self.withTLSServer(certificate.files) { port in
-                var weak = certificate.clientConfiguration(minimum: .tlsv12, maximum: .tlsv12)
+                var weak = try certificate.clientConfiguration(minimum: .tlsv12, maximum: .tlsv12)
                 weak.cipherSuites = weakOnly
                 let rejected = weak
                 await #expect(throws: NIOSSLError.self) {
@@ -152,20 +152,16 @@ struct TLSListenerTests {
     }
 }
 
-/// A leaf certificate and key made for one test, in PEM files under a private directory,
-/// and the CA that signed the leaf.
+/// A server leaf in PEM files under a private directory, from ``TestServerFiles``, and
+/// the CA that signed it.
 private struct TestCertificate: Sendable {
-    struct FileNotCreated: Error {}
-    
     let directory: URL
     let files: TLSFiles
-    let authority: NIOSSLCertificate
+    let authority: TestAuthority
     
     /// A client that trusts only the test CA and checks the host name `localhost`.
-    func clientConfiguration(minimum: TLSVersion, maximum: TLSVersion) -> TLSConfiguration {
-        var configuration = TLSConfiguration.makeClientConfiguration()
-        configuration.trustRoots = .certificates([authority])
-        configuration.certificateVerification = .fullVerification
+    func clientConfiguration(minimum: TLSVersion, maximum: TLSVersion) throws -> TLSConfiguration {
+        var configuration = try TLSConfiguration.testClient(trusting: authority, identity: nil)
         configuration.minimumTLSVersion = minimum
         configuration.maximumTLSVersion = maximum
         return configuration
@@ -173,72 +169,10 @@ private struct TestCertificate: Sendable {
     
     /// Creates the files, runs `body`, then deletes the directory whatever `body` does.
     static func withFiles<Value>(_ body: (TestCertificate) async throws -> Value) async throws -> Value {
-        let fileManager = FileManager.default
-        let directory = fileManager.temporaryDirectory.appendingPathComponent("server-tls-\(UUID().uuidString)", isDirectory: true)
-        try fileManager.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
-        defer { try? fileManager.removeItem(at: directory) }
-        
-        let authorityKey = P256.Signing.PrivateKey()
-        let authority = try makeAuthority(key: authorityKey)
-        let leafKey = P256.Signing.PrivateKey()
-        let leafPEM = try makeLeaf(key: leafKey, authority: authority, authorityKey: authorityKey).serializeAsPEM().pemString
-        let chainURL = directory.appendingPathComponent("chain.pem")
-        let keyURL = directory.appendingPathComponent("key.pem")
-        try Data(leafPEM.utf8).write(to: chainURL)
-        guard fileManager.createFile(atPath: keyURL.path, contents: Data(leafKey.pemRepresentation.utf8), attributes: [.posixPermissions: 0o600]) else {
-            throw FileNotCreated()
+        let authority = try TestAuthority(name: "WardAxis test CA")
+        return try await TestServerFiles.with(serverAuthority: authority, clientCAs: nil) { files, directory in
+            try await body(TestCertificate(directory: directory, files: files, authority: authority))
         }
-        let certificate = try TestCertificate(
-            directory: directory,
-            files: TLSFiles(certificateChainPath: chainURL.path, privateKeyPath: keyURL.path),
-            authority: NIOSSLCertificate(bytes: Array(authority.serializeAsPEM().pemString.utf8), format: .pem)
-        )
-        return try await body(certificate)
-    }
-    
-    private static func makeAuthority(key: P256.Signing.PrivateKey) throws -> Certificate {
-        let name = try DistinguishedName {
-            CommonName("WardAxis test CA")
-        }
-        let now = Date()
-        return try Certificate(
-            version: .v3,
-            serialNumber: Certificate.SerialNumber(),
-            publicKey: Certificate.PublicKey(key.publicKey),
-            notValidBefore: now.addingTimeInterval(-3600),
-            notValidAfter: now.addingTimeInterval(3600),
-            issuer: name,
-            subject: name,
-            signatureAlgorithm: .ecdsaWithSHA256,
-            extensions: Certificate.Extensions {
-                Critical(BasicConstraints.isCertificateAuthority(maxPathLength: 0))
-                Critical(KeyUsage(keyCertSign: true))
-            },
-            issuerPrivateKey: Certificate.PrivateKey(key)
-        )
-    }
-    
-    private static func makeLeaf(key: P256.Signing.PrivateKey, authority: Certificate, authorityKey: P256.Signing.PrivateKey) throws -> Certificate {
-        let now = Date()
-        return try Certificate(
-            version: .v3,
-            serialNumber: Certificate.SerialNumber(),
-            publicKey: Certificate.PublicKey(key.publicKey),
-            notValidBefore: now.addingTimeInterval(-3600),
-            notValidAfter: now.addingTimeInterval(3600),
-            issuer: authority.subject,
-            subject: DistinguishedName {
-                CommonName("localhost")
-            },
-            signatureAlgorithm: .ecdsaWithSHA256,
-            extensions: Certificate.Extensions {
-                Critical(BasicConstraints.notCertificateAuthority)
-                SubjectAlternativeNames([.dnsName("localhost"), .ipAddress(ASN1OctetString(contentBytes: [127, 0, 0, 1]))])
-                Critical(KeyUsage(digitalSignature: true))
-                try ExtendedKeyUsage([.serverAuth])
-            },
-            issuerPrivateKey: Certificate.PrivateKey(authorityKey)
-        )
     }
 }
 

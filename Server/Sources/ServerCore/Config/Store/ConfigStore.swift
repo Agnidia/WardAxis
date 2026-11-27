@@ -46,6 +46,6 @@ package struct ConfigChange: Sendable, Equatable {
 
 /// A store whose data breaks the schema's guarantees.
 package enum ConfigStoreError: Error, Equatable, Sendable {
-    /// `config_version` has no row: migration 6 did not run, or the row was deleted.
+    /// `config_version` has no row: migration 0002 did not run, or the row was deleted.
     case missingVersion
 }
