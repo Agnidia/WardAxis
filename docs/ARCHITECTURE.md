@@ -279,7 +279,7 @@ Evidence: `ConfigurationServiceTests`, `ConfigurationWireTests`, `ConfigurationC
 
 ## Schemas
 
-The documents that cross a trust boundary are `SecurityEvent` and `ApplicationIdentity` in `WardAxisCore`, and `SecurityPolicy` in `WardAxisPolicy`. [ADR 0011](adr/0011-versioned-schemas.md) records the envelope and codec decisions; [ADR 0015](adr/0015-policy-schema.md) records the policy fields.
+The documents that cross a trust boundary are `SecurityEvent` and `ApplicationIdentity` in `WardAxisCore`, and `SecurityPolicy` in `WardAxisPolicy`. [ADR 0011](adr/0011-versioned-schemas.md) records the envelope and codec decisions; [ADR 0015](adr/0015-policy-schema.md) records the policy fields, and [ADR 0016](adr/0016-application-identity-matching.md) how a rule matches an application and the unknown-identity fallback.
 
 Trust boundary: every decode. A document comes from a peer that may be hostile (X5) or out of date.
 
@@ -297,13 +297,14 @@ Trust boundary: every decode. A document comes from a peer that may be hostile (
 | `SchemaLimits` | 64 KiB, depth 16, 256 events per batch |
 | `PolicyLimits` (`WardAxisPolicy`) | 256 rules; per rule 64 hosts, 64 networks, 32 port ranges; priority `0...10_000` |
 | `SecurityPolicy`, `PolicyRule`, `PolicyMatch` (`WardAxisPolicy`) | Required `mode` (`enforce`, `audit`), `defaultAction`, rule `priority` and `enabled`. A higher priority wins; array order has no meaning. A match names at least one criterion; networks are canonical CIDR |
-| `ApplicationMatcher` | Pins a Team ID or a platform binary; a signing identifier alone is refused |
+| `ApplicationMatcher` | Pins a Team ID or a platform binary; a signing identifier alone is refused. An optional bundle ID narrows the match |
+| `FlowApplication`, `ApplicationMatcher.evaluate(_:)`, `PolicyRule.applicationApplies(to:)` (`WardAxisPolicy`) | A flow's identity field by field, each known or unknown. Byte-exact match to `match`, `noMatch` or `unknown`; unknown identity applies a `deny` rule and never an `allow` rule ([ADR 0016](adr/0016-application-identity-matching.md)) |
 | `ProcessReference` | PID and PID version, so a reused PID resolves to nothing |
 | `SecurityEventSourceProtocol`, `ApplicationIdentityResolverProtocol`, `PolicySourceProtocol` (`WardAxisPolicy`) | The seams for real and synthetic sources |
 
 `WardAxisCoreSynthetic` holds `SyntheticEventSource` (seeded, `synthetic` provenance only) and `SyntheticIdentityResolver`. `WardAxisPolicyTestSupport` holds `FixturePolicySource`. Link both from tests and previews only.
 
-Evidence: `SchemaFixtureTests`, `SchemaBoundsTests`, `FieldRulesTests` and `SyntheticSourceTests` in `Packages/WardAxisCore/Tests/`; `PolicyFixtureTests` and `PolicyBoundsTests` in `Packages/WardAxisPolicy/Tests/`.
+Evidence: `SchemaFixtureTests`, `SchemaBoundsTests`, `FieldRulesTests`, `ApplicationMatcherTests` and `SyntheticSourceTests` in `Packages/WardAxisCore/Tests/`; `PolicyFixtureTests`, `PolicyBoundsTests` and `ApplicationMatchingTests` in `Packages/WardAxisPolicy/Tests/`.
 
 ---
 

@@ -43,7 +43,12 @@ struct PolicyFixtureTests {
         #expect(policy.rules.map(\.priority) == [100, 50, 900, 800])
         #expect(policy.rules.map(\.enabled) == [true, true, true, false])
         #expect(policy.rules[0].match == PolicyMatch(
-            application: ApplicationMatcher(signingIdentifier: "com.example.browser", teamIdentifier: "EXAMPLE001", isPlatformBinary: false),
+            application: ApplicationMatcher(
+                signingIdentifier: "com.example.browser",
+                teamIdentifier: "EXAMPLE001",
+                isPlatformBinary: false,
+                bundleIdentifier: "com.example.browser"
+            ),
             destinationHosts: ["example.com", "*.example.org"],
             transport: .tcp,
             destinationPorts: [PortRange(first: 443, last: 443), PortRange(first: 8000, last: 8099)]
@@ -148,6 +153,7 @@ struct PolicyFixtureTests {
     @Test(arguments: [
         ("policy-empty-match", SchemaViolation(path: "$.body.rules[0].match", reason: .missingRequired)),
         ("policy-unpinned-application", SchemaViolation(path: "$.body.rules[0].match.application.teamIdentifier", reason: .missingRequired)),
+        ("policy-malformed-bundle-identifier", SchemaViolation(path: "$.body.rules[0].match.application.bundleIdentifier", reason: .malformedIdentifier)),
         ("policy-duplicate-rule", SchemaViolation(path: "$.body.rules[1].identifier", reason: .duplicate)),
         ("policy-uppercase-host", SchemaViolation(path: "$.body.rules[0].match.destinationHosts[1]", reason: .malformedHost)),
         ("policy-tld-wildcard", SchemaViolation(path: "$.body.rules[0].match.destinationHosts[0]", reason: .malformedHost)),

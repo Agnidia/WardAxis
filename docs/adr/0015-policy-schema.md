@@ -48,7 +48,7 @@ Trust boundary: TB4 (device and management server) today. TB2 and TB10 use the s
 | `priority` | Required integer in `0...10_000` |
 | `enabled` | Required. A disabled rule never matches, but it is validated like every other rule |
 | `match` | Required. Names at least one criterion. An absent criterion matches anything; within a list, one element must match |
-| `match.application` | `ApplicationMatcher` (ADR 0011 D3) |
+| `match.application` | `ApplicationMatcher` (ADR 0011 D3), with an optional `bundleIdentifier` ([ADR 0016](0016-application-identity-matching.md) D1) |
 | `match.destinationHosts` | Host names or `*.` patterns (ADR 0011 D3), 1 to 64, no duplicates |
 | `match.destinationNetworks` | Canonical CIDR (D4), 1 to 64, no duplicates |
 | `match.transport` | `tcp` or `udp` |

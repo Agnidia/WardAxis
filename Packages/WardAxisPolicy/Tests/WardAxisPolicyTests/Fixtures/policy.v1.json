@@ -16,7 +16,8 @@
           "application": {
             "signingIdentifier": "com.example.browser",
             "teamIdentifier": "EXAMPLE001",
-            "isPlatformBinary": false
+            "isPlatformBinary": false,
+            "bundleIdentifier": "com.example.browser"
           },
           "destinationHosts": [
             "example.com",
