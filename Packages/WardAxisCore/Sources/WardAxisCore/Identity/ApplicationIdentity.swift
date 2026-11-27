@@ -67,22 +67,23 @@ public struct ApplicationIdentity: SchemaBody, Hashable {
 ///
 /// A signing identifier alone is chosen by the developer, so any team can
 /// claim any identifier. A matcher therefore pins the Team ID, or names an
-/// Apple platform binary.
+/// Apple platform binary. `WardAxisPolicy` evaluates a matcher against a flow
+/// (ADR 0016).
 public struct ApplicationMatcher: Sendable, Hashable, Codable {
     public let signingIdentifier: String
     public let teamIdentifier: String?
     public let isPlatformBinary: Bool
     
-    public init(signingIdentifier: String, teamIdentifier: String?, isPlatformBinary: Bool) {
+    /// An extra criterion that narrows the match; `nil` accepts any bundle. It
+    /// never replaces the Team ID pin, because a bundle ID is as claimable as a
+    /// signing identifier.
+    public let bundleIdentifier: String?
+    
+    public init(signingIdentifier: String, teamIdentifier: String?, isPlatformBinary: Bool, bundleIdentifier: String? = nil) {
         self.signingIdentifier = signingIdentifier
         self.teamIdentifier = teamIdentifier
         self.isPlatformBinary = isPlatformBinary
-    }
-    
-    public func matches(_ identity: ApplicationIdentity) -> Bool {
-        identity.signingIdentifier == signingIdentifier
-            && identity.teamIdentifier == teamIdentifier
-            && identity.isPlatformBinary == isPlatformBinary
+        self.bundleIdentifier = bundleIdentifier
     }
     
     /// Refuses a matcher that names a signing identifier alone, which any developer can claim (ADR 0011 D3).
@@ -101,6 +102,9 @@ public struct ApplicationMatcher: Sendable, Hashable, Codable {
             throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.teamIdentifier), reason: .missingRequired)
         case (.some, true):
             throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.teamIdentifier), reason: .contradictory)
+        }
+        if let bundleIdentifier, !FieldRules.isSigningIdentifier(bundleIdentifier) {
+            throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.bundleIdentifier), reason: .malformedIdentifier)
         }
     }
 }

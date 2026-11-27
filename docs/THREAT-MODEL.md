@@ -102,7 +102,7 @@ flowchart LR
 | TB7 | Mail and MailKit extension | Message content (X3) | MailKit sandbox; handler validates input | Planned: roadmap ADR-017 |
 | TB8 | Shipped build and lab build | The lab build | Disjoint bundle-ID root, groups and signing; `WARDAXIS_LAB` only in `Lab` | [ADR 0003](adr/0003-lab-build-signing.md), [ADR 0009](adr/0009-endpoint-security-lab-only.md) |
 | TB9 | Pull request and CI runner | PR code (X4) | `pull_request` trigger, read-only token, no secrets, pinned inputs, no cache | [ADR 0007](adr/0007-pull-request-ci.md) |
-| TB10 | Network flows and NE providers | Packets, flows, DNS queries and URLs (X1, X2) | Bounded parsing; no I/O on the synchronous decision path | Planned: roadmap ADR-002, ADR-012, ADR-019 |
+| TB10 | Network flows and NE providers | Packets, flows, DNS queries and URLs (X1, X2) | Bounded parsing; no I/O on the synchronous decision path; exact application identity match, unknown identity fails closed by action | [ADR 0016](adr/0016-application-identity-matching.md); planned: roadmap ADR-002, ADR-012, ADR-019 |
 | TB11 | Pull request code and the build Mac | PR code (X4) that a maintainer builds or tests locally | The local gate never runs code from a fork or an unreviewed PR on the build Mac. Such code builds only in a VM or a macOS user account with no signing identities | This file |
 | TB12 | AI gateway and the configured AI provider | The provider's responses; the integrated clients' requests | DLP before forwarding; explicit client integration only | Planned: roadmap ADR-009, Phase 4 |
 | TB13 | NanoMDM server and managed devices | Enrollment requests; the network | MDM protocol, APNs credentials, device identity | Planned: roadmap ADR-010, Phase 5 |
@@ -128,7 +128,7 @@ STRIDE per boundary. A cell names the threat that covers it: an ADR threat (`ADR
 | TB7 | n/a | TBD (phase 4) | n/a | TBD (phase 4) | TBD (phase 4) | n/a |
 | TB8 | n/a | ADR 0003 T1, T3 | n/a | ADR 0003 T2, ADR 0009 T5 | n/a | ADR 0009 T1 |
 | TB9 | n/a | ADR 0007 T2, T3 | n/a | ADR 0007 T1 | n/a | ADR 0007 T1 |
-| TB10 | TBD (phase 1) | TBD (phase 1) | n/a | TBD (phase 1) | TBD (phase 1) | TBD (phase 1) |
+| TB10 | ADR 0016 T3–T6; TBD (phase 1) | TBD (phase 1) | n/a | TBD (phase 1) | TBD (phase 1) | ADR 0016 T1, T2; TBD (phase 1) |
 | TB11 | n/a | TM3 | n/a | TM3 | n/a | TM3 |
 | TB12 | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) |
 | TB13 | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) | TBD (phase 5) |
@@ -181,6 +181,7 @@ Client resource and deletion controls: [ADR 0012](adr/0012-bounded-client-proces
 | `SystemExtensionIdentifierTests` | TB2 | A malformed or foreign extension identifier fails closed |
 | `ConfigurationWireTests`, `ConfigurationContractTests` | TB4 | Oversize, too-deep and malformed frames |
 | `SchemaFixtureTests`, `SchemaBoundsTests`, `FieldRulesTests`, `ConfigurationSchemaTests` | TB4 | Unknown schema versions, wrong kind and shape, unknown fields, unpinned application matchers, non-canonical hosts, oversize and deep documents |
+| `ApplicationMatchingTests`, `ApplicationMatcherTests` | TB10 | Exact identity match with no case folding, prefix or normalization; partial and missing identity; unknown identity applies a deny rule and never an allow rule |
 | `SyntheticSourceTests` | TB2 | Synthetic events are labeled `synthetic`; a reused PID resolves to no identity |
 | `KeychainItemStoreTests`, `SecureItemVaultTests` | TB3 | Keychain item attributes, write fencing, interrupted erase. They do not test group isolation |
 | `ConfigStreamMutualTLSTests`, `TLSListenerTests`, `RequestBodyLimitTests` (`Server/`) | TB4 | A certificate from another CA fails the handshake whatever headers it sends; weak TLS is refused; an oversize body gets 413 |

@@ -62,7 +62,7 @@ The body types decode only inside `SchemaCodec`. Each body's `init(from:)` calls
 
 | Field | Rule |
 |---|---|
-| `ApplicationMatcher` | Pins `teamIdentifier`, or sets `isPlatformBinary` with no Team ID. A signing identifier alone is refused |
+| `ApplicationMatcher` | Pins `teamIdentifier`, or sets `isPlatformBinary` with no Team ID. A signing identifier alone is refused. An optional `bundleIdentifier` narrows the match ([ADR 0016](0016-application-identity-matching.md) D1) |
 | `ApplicationIdentity` | A platform binary with a Team ID is refused as a contradictory claim |
 | Team ID | Exactly ten of `A–Z 0–9` |
 | Host name | ASCII, lowercase LDH labels, no trailing dot, last label not all digits, and no one-to-four-component numeric IPv4 form, including hexadecimal components. Internationalized names arrive as punycode |
@@ -110,6 +110,6 @@ A `SchemaError` path is built from schema keys and array indexes, such as `$.bod
 | `SchemaFixtureTests`, `PolicyFixtureTests` (`WardAxisPolicy`) | Unit tests, fixtures in `Packages/WardAxisCore/Tests/WardAxisCoreTests/Fixtures/` and `Packages/WardAxisPolicy/Tests/WardAxisPolicyTests/Fixtures/` | Unknown versions, wrong kind, wrong shape, unknown and `null` fields, repeated keys, fractional and offset times, a plain `JSONDecoder` refused, every validation rule with its path | D1, D2, D3, D5 |
 | `SchemaBoundsTests`, `PolicyBoundsTests` (`WardAxisPolicy`) | Unit tests | Oversize, too deep, not a strict object, trailing data, mismatched brackets, repeated keys, encoder refusals, rule and host limits | D2, D3 |
 | `FieldRulesTests` | Unit tests | Host names, patterns, canonical IP literals, Team IDs, signing identifiers, homoglyphs | D3 |
-| `SyntheticSourceTests` | Unit tests | Determinism from SplitMix64 alone, `synthetic` provenance, catalog checked at init, codec round trip, batch bounds, PID reuse, matcher pinning | D3, D4, D6 |
+| `SyntheticSourceTests` | Unit tests | Determinism from SplitMix64 alone, `synthetic` provenance, catalog checked at init, codec round trip, batch bounds, PID reuse. Matcher pinning moved to `ApplicationMatcherTests` and `ApplicationMatchingTests` ([ADR 0016](0016-application-identity-matching.md)) | D3, D4, D6 |
 | `PolicyFixtureTests` (`WardAxisPolicy`) | Unit tests | `FixturePolicySource` applies every codec refusal | D6 |
 | `ConfigurationSchemaTests` (`WardAxisManagement`) | Unit tests | A feed value of the wrong shape, an unknown version or a non-object is refused; a frame with a repeated key is dropped | D2, ADR 0010 D3 |

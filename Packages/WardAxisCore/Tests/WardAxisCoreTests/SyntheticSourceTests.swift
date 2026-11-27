@@ -87,14 +87,4 @@ struct SyntheticSourceTests {
         #expect(await resolver.identity(of: ProcessReference(pid: 501, pidVersion: 1)) == browser)
         #expect(await resolver.identity(of: ProcessReference(pid: 501, pidVersion: 2)) == nil)
     }
-    
-    @Test
-    func `A matcher pins the Team ID and the platform-binary claim`() {
-        let matcher = ApplicationMatcher(signingIdentifier: "com.example.browser", teamIdentifier: "EXAMPLE001", isPlatformBinary: false)
-        
-        #expect(matcher.matches(ApplicationIdentity(signingIdentifier: "com.example.browser", teamIdentifier: "EXAMPLE001", isPlatformBinary: false, bundleIdentifier: nil)))
-        #expect(!matcher.matches(ApplicationIdentity(signingIdentifier: "com.example.browser", teamIdentifier: "EXAMPLE999", isPlatformBinary: false, bundleIdentifier: nil)))
-        #expect(!matcher.matches(ApplicationIdentity(signingIdentifier: "com.example.browser", teamIdentifier: nil, isPlatformBinary: false, bundleIdentifier: nil)))
-        #expect(!matcher.matches(ApplicationIdentity(signingIdentifier: "com.example.browser", teamIdentifier: nil, isPlatformBinary: true, bundleIdentifier: nil)))
-    }
 }
