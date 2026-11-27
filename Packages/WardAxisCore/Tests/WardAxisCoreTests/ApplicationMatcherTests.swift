@@ -13,12 +13,12 @@ struct ApplicationMatcherTests {
     private func matcher(bundleIdentifier: String?) -> ApplicationMatcher {
         ApplicationMatcher(signingIdentifier: "com.example.browser", teamIdentifier: "EXAMPLE001", isPlatformBinary: false, bundleIdentifier: bundleIdentifier)
     }
-
+    
     @Test(arguments: [nil, "com.example.browser", String(repeating: "a", count: SchemaLimits.maximumSigningIdentifierLength)])
     func `A pinned matcher with a well-formed or absent bundle ID is valid`(bundleIdentifier: String?) throws {
         try matcher(bundleIdentifier: bundleIdentifier).validate(at: "$")
     }
-
+    
     @Test(arguments: [
         "",
         ".com.example",
@@ -32,7 +32,7 @@ struct ApplicationMatcherTests {
             try matcher(bundleIdentifier: bundleIdentifier).validate(at: "$")
         }
     }
-
+    
     @Test
     func `A bundle ID does not replace the Team ID pin`() {
         let unpinned = ApplicationMatcher(signingIdentifier: "com.example.browser", teamIdentifier: nil, isPlatformBinary: false, bundleIdentifier: "com.example.browser")
