@@ -60,6 +60,17 @@ public struct PolicyMatch: Sendable, Hashable, Codable {
     public let transport: TransportProtocol?
     public let destinationPorts: [PortRange]?
     
+    /// ``destinationNetworks`` parsed once per policy, so a flow costs no string
+    /// parse. `nil` marks an entry that bypassed validation (ADR 0018 D3).
+    let compiledNetworks: [IPNetwork?]?
+    
+    /// ``destinationHosts`` checked once per policy, for the same reason (ADR 0017 D3).
+    let compiledHosts: CompiledHosts?
+    
+    enum CodingKeys: String, CodingKey {
+        case application, destinationHosts, destinationNetworks, transport, destinationPorts
+    }
+    
     public init(
         application: ApplicationMatcher? = nil,
         destinationHosts: [String]? = nil,
@@ -72,6 +83,19 @@ public struct PolicyMatch: Sendable, Hashable, Codable {
         self.destinationNetworks = destinationNetworks
         self.transport = transport
         self.destinationPorts = destinationPorts
+        compiledNetworks = destinationNetworks?.map(IPNetwork.init)
+        compiledHosts = destinationHosts.map(CompiledHosts.init)
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(
+            application: container.decodeIfPresent(ApplicationMatcher.self, forKey: .application),
+            destinationHosts: container.decodeIfPresent([String].self, forKey: .destinationHosts),
+            destinationNetworks: container.decodeIfPresent([String].self, forKey: .destinationNetworks),
+            transport: container.decodeIfPresent(TransportProtocol.self, forKey: .transport),
+            destinationPorts: container.decodeIfPresent([PortRange].self, forKey: .destinationPorts)
+        )
     }
     
     func validate(at path: String) throws(SchemaViolation) {
@@ -125,5 +149,16 @@ public struct PolicyMatch: Sendable, Hashable, Codable {
                 throw SchemaViolation(path: SchemaPath.index(path, index), reason: .duplicate)
             }
         }
+    }
+}
+
+/// The validated host patterns of a match, and whether any entry bypassed validation.
+struct CompiledHosts: Sendable, Hashable {
+    let patterns: [String]
+    let hasInvalid: Bool
+    
+    init(_ hosts: [String]) {
+        patterns = hosts.filter(FieldRules.isHostPattern)
+        hasInvalid = patterns.count != hosts.count
     }
 }

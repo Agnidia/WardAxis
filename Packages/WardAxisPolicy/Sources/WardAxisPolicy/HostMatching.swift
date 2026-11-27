@@ -35,9 +35,9 @@ public struct FlowHost: Sendable, Hashable {
     }
     
     /// Whether a policy host pattern (``WardAxisCore/FieldRules/isHostPattern(_:)``)
-    /// covers this host, label-aware and byte-exact (ADR 0017 D2).
-    /// An unvalidated pattern cannot widen the match: a canonical host has no
-    /// uppercase, `*` or trailing dot for it to hit.
+    /// covers this host, label-aware and byte-exact (ADR 0017 D2). The pattern
+    /// must be validated: `*.com` would cover every `.com` host.
+    /// ``PolicyMatch/evaluateHost(_:)`` never passes it one that is not.
     public func matches(_ pattern: String) -> Bool {
         let host = name.utf8
         guard pattern.hasPrefix("*.") else {
@@ -83,16 +83,15 @@ public struct FlowHost: Sendable, Hashable {
         if name.utf8.last == UInt8(ascii: ".") {
             name.removeLast()
         }
-        if FieldRules.isHostName(name) {
-            return hasValidALabels(name) ? .name(name) : .malformed
-        }
-        // Brackets enclose an IPv6 literal only (RFC 3986 §3.2.2).
-        let isBracketed = name.hasPrefix("[") && name.hasSuffix("]")
-        if isBracketed ? FieldRules.isCanonicalIPv6(String(name.dropFirst().dropLast())) : FieldRules.isCanonicalIPv4(name) || FieldRules.isCanonicalIPv6(name) {
+        // The network side's grammar, so every literal it reads reaches the network rules (ADR 0018 D3).
+        if FlowAddress(reported: name) != nil {
             return .address
         }
-        // Short, octal and hex IPv4 forms land here: a deny still applies to them.
-        return .malformed
+        guard FieldRules.isHostName(name) else {
+            // Short, octal and hex IPv4 forms land here: a deny still applies to them.
+            return .malformed
+        }
+        return hasValidALabels(name) ? .name(name) : .malformed
     }
     
     /// UTS 46 nontransitional mapping to punycode, lowercase. `nil` when Foundation
@@ -225,17 +224,19 @@ public extension PolicyMatch {
     ///
     /// | Flow host | Result |
     /// |---|---|
-    /// | Known, a pattern matches | `match` |
+    /// | Known, a validated pattern matches | `match` |
+    /// | Known, no validated pattern matches, one bypassed validation | `unknown` |
     /// | Known, no pattern matches | `noMatch` |
     /// | `.known(nil)`: the flow has no host name | `noMatch`; network rules apply instead |
     /// | `unknown` | `unknown` |
     func evaluateHost(_ host: Observed<FlowHost?>) -> MatchResult {
-        guard let destinationHosts else {
+        guard let compiledHosts else {
             return .match
         }
         return switch host {
         case .known(.some(let host)):
-            destinationHosts.contains(where: host.matches) ? .match : .noMatch
+            // A pattern that bypassed validation could widen an allow or narrow a deny, so it only fails closed by action.
+            compiledHosts.patterns.contains(where: host.matches) ? .match : compiledHosts.hasInvalid ? .unknown : .noMatch
         case .known(nil):
             .noMatch
         case .unknown:

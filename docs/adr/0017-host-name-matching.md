@@ -4,6 +4,8 @@
 
 Accepted on 2026-11-27 (NET-009, #15).
 
+Amended on 2026-11-27 (NET-010, #16): an IP literal is any address that `FlowAddress(reported:)` parses ([D1](#d1-one-canonical-form-on-both-sides-h2-h3-h5-h6)), and only a validated pattern can match; one that bypassed validation is `unknown` ([D3](#d3-a-flow-without-a-name-is-absent-an-unreadable-or-malformed-name-is-unknown-h3-h7)). `PolicyMatch` checks its patterns once.
+
 ## Context
 
 A rule names destinations in `match.destinationHosts`: host names and `*.` patterns in canonical form ([ADR 0011](0011-versioned-schemas.md) D3, [ADR 0015](0015-policy-schema.md) D2). Validation fixed the policy side. Nothing matched a flow's host against it, and nothing put the flow's host into the same form.
@@ -50,7 +52,7 @@ Trust boundary: TB10 (network flows and NE providers). The policy data crosses T
 6. Check every `xn--` label, on both paths: it must decode (RFC 3492) and map back through step 3 to the same bytes, the UTS 46 round trip. Foundation passes ASCII through unchecked, so without this step `xn--zz.test` would be a name while `ü.xn--zz` would not.
 7. Refuse a label that decodes to a deviation character (U+00DF ß, U+03C2 ς, U+200C ZWNJ, U+200D ZWJ). Transitional and nontransitional processing map these differently, so the flow could reach a name that the policy does not see (H6). Uppercase ẞ maps to ß and is refused with it.
 
-An IP literal (canonical IPv4, canonical IPv6, or IPv6 in brackets) is not a name. It is matched as a network (NET-010); see D3. A short, octal or hexadecimal IPv4 form (`127.1`, `0x7f.1`) and an IPv4 in brackets have no canonical form and are malformed.
+An IP literal is not a name. After steps 2–4, the check is `FlowAddress(reported:)` of [ADR 0018](0018-cidr-network-matching.md) D1: any IPv6 spelling with optional brackets and zone, or a canonical dotted quad. Both sides use one grammar, so every literal that the host side gives up reaches the network rules (see D3). A short, octal or hexadecimal IPv4 form (`127.1`, `0x7f.1`) and an IPv4 in brackets are refused by that grammar and are malformed.
 
 `FlowHost` holds ASCII only, so its equality and hash are byte equality.
 
@@ -71,13 +73,16 @@ A flow's host is an `Observed<FlowHost?>` ([ADR 0016](0016-application-identity-
 
 | Flow host | `PolicyMatch.evaluateHost(_:)` | `deny` rule | `allow` rule |
 |---|---|---|---|
-| Known, a pattern matches | `match` | Applies | Applies |
+| Known, a validated pattern matches | `match` | Applies | Applies |
+| Known, no validated pattern matches, and one bypassed validation (`FieldRules.isHostPattern` is false) | `unknown` | Applies | Does not apply |
 | Known, no pattern matches | `noMatch` | Does not apply | Does not apply |
 | `.known(nil)`: the flow has no host name | `noMatch` | Does not apply | Does not apply |
 | `unknown`: the flow has a name that could not be read, or the reported name does not normalize | `unknown` | Applies | Does not apply |
 | Rule without `destinationHosts` | `match` | Applies | Applies |
 
 `FlowHost.observed(reportedName:)` maps a reported IP literal to `.known(nil)` and a name that does not normalize to `unknown`, so a malformed name never escapes a deny (H3) and an address never applies every host deny (H7).
+
+A pattern that bypassed validation never matches: `*.com` would widen an allow to every `.com` host. It does not drop out either, which would narrow a deny. `PolicyMatch` sorts its patterns into validated ones and a flag once, when it is created or decoded, so a flow runs no validation.
 
 A provider reports a flow as `.known(nil)` when the flow has no name to read (H7):
 
@@ -102,7 +107,7 @@ A provider reports a flow as `.known(nil)` when the flow has no name to read (H7
 
 - IDNA follows the Foundation version of the OS. `HostMatchingTests` pins the expected outputs (`bücher.de`, fullwidth, U+3002 full stop, Cyrillic `а`) on macOS, and on iOS and tvOS simulators, so a change in the mapping fails the suite.
 - A name with ß, ς, ZWJ or ZWNJ is unknown: a host-scoped deny applies to it and an allow never does. A policy cannot allow such a name by host.
-- An application that connects by address, and a flow from a provider with no name source, pass a host-only deny rule. A policy that must block a destination also names its networks (NET-010). On tvOS `PacketTunnel` without DNS or SNI parsing, host rules never apply. DNS-to-flow correlation is out of scope here.
+- An application that connects by address, and a flow from a provider with no name source, pass a host-only deny rule. A policy that must block a destination also names its networks ([ADR 0018](0018-cidr-network-matching.md)). On tvOS `PacketTunnel` without DNS or SNI parsing, host rules never apply. DNS-to-flow correlation is out of scope here.
 - A wildcard over a public suffix (`*.co.uk`) still passes validation and matches every name under it (ADR 0011 known gap). A public-suffix check needs a bundled list and its updates.
 - Per flow, a match is at most 64 patterns of at most 255 bytes (`*.` and a 253-byte name), after one bounded normalization. The A-label check decodes at most 127 labels of at most 63 bytes.
 
@@ -110,7 +115,7 @@ A provider reports a flow as `.known(nil)` when the flow has no name to read (H7
 
 | Check | Kind | Scope | Decision |
 |---|---|---|---|
-| `HostMatchingTests` (`WardAxisPolicy`) | Unit tests | `fakeexample.test` against a name and a wildcard; the wildcard apex; subdomains; unvalidated patterns; case, trailing dot and IDNA spellings; refused names (spaces, `%`, `_`, non-canonical IPv4, a zone, label and name length, the input bound); invalid A-labels on both paths; deviation characters; IP literals as `.known(nil)`; byte-wise equality and hashing; the D3 table for `deny`, `allow`, disabled rules and rules without a host criterion | D1, D2, D3 |
+| `HostMatchingTests` (`WardAxisPolicy`) | Unit tests | `fakeexample.test` against a name and a wildcard; the wildcard apex; subdomains; unvalidated patterns; case, trailing dot and IDNA spellings; refused names (spaces, `%`, `_`, non-canonical IPv4, label and name length, the input bound); every IPv6 spelling, zones included, as an IP literal; a TLD wildcard that bypassed validation against an allow; invalid A-labels on both paths; deviation characters; IP literals as `.known(nil)`; byte-wise equality and hashing; the D3 table for `deny`, `allow`, disabled rules and rules without a host criterion | D1, D2, D3 |
 | `HostMatchingTests` properties | Seeded property tests (SplitMix64, 4 seeds × 500 cases) | Normalization is idempotent and canonical; case and trailing-dot variants match alike; wildcards respect label boundaries; arbitrary input is refused, canonical, or an address that is never also a name | D1, D2, D3 |
 | `xcodebuild -scheme WardAxisPolicy-Package test` on an iOS and a tvOS simulator, from `Packages/WardAxisPolicy` | Unit tests, per platform | The same suite against each platform's Foundation IDNA | D1 |
 | `FieldRulesTests` (`WardAxisCore`) | Unit tests | The host-name rule that both sides share | D1 |

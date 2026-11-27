@@ -57,6 +57,22 @@ struct HostMatchingTests {
         #expect(try !host("www.example.test").matches(pattern))
         #expect(try !host("example.test").matches(pattern))
     }
+
+    @Test(arguments: ["EXAMPLE.TEST", "*", "example.test.", "exa mple.test", ""])
+    func `A pattern that bypassed validation fails closed by action`(pattern: String) throws {
+        let match = PolicyMatch(destinationHosts: [pattern])
+        #expect(try match.evaluateHost(.known(host("example.test"))) == .unknown)
+        #expect(try rule(.deny, hosts: [pattern]).hostApplies(to: .known(host("example.test"))))
+        #expect(try !rule(.allow, hosts: [pattern]).hostApplies(to: .known(host("example.test"))))
+        #expect(match.evaluateHost(.known(nil)) == .noMatch)
+    }
+
+    @Test
+    func `A valid host pattern that matches still decides next to one that bypassed validation`() throws {
+        let match = PolicyMatch(destinationHosts: ["EXAMPLE.TEST", "*.other.test"])
+        #expect(try match.evaluateHost(.known(host("www.other.test"))) == .match)
+        #expect(try match.evaluateHost(.known(host("www.third.test"))) == .unknown)
+    }
     
     // MARK: - Normalization
     
@@ -78,7 +94,7 @@ struct HostMatchingTests {
     
     @Test(arguments: [
         "", ".", "example.test..", ".example.test", "example..test", "exa mple.test", "ex%41.test", "under_score.test",
-        "-lead.test", "trail-.test", "*.example.test", "127.1", "0x7f.1", "010.0.0.1", "999", "[fe80::1%en0]", "[192.0.2.1]",
+        "-lead.test", "trail-.test", "*.example.test", "127.1", "0x7f.1", "010.0.0.1", "999", "[192.0.2.1]",
         "xn--zz.test", "ü.xn--zz", "xn--abc-.test", "xn--fa-hia.de", "faß.de", "FAẞ.de", "ς.test", "a\u{200D}b.test",
         "exa mple.bücher.de", "bücher.de/path", "user@example.test", "example.test:443",
         String(repeating: "a", count: 64) + ".test",
@@ -98,11 +114,29 @@ struct HostMatchingTests {
         #expect(try host("example.test") != host("example.tests"))
     }
     
-    @Test(arguments: ["192.0.2.1", "192.0.2.1.", "::1", "[::1]", "[::FFFF:C000:201]", "2001:db8::1", "１９２.０.２.１"])
+    @Test(arguments: [
+        "192.0.2.1", "192.0.2.1.", "::1", "[::1]", "[::FFFF:C000:201]", "2001:db8::1", "１９２.０.２.１",
+        "2001:0db8::1", "2001:DB8:0:0:0:0:0:1", "fe80::1%en0", "[fe80::1%en0]", "[fe80::1%25en0]", "[::ffff:192.0.2.1]", "::ffff:192.0.2.1"
+    ])
     func `An IP literal is a flow without a host name, not an unknown one`(reported: String) {
         #expect(FlowHost(normalizing: reported) == nil)
         #expect(FlowHost.observed(reportedName: reported) == .known(nil))
         #expect(!rule(.deny, hosts: ["*.tracker.test"]).hostApplies(to: FlowHost.observed(reportedName: reported)))
+    }
+    
+    @Test(arguments: ["[192.0.2.1]", "0x7f.0.0.1", "127.1", "010.0.0.1", "[2001:db8::1", "1:2:3:4:5:6:7"])
+    func `A literal that the network side refuses is unknown, never absent`(reported: String) {
+        #expect(FlowAddress(reported: reported) == nil)
+        #expect(FlowHost.observed(reportedName: reported) == .unknown)
+    }
+    
+    @Test
+    func `A TLD wildcard that bypassed validation never widens an allow`() throws {
+        #expect(!FieldRules.isHostPattern("*.com"))
+        let allow = rule(.allow, hosts: ["*.com"])
+        #expect(try allow.match.evaluateHost(.known(host("evil.com"))) == .unknown)
+        #expect(try !allow.hostApplies(to: .known(host("evil.com"))))
+        #expect(try rule(.deny, hosts: ["*.com"]).hostApplies(to: .known(host("evil.com"))))
     }
     
     // MARK: - Unknown and absent hosts
@@ -210,27 +244,7 @@ struct HostMatchingTests {
     }
 }
 
-/// Seeded generator, so a failing property reproduces from the seed in its message.
-/// Every choice reads the raw stream; `Int.random(in:using:)` may change its mapping.
-private struct SplitMix64: RandomNumberGenerator {
-    private var state: UInt64
-    
-    init(seed: UInt64) {
-        state = seed
-    }
-    
-    mutating func next() -> UInt64 {
-        state &+= 0x9E3779B97F4A7C15
-        var value = state
-        value = (value ^ (value >> 30)) &* 0xBF58476D1CE4E5B9
-        value = (value ^ (value >> 27)) &* 0x94D049BB133111EB
-        return value ^ (value >> 31)
-    }
-    
-    mutating func below(_ bound: Int) -> Int {
-        Int(next() % UInt64(bound))
-    }
-    
+private extension SplitMix64 {
     mutating func label() -> String {
         let letters = Array("abcdefghijklmnopqrstuvwxyz0123456789")
         let length = 1 + below(12)

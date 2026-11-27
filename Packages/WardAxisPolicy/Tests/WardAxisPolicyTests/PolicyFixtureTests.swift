@@ -181,6 +181,7 @@ struct PolicyFixtureTests {
         "policy-network-ipv6-host-bits",
         "policy-network-zone",
         "policy-network-mapped-ipv4",
+        "policy-network-mapped-ipv4-hex",
         "policy-network-missing-prefix"
     ])
     func `A network in any but its one canonical CIDR spelling is refused`(fixture: String) throws {
