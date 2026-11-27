@@ -11,19 +11,19 @@ import Foundation
 ///
 /// Members come from a type's `CodingKeys`, so a path always names the real
 /// JSON key and never a key taken from the input.
-enum SchemaPath {
-    static let root = "$"
-    static let body = member(root, "body")
+public enum SchemaPath {
+    public static let root = "$"
+    public static let body = member(root, "body")
     
-    static func member(_ path: String, _ key: some CodingKey) -> String {
+    public static func member(_ path: String, _ key: some CodingKey) -> String {
         member(path, key.stringValue)
     }
     
-    static func member(_ path: String, _ name: String) -> String {
+    public static func member(_ path: String, _ name: String) -> String {
         "\(path).\(name)"
     }
     
-    static func index(_ path: String, _ index: Int) -> String {
+    public static func index(_ path: String, _ index: Int) -> String {
         "\(path)[\(index)]"
     }
 }

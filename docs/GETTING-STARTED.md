@@ -121,6 +121,7 @@ The scheme runs the `UnitTests` and `UITests` targets. It does not run the packa
 
 ```bash
 (cd Packages/WardAxisCore && swift test)
+(cd Packages/WardAxisPolicy && swift test)
 (cd Packages/WardAxisTelemetry && swift test)
 (cd Packages/WardAxisManagement && swift test)
 (cd Packages/WardAxisManagementAPI && swift test)
@@ -157,6 +158,7 @@ swiftformat . \
        -destination 'platform=macOS' \
        -skipPackagePluginValidation -onlyUsePackageVersionsFromResolvedFile test \
   && (cd Packages/WardAxisCore && swift test) \
+  && (cd Packages/WardAxisPolicy && swift test) \
   && (cd Packages/WardAxisTelemetry && swift test) \
   && (cd Packages/WardAxisManagement && swift test) \
   && (cd Packages/WardAxisManagementAPI && swift test)

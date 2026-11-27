@@ -96,34 +96,4 @@ struct SchemaBoundsTests {
         
         #expect(json == #"{"body":{"isPlatformBinary":true,"signingIdentifier":"com.apple.curl"},"schema":"wardaxis.application-identity","schemaVersion":1}"#)
     }
-    
-    @Test
-    func `A policy over the rule limit is refused`() throws {
-        let rules = (0...SchemaLimits.maximumRuleCount).map {
-            PolicyRule(identifier: "r\($0)", action: .deny, application: nil, destinationHosts: ["example.com"])
-        }
-        let policy = SecurityPolicy(identifier: "large", revision: 1, defaultAction: .deny, rules: rules)
-        
-        #expect(throws: SchemaViolation(path: "$.body.rules", reason: .tooMany)) {
-            try policy.validate()
-        }
-    }
-    
-    @Test
-    func `A rule over the host limit or with an empty host list is refused`() {
-        let hosts = (0...SchemaLimits.maximumHostsPerRule).map { "h\($0).example.com" }
-        let tooMany = SecurityPolicy(identifier: "p", revision: 1, defaultAction: .deny, rules: [
-            PolicyRule(identifier: "r", action: .deny, application: nil, destinationHosts: hosts)
-        ])
-        let empty = SecurityPolicy(identifier: "p", revision: 1, defaultAction: .deny, rules: [
-            PolicyRule(identifier: "r", action: .deny, application: nil, destinationHosts: [])
-        ])
-        
-        #expect(throws: SchemaViolation(path: "$.body.rules[0].destinationHosts", reason: .tooMany)) {
-            try tooMany.validate()
-        }
-        #expect(throws: SchemaViolation(path: "$.body.rules[0].destinationHosts", reason: .missingRequired)) {
-            try empty.validate()
-        }
-    }
 }

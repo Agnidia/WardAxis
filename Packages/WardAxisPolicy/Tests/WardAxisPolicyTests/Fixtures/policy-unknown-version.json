@@ -1,0 +1,1 @@
+{"schema": "wardaxis.security-policy", "schemaVersion": 2, "body": {"identifier": "office-network", "revision": 7, "mode": "enforce", "defaultAction": "deny", "rules": []}}

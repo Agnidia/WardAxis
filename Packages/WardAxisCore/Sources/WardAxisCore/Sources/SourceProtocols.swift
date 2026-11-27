@@ -22,10 +22,3 @@ public protocol ApplicationIdentityResolverProtocol: Sendable {
     /// cannot be read. A caller treats `nil` as an unknown application, never as a match.
     func identity(of process: ProcessReference) async -> ApplicationIdentity?
 }
-
-/// Supplies the policy that a component enforces.
-public protocol PolicySourceProtocol: Sendable {
-    /// The current policy, decoded through ``SchemaCodec``. A refusal leaves
-    /// the caller on its last good policy.
-    func currentPolicy() async throws(SchemaError) -> SecurityPolicy
-}

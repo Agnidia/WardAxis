@@ -9,9 +9,9 @@ import Foundation
 
 /// Lexical rules shared by the schemas. Each accepts ASCII only, so two
 /// strings that look the same always compare the same.
-enum FieldRules {
+public enum FieldRules {
     /// A policy or rule identifier: 1–128 of `A–Z a–z 0–9 . _ -`, starting alphanumeric.
-    static func isIdentifier(_ value: String) -> Bool {
+    public static func isIdentifier(_ value: String) -> Bool {
         isToken(value, maximumLength: SchemaLimits.maximumIdentifierLength)
     }
     
@@ -51,7 +51,7 @@ enum FieldRules {
     
     /// A host name, or `*.` and a host name of at least two labels for any subdomain of it.
     /// The rule does not consult a public-suffix list, so `*.co.uk` passes (ADR 0011 D3).
-    static func isHostPattern(_ value: String) -> Bool {
+    public static func isHostPattern(_ value: String) -> Bool {
         guard value.hasPrefix("*.") else {
             return isHostName(value)
         }
@@ -92,11 +92,48 @@ enum FieldRules {
         return canonicalIPv6(groups) == value
     }
     
-    static func isPort(_ value: Int) -> Bool {
+    public static func isPort(_ value: Int) -> Bool {
         SchemaLimits.validPorts.contains(value)
     }
     
+    /// A network in CIDR form: a canonical IPv4 (``isCanonicalIPv4(_:)``) or IPv6
+    /// (``isCanonicalIPv6(_:)``) address, `/`, and a decimal prefix length with no
+    /// leading zero (0–32 or 0–128). Every bit after the prefix must be zero, so
+    /// `192.0.2.1/24` is refused and one network has one spelling.
+    public static func isCanonicalNetwork(_ value: String) -> Bool {
+        let parts = value.split(separator: "/", omittingEmptySubsequences: false)
+        guard parts.count == 2,
+              (1...3).contains(parts[1].utf8.count),
+              parts[1].utf8.allSatisfy(ASCII.digits.contains),
+              parts[1].utf8.count == 1 || parts[1].utf8.first != UInt8(ascii: "0"),
+              let prefix = Int(parts[1])
+        else {
+            return false
+        }
+        let address = String(parts[0])
+        if isCanonicalIPv4(address) {
+            let octets = address.split(separator: ".").compactMap { UInt8($0) }
+            return prefix <= 32 && hostBitsAreZero(octets, prefix: prefix)
+        }
+        guard isCanonicalIPv6(address), let groups = ipv6Groups(address) else {
+            return false
+        }
+        let bytes = groups.flatMap { [UInt8($0 >> 8), UInt8($0 & 0xFF)] }
+        return prefix <= 128 && hostBitsAreZero(bytes, prefix: prefix)
+    }
+    
     // MARK: - Private
+    
+    private static func hostBitsAreZero(_ bytes: [UInt8], prefix: Int) -> Bool {
+        for (index, byte) in bytes.enumerated() {
+            let networkBits = min(max(prefix - index * 8, 0), 8)
+            let hostMask: UInt8 = networkBits == 8 ? 0 : UInt8(0xFF) >> networkBits
+            if byte & hostMask != 0 {
+                return false
+            }
+        }
+        return true
+    }
     
     private static func isNumericAddress(_ labels: [ArraySlice<UInt8>]) -> Bool {
         guard (1...4).contains(labels.count) else { return false }
