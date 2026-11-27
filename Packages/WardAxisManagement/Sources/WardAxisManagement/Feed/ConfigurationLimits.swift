@@ -32,6 +32,12 @@ enum ConfigurationLimits {
         BoundedJSON.isWithinBounds(data, maximumSize: maximumMessageSize, maximumDepth: maximumNestingDepth)
     }
     
+    /// `true` when a configuration, a delta's removals or a cache file holds at
+    /// most ``maximumEntryCount`` settings.
+    static func fitsEntryCount(_ count: Int) -> Bool {
+        count <= maximumEntryCount
+    }
+    
     /// `true` when `values` encodes to at most ``maximumMessageSize`` bytes, so a
     /// run of deltas cannot grow the configuration past what a snapshot may carry.
     static func fitsByteLimit(_ values: [String: ConfigurationValue]) -> Bool {

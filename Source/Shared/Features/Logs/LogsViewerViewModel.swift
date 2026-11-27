@@ -21,7 +21,7 @@ import WardAxisTelemetry
 /// Derived state (`filteredEntries`, `totalEntryCount`, `filteredOutCount`,
 /// `hasAnyEntries`) is **stored**, recomputed only when `state` or
 /// `selectedLevels` mutates. This avoids re-running the O(N) reverse + filter
-/// on every SwiftUI read at the 5000-entry streaming cap.
+/// on every SwiftUI read at the `LogFileLimits.maximumStreamedEntries` streaming cap.
 @Observable @MainActor
 final class LogsViewerViewModel {
     // MARK: - Types

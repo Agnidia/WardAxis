@@ -39,13 +39,7 @@ struct LogRowView: View {
     @State private var isExpanded: Bool = false
     @State private var isCopied: Bool = false
     
-    private static let timestampFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = LogDateFormat.timeWithMilliseconds
-        return formatter
-    }()
+    private static let timestampFormatter = LogDateFormat.posixFormatter(LogDateFormat.timeWithMilliseconds)
     
     var body: some View {
         Button {

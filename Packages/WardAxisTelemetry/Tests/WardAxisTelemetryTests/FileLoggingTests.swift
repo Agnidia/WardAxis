@@ -59,7 +59,7 @@ struct FileLoggingTests {
     func `Oversize Unicode entries are capped without splitting a scalar`() {
         let data = FileLogHandler.boundedEntry(String(repeating: "🔒", count: 10_000))
         #expect(data.count <= LogFileLimits.maximumEntryBytes)
-        #expect(String(data: data, encoding: .utf8)?.hasSuffix(" [truncated]\n") == true)
+        #expect(String(data: data, encoding: .utf8)?.hasSuffix(LogFileLimits.truncationMarker) == true)
     }
     
     @Test

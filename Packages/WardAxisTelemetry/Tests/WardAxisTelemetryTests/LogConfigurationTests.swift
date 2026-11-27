@@ -45,53 +45,25 @@ struct LogConfigurationTests {
     
     @Test
     func `consolePrefix combines emoji and label`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "[Test]",
-            consoleEmojis: [.error: "X"],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .none
-        )
+        let config = Log.Configuration.testing(label: "[Test]", consoleEmojis: [.error: "X"])
         #expect(config.consolePrefix(for: .error) == "X [Test]")
     }
     
     @Test
     func `consolePrefix returns only emoji when no label`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [.info: "i"],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .none
-        )
+        let config = Log.Configuration.testing(consoleEmojis: [.info: "i"])
         #expect(config.consolePrefix(for: .info) == "i")
     }
     
     @Test
     func `consolePrefix returns only label when no emoji`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "[MyApp]",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .none
-        )
+        let config = Log.Configuration.testing(label: "[MyApp]")
         #expect(config.consolePrefix(for: .debug) == "[MyApp]")
     }
     
     @Test
     func `consolePrefix returns empty when no emoji and no label`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .none
-        )
+        let config = Log.Configuration.testing()
         #expect(config.consolePrefix(for: .warning).isEmpty)
     }
     

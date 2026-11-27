@@ -204,18 +204,18 @@ extension Log.Configuration {
         return states
     }
     
+    /// The presets share every console emoji except the one for `debug`.
+    private static func consoleEmojis(debug: String) -> [Log.Level: String] {
+        [.debug: debug, .info: "ℹ️", .warning: "⚠️", .error: "❌"]
+    }
+    
     public static func preset(_ environment: Log.Environment) -> Self {
         switch environment {
         case .release:
             .init(
                 categoryStates: releaseList,
                 label: "",
-                consoleEmojis: [
-                    .debug: "📝",
-                    .info: "ℹ️",
-                    .warning: "⚠️",
-                    .error: "❌"
-                ],
+                consoleEmojis: consoleEmojis(debug: "📝"),
                 saveToFileByDefault: true,
                 fileLogLevel: .error,
                 dateDisplayStyle: .short
@@ -224,12 +224,7 @@ extension Log.Configuration {
             .init(
                 categoryStates: debugList,
                 label: "",
-                consoleEmojis: [
-                    .debug: "🛠",
-                    .info: "ℹ️",
-                    .warning: "⚠️",
-                    .error: "❌"
-                ],
+                consoleEmojis: consoleEmojis(debug: "🛠"),
                 saveToFileByDefault: true,
                 fileLogLevel: .debug,
                 dateDisplayStyle: .time
@@ -238,12 +233,7 @@ extension Log.Configuration {
             .init(
                 categoryStates: Dictionary(uniqueKeysWithValues: Log.Category.allCases.map { ($0, true) }),
                 label: "[Tests]",
-                consoleEmojis: [
-                    .debug: "🛠",
-                    .info: "ℹ️",
-                    .warning: "⚠️",
-                    .error: "❌"
-                ],
+                consoleEmojis: consoleEmojis(debug: "🛠"),
                 saveToFileByDefault: true,
                 fileLogLevel: .warning,
                 dateDisplayStyle: .none

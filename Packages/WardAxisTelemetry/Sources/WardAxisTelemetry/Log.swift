@@ -73,7 +73,7 @@ public struct Log: Sendable {
     
     /// The subsystem for the logs, which utilizes the main bundle identifier
     /// of the application to namespace the logs, enhancing their traceability and filtering.
-    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.agnidia.wardaxis"
+    private static let subsystem = LogFileLocation.bundleIdentifier
     
     /// The `Logger` instance derived from the OS logging system, configured for a specific logging category.
     private let logger: Logger
@@ -131,18 +131,15 @@ public struct Log: Sendable {
         Self.isEnabled(category)
     }
     
-    private static var logUrl: URL {
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.agnidia.wardaxis"
-        return FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Logs", isDirectory: true)
-            .appendingPathComponent(bundleID, isDirectory: true)
-            .appending(path: "log.log")
+    /// The log file that ``FileLogHandler/shared`` writes and the log viewer reads.
+    public static var logFileUrl: URL {
+        LogFileLocation.file(bundleIdentifier: LogFileLocation.bundleIdentifier)
     }
     
     /// Returns the URL of the log directory where log files are stored.
     /// This can be used to open the log directory in Finder.
     public static var logDirectoryUrl: URL {
-        logUrl.deletingLastPathComponent()
+        LogFileLocation.directory(bundleIdentifier: LogFileLocation.bundleIdentifier)
     }
 }
 
@@ -201,12 +198,11 @@ extension Log: LogProtocol {
             if let cachedFormatter = cache[style] {
                 formatter = cachedFormatter
             } else {
-                let newFormatter = DateFormatter()
+                let newFormatter: DateFormatter
                 if let format = style.dateFormat {
-                    newFormatter.locale = Locale(identifier: "en_US_POSIX")
-                    newFormatter.timeZone = .current
-                    newFormatter.dateFormat = format
+                    newFormatter = LogDateFormat.posixFormatter(format)
                 } else {
+                    newFormatter = DateFormatter()
                     newFormatter.dateStyle = style.dateStyle
                     newFormatter.timeStyle = style.timeStyle
                 }
@@ -323,5 +319,15 @@ private extension Log {
             }
             .sorted()
             .joined(separator: ", ")
+    }
+}
+
+public extension Log {
+    /// The error domain and code only, safe to log as `.public`. A file error's
+    /// description holds its path, which names the user on macOS, and other
+    /// descriptions can quote input.
+    static func safeName(of error: any Error) -> String {
+        let error = error as NSError
+        return "\(error.domain) \(error.code)"
     }
 }

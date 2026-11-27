@@ -15,84 +15,42 @@ struct LogFormattingTests {
     
     @Test
     func `formatTimestamp returns empty for .none style`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .none
-        )
+        let config = Log.Configuration.testing()
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(result.isEmpty)
     }
     
     @Test
     func `formatTimestamp returns non-empty for .time style`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .time
-        )
+        let config = Log.Configuration.testing(dateDisplayStyle: .time)
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(!result.isEmpty)
     }
     
     @Test
     func `formatTimestamp returns non-empty for .short style`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .short
-        )
+        let config = Log.Configuration.testing(dateDisplayStyle: .short)
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(!result.isEmpty)
     }
     
     @Test
     func `formatTimestamp returns non-empty for .full style`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .full
-        )
+        let config = Log.Configuration.testing(dateDisplayStyle: .full)
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(!result.isEmpty)
     }
     
     @Test
     func `formatTimestamp with .time style contains colons`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .time
-        )
+        let config = Log.Configuration.testing(dateDisplayStyle: .time)
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(result.contains(":"))
     }
     
     @Test
     func `formatTimestamp with .time style contains period (milliseconds)`() {
-        let config = Log.Configuration(
-            categoryStates: [:],
-            label: "",
-            consoleEmojis: [:],
-            saveToFileByDefault: false,
-            fileLogLevel: .base,
-            dateDisplayStyle: .time
-        )
+        let config = Log.Configuration.testing(dateDisplayStyle: .time)
         let result = Log.formatTimestamp(Date(), configuration: config)
         #expect(result.contains("."))
     }

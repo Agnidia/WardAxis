@@ -145,7 +145,7 @@ struct ConfigurationWireTests {
     
     @Test
     func `A client-certificate challenge gets the device identity`() {
-        let identity = ClientIdentity(testCredential: URLCredential(user: "test", password: "test", persistence: .none))
+        let identity = ConfigurationHarness.identity
         let (disposition, credential) = URLSessionWebSocketTransport.disposition(
             for: NSURLAuthenticationMethodClientCertificate,
             identity: identity
@@ -156,7 +156,7 @@ struct ConfigurationWireTests {
     
     @Test
     func `Server trust goes to the system evaluation`() {
-        let identity = ClientIdentity(testCredential: URLCredential(user: "test", password: "test", persistence: .none))
+        let identity = ConfigurationHarness.identity
         let (disposition, credential) = URLSessionWebSocketTransport.disposition(
             for: NSURLAuthenticationMethodServerTrust,
             identity: identity
@@ -173,7 +173,7 @@ struct ConfigurationWireTests {
         NSURLAuthenticationMethodDefault
     ])
     func `Every other challenge is cancelled, so no other credential is ever offered`(method: String) {
-        let identity = ClientIdentity(testCredential: URLCredential(user: "test", password: "test", persistence: .none))
+        let identity = ConfigurationHarness.identity
         let (disposition, credential) = URLSessionWebSocketTransport.disposition(for: method, identity: identity)
         #expect(disposition == .cancelAuthenticationChallenge)
         #expect(credential == nil)
@@ -196,8 +196,9 @@ struct ConfigurationWireTests {
     
     @Test
     func `A frame one level past the depth limit is skipped`() {
-        #expect(ConfigurationFrameDecoder().decode(Self.nestedFrame(depth: 30)) != nil)
-        #expect(ConfigurationFrameDecoder().decode(Self.nestedFrame(depth: 31)) == nil)
+        // The envelope and `values` take two levels.
+        #expect(ConfigurationFrameDecoder().decode(Self.nestedFrame(depth: ConfigurationLimits.maximumNestingDepth - 2)) != nil)
+        #expect(ConfigurationFrameDecoder().decode(Self.nestedFrame(depth: ConfigurationLimits.maximumNestingDepth - 1)) == nil)
     }
     
     @Test
@@ -269,13 +270,12 @@ struct ConfigurationWireTests {
     @Test
     @MainActor
     func `A moderately nested frame decodes and survives a cache save and reload on a background thread`() async throws {
-        let root = FileManager.default.temporaryDirectory
-            .appending(path: "ConfigurationWireTests-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let root = makeTemporaryDirectory("ConfigurationWireTests")
         defer { try? FileManager.default.removeItem(at: root) }
         let cache = FileConfigurationCache(directory: root.appending(path: FileConfigurationCache.directoryName, directoryHint: .isDirectory))
         
         // The envelope and `values` take two of the 32 levels.
-        for depth in [1, 16, 30] {
+        for depth in [1, 16, ConfigurationLimits.maximumNestingDepth - 2] {
             let frame = ConfigurationFrameDecoder().decode(Self.nestedFrame(depth: depth))
             guard case .snapshot(let configuration)? = frame else {
                 Issue.record("depth \(depth) did not decode")

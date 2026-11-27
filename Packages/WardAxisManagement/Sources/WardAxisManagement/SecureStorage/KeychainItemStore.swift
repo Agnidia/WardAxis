@@ -27,21 +27,51 @@ public struct KeychainItemLocation: Sendable, Equatable {
 /// Builds the Keychain queries. Pure functions, so the protection attributes are
 /// testable without touching the Keychain.
 enum KeychainQuery {
-    /// Identifies the item. Also the delete query.
-    static func item(_ location: KeychainItemLocation) -> [String: Any] {
+    /// What one `SecItemCopyMatching` call found.
+    enum Lookup {
+        case found(CFTypeRef?)
+        case notFound
+    }
+    
+    /// The attributes every query of this package carries, for items and identities alike.
+    static func base(class itemClass: CFString, accessGroup: String?) -> [String: Any] {
         var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: location.service,
-            kSecAttrAccount as String: location.account,
+            kSecClass as String: itemClass,
             // macOS: the legacy file keychain ignores kSecAttrAccessible, so the item
             // must live in the data-protection keychain. iOS ignores the key.
             kSecUseDataProtectionKeychain as String: true,
             kSecAttrSynchronizable as String: false
         ]
-        if let accessGroup = location.accessGroup {
+        if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
         }
         return query
+    }
+    
+    /// Identifies the item. Also the delete query.
+    static func item(_ location: KeychainItemLocation) -> [String: Any] {
+        base(class: kSecClassGenericPassword, accessGroup: location.accessGroup).merging([
+            kSecAttrService as String: location.service,
+            kSecAttrAccount as String: location.account
+        ]) { _, new in new }
+    }
+    
+    /// Runs `query`. A missing item is a result, not an error; any other
+    /// status becomes the caller's error, which carries the status only.
+    static func copyMatching<Failure: Error>(
+        _ query: [String: Any],
+        orThrow failure: (OSStatus) -> Failure
+    ) throws(Failure) -> Lookup {
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        switch status {
+        case errSecSuccess:
+            return .found(result)
+        case errSecItemNotFound:
+            return .notFound
+        default:
+            throw failure(status)
+        }
     }
     
     static func load(_ location: KeychainItemLocation) -> [String: Any] {
@@ -78,18 +108,14 @@ public struct KeychainItemStore<Value: SecurePayload>: SecureItemStoreProtocol {
     }
     
     public func load() throws(SecureItemStoreError) -> Value? {
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(KeychainQuery.load(location) as CFDictionary, &result)
-        switch status {
-        case errSecSuccess:
+        switch try KeychainQuery.copyMatching(KeychainQuery.load(location), orThrow: SecureItemStoreError.osStatus) {
+        case .found(let result):
             guard let data = result as? Data else {
                 throw .unreadable
             }
             return try SecurePayloadCoding.decode(data)
-        case errSecItemNotFound:
+        case .notFound:
             return nil
-        default:
-            throw .osStatus(status)
         }
     }
     

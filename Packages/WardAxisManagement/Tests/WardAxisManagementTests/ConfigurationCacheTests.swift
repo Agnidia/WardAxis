@@ -27,8 +27,7 @@ struct ConfigurationCacheTests {
     
     /// A cache in a fresh throwaway directory, removed by `cleanUp()`.
     private struct Sandbox {
-        let root = FileManager.default.temporaryDirectory
-            .appending(path: "ConfigurationCacheTests-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let root = makeTemporaryDirectory("ConfigurationCacheTests")
         
         var cache: FileConfigurationCache {
             FileConfigurationCache(directory: root.appending(path: FileConfigurationCache.directoryName, directoryHint: .isDirectory))
@@ -92,8 +91,8 @@ struct ConfigurationCacheTests {
     
     @Test(arguments: [
         "not json",
-        #"{"schema":1,"version":"forty"}"#,
-        #"{"schema":2,"version":43,"values":{}}"#
+        #"{"schema":\#(FileConfigurationCache.schemaVersion),"version":"forty"}"#,
+        #"{"schema":\#(FileConfigurationCache.schemaVersion + 1),"version":43,"values":{}}"#
     ])
     func `A corrupt file is deleted and loads as nil`(contents: String) async throws {
         let sandbox = Sandbox()
@@ -108,11 +107,13 @@ struct ConfigurationCacheTests {
     
     @Test
     func `A cache file nested past the depth limit, or with too many entries, loads as absent and is deleted`() async throws {
-        let deep = String(repeating: "[", count: 31) + String(repeating: "]", count: 31)
+        // The envelope and `values` take two levels, so this nest is one past the limit.
+        let deep = String(repeating: "[", count: ConfigurationLimits.maximumNestingDepth - 1)
+            + String(repeating: "]", count: ConfigurationLimits.maximumNestingDepth - 1)
         let pairs = (0...ConfigurationLimits.maximumEntryCount).map { #""k\#($0)":1"# }.joined(separator: ",")
         for contents in [
-            #"{"schema":1,"version":1,"values":{"deep":\#(deep)}}"#,
-            #"{"schema":1,"version":1,"values":{\#(pairs)}}"#
+            #"{"schema":\#(FileConfigurationCache.schemaVersion),"version":1,"values":{"deep":\#(deep)}}"#,
+            #"{"schema":\#(FileConfigurationCache.schemaVersion),"version":1,"values":{\#(pairs)}}"#
         ] {
             let sandbox = Sandbox()
             defer { sandbox.cleanUp() }
@@ -127,8 +128,8 @@ struct ConfigurationCacheTests {
     
     @Test
     func `A cache file in UTF-16 or UTF-32, with an unchecked Unicode escape, a NUL byte, or over the size limit, loads as absent and is deleted`() async throws {
-        let oversized = Data(#"{"schema":1,"version":1,"values":{"s":"\#(String(repeating: "x", count: ConfigurationLimits.maximumMessageSize))"}}"#.utf8)
-        let payloads = HostilePayloads.all(envelope: #""schema":1,"version":1"#) + [("oversized", oversized)]
+        let oversized = Data(#"{"schema":\#(FileConfigurationCache.schemaVersion),"version":1,"values":{"s":"\#(String(repeating: "x", count: ConfigurationLimits.maximumMessageSize))"}}"#.utf8)
+        let payloads = HostilePayloads.all(envelope: #""schema":\#(FileConfigurationCache.schemaVersion),"version":1"#) + [("oversized", oversized)]
         for payload in payloads {
             let sandbox = Sandbox()
             defer { sandbox.cleanUp() }

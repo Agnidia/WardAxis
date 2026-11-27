@@ -13,7 +13,7 @@ import WardAxisManagementTestSupport
 
 @Suite("KeychainItemStore")
 struct KeychainItemStoreTests {
-    private static let location = KeychainItemLocation(service: "com.example.tests.vault", account: "enrollment")
+    private static let location = KeychainItemLocation(service: "\(KeychainAvailability.testServicePrefix).vault", account: "enrollment")
     private static let payload = Data("payload".utf8)
     
     private static let credential = TestSecret(
@@ -118,17 +118,13 @@ struct KeychainItemStoreTests {
         }
     }
     
-    private static func makeCredential(_ nonce: String) -> TestSecret {
-        TestSecret(secret: "a", nonce: nonce, expiresAt: .distantFuture, identifier: nil)
-    }
-    
     private static func apply(_ steps: [VaultStep]) async -> TestSecret? {
-        let store = InMemorySecureItemStore<TestSecret>(value: makeCredential("restored"))
+        let store = InMemorySecureItemStore<TestSecret>(value: TestSecret.credential("restored"))
         let vault = SecureItemVault<TestSecret>(store: store, marker: MockErasePendingMarker())
         for step in steps {
             switch step {
             case .persist(let token, let generation):
-                _ = try? await vault.persist(makeCredential(token), generation: generation)
+                _ = try? await vault.persist(TestSecret.credential(token), generation: generation)
             case .erase(let generation):
                 try? await vault.erase(generation: generation)
             }
@@ -180,8 +176,8 @@ struct KeychainItemStoreTests {
         let vault = SecureItemVault<TestSecret>(store: InMemorySecureItemStore<TestSecret>(), marker: MockErasePendingMarker())
         try await vault.erase(generation: 5)
         
-        #expect(try await vault.persist(Self.makeCredential("late"), generation: 4) == false)
-        #expect(try await vault.persist(Self.makeCredential("next"), generation: 6) == true)
+        #expect(try await vault.persist(TestSecret.credential("late"), generation: 4) == false)
+        #expect(try await vault.persist(TestSecret.credential("next"), generation: 6) == true)
     }
     
     @Test
@@ -206,7 +202,7 @@ struct KeychainItemStoreTests {
         .enabled(if: KeychainAvailability.hasDataProtectionKeychain, "needs a signed test host with a keychain access group")
     )
     func `Keychain round-trip stores a this-device-only, non-synchronized item and deletes it`() throws {
-        let location = KeychainItemLocation(service: "com.agnidia.wardaxis.tests.\(UUID().uuidString)", account: "enrollment")
+        let location = KeychainItemLocation(service: "\(KeychainAvailability.testServicePrefix).\(UUID().uuidString)", account: "enrollment")
         let store = KeychainItemStore<TestSecret>(location: location)
         defer { try? store.delete() }
         

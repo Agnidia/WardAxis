@@ -56,13 +56,7 @@ struct LogEntryParser: Sendable {
     /// Time-of-day formatter (no date component). Output dates land on
     /// `DateFormatter`'s reference epoch — see `parseTimestamp(_:now:)` for
     /// the reanchor step that pins them to today.
-    private static let timeOnlyFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = LogDateFormat.timeWithMilliseconds
-        return formatter
-    }()
+    private static let timeOnlyFormatter = LogDateFormat.posixFormatter(LogDateFormat.timeWithMilliseconds)
     
     /// Date+time formatters used when the file logger emits a date-bearing
     /// timestamp (`.short` or `.full` configuration). Output dates already
