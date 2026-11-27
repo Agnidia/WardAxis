@@ -22,7 +22,7 @@ struct ErrorTag: View {
     let message: String
     
     var body: some View {
-        Text(message.uppercased())
+        Text(message)
             .bodyAlertSmall()
             .multilineTextAlignment(.center)
             .foregroundStyle(Color.Text.white)

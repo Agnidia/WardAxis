@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension CGFloat {    
+extension BinaryFloatingPoint {
     static var half: Self {
         0.5
     }
@@ -17,47 +17,11 @@ extension CGFloat {
     }
     
     var doubled: Self {
-        self * .two
+        self * 2
     }
     
     var tripled: Self {
-        self * .three
-    }
-}
-
-extension Float {    
-    static var half: Self {
-        0.5
-    }
-    
-    var half: Self {
-        self * .half
-    }
-    
-    var doubled: Self {
-        self * .two
-    }
-    
-    var tripled: Self {
-        self * .three
-    }
-}
-
-extension Double {    
-    static var half: Self {
-        0.5
-    }
-    
-    var half: Self {
-        self * .half
-    }
-    
-    var doubled: Self {
-        self * .two
-    }
-    
-    var tripled: Self {
-        self * .three
+        self * 3
     }
 }
 

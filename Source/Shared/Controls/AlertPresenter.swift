@@ -25,7 +25,7 @@ struct AlertPresenterModifier: ViewModifier {
                 alertContent
             })
             .animation(
-                .spring(response: AnimationDuration.normal, dampingFraction: AnimationDuration.slow),
+                .spring(response: AnimationDuration.normal, dampingFraction: SpringDamping.gentle),
                 value: alertManager.currentAlert?.id
             )
     }

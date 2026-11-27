@@ -73,6 +73,12 @@ enum SystemExtensionError: Error, Equatable, Sendable {
     case endedWithoutResult
     /// An error the app does not map; the value is the OS error code.
     case unknown(code: Int)
+    
+    /// `error` when it is already a ``SystemExtensionError``; otherwise `.unknown`
+    /// with its code only, so no description reaches the log or the UI.
+    init(_ error: any Error) {
+        self = error as? SystemExtensionError ?? .unknown(code: (error as NSError).code)
+    }
 }
 
 /// Installs and removes the app's own NetworkFilter system extension.

@@ -46,7 +46,7 @@ struct BannerAlert: View {
                     .foregroundStyle(labelColor)
             }
             
-            Text(message.uppercased())
+            Text(message)
                 .bodySmall()
                 .foregroundStyle(labelColor)
         }
@@ -61,7 +61,7 @@ struct BannerAlert: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityAddTraits(.isStaticText)
-        .accessibilityHint(onTap != nil ? "Double tap to dismiss" : "")
+        .accessibilityHint(onTap != nil ? AccessibilityHint.dismiss : "")
     }
     
     // MARK: - Computed Properties
@@ -86,13 +86,13 @@ struct BannerAlert: View {
         }
     }
     
+    /// Localized as one phrase, so a language can order the type and the message itself.
     private var accessibilityLabel: String {
-        let prefix: String = switch type {
-        case .info: "Information"
-        case .error: "Error"
-        case .success: "Success"
+        switch type {
+        case .info: String(localized: "Information: \(message)")
+        case .error: String(localized: "Error: \(message)")
+        case .success: String(localized: "Success: \(message)")
         }
-        return "\(prefix): \(message)"
     }
 }
 

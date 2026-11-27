@@ -37,11 +37,11 @@ enum InAppAlert: Identifiable, Sendable, Equatable {
     var autoDismissDuration: Double? {
         switch self {
         case .accent(_, let isLoading):
-            isLoading ? nil : 3
+            isLoading ? nil : AlertDuration.short
         case .banner(_, let type):
             switch type {
-            case .info, .success: 3
-            case .error: 5
+            case .info, .success: AlertDuration.short
+            case .error: AlertDuration.long
             }
         }
     }

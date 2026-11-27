@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WardAxisTelemetry
 
 /// A view extension to print debug information during development.
 ///
@@ -38,5 +39,14 @@ extension View {
 #if DEBUG
         let _ = Self._printChanges()
 #endif
+    }
+}
+
+extension View {
+    /// Logs `<name> appeared` in the UI category at debug level, each time the view appears.
+    func logAppearance(_ name: String) -> some View {
+        onAppear {
+            Log(category: .ui).debug("\(name) appeared")
+        }
     }
 }

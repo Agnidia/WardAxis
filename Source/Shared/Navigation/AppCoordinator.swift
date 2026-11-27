@@ -78,8 +78,8 @@ final class AppCoordinator {
         
         var systemImage: String {
             switch self {
-            case .home: "house"
-            case .settings: "gearshape"
+            case .home: Symbol.home
+            case .settings: Symbol.settings
             }
         }
     }
@@ -94,7 +94,20 @@ final class AppCoordinator {
     
     // MARK: - Initialization
     
-    init(deepLinkScheme: String? = Bundle.main.object(forInfoDictionaryKey: "WADeepLinkScheme") as? String) {
+    /// Info.plist key that the build fills from `APP_URL_SCHEME`.
+    static let deepLinkSchemeInfoKey = "WADeepLinkScheme"
+    
+    /// A longer URL is refused before it is parsed, so a hostile link costs bounded work.
+    static let maximumDeepLinkLength = 2048
+    
+    /// The hosts a deep link may name; anything else is refused.
+    private enum DeepLinkHost: String {
+        case settings
+        case help
+        case home
+    }
+    
+    init(deepLinkScheme: String? = Bundle.main.object(forInfoDictionaryKey: AppCoordinator.deepLinkSchemeInfoKey) as? String) {
         self.deepLinkScheme = deepLinkScheme
         logger.debug("AppCoordinator initialized")
     }
@@ -200,8 +213,7 @@ final class AppCoordinator {
             blockedTabSwitch = tab
             return
         }
-        logger.debug("Switching to tab: \(tab.rawValue)")
-        selectedTab = tab
+        select(tab)
     }
     
     /// Marks whether `tab` holds unsaved changes.
@@ -218,8 +230,17 @@ final class AppCoordinator {
         guard let tab = blockedTabSwitch else { return }
         blockedTabSwitch = nil
         tabsWithUnsavedChanges.remove(selectedTab)
+        select(tab)
+    }
+    
+    private func select(_ tab: Tab) {
         logger.debug("Switching to tab: \(tab.rawValue)")
         selectedTab = tab
+    }
+    
+    private func dismissAllModals() {
+        presentedSheet = nil
+        presentedFullScreenCover = nil
     }
     
     /// Drops the blocked switch; the user keeps editing.
@@ -241,8 +262,7 @@ final class AppCoordinator {
         tabsWithUnsavedChanges = []
         blockedTabSwitch = nil
         selectedTab = .home
-        presentedSheet = nil
-        presentedFullScreenCover = nil
+        dismissAllModals()
         appPhase = .splash
     }
     
@@ -254,11 +274,11 @@ final class AppCoordinator {
     /// - Returns: Whether the URL was handled.
     @discardableResult
     func handleDeepLink(_ url: URL) -> Bool {
-        guard url.absoluteString.utf8.count <= 2048,
+        guard url.absoluteString.utf8.count <= Self.maximumDeepLinkLength,
               let deepLinkScheme, !deepLinkScheme.isEmpty,
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               components.scheme?.lowercased() == deepLinkScheme,
-              let host = components.host,
+              let host = components.host.flatMap(DeepLinkHost.init(rawValue:)),
               components.user == nil, components.password == nil, components.port == nil,
               components.query == nil, components.fragment == nil,
               components.percentEncodedPath.isEmpty || components.percentEncodedPath == "/"
@@ -267,27 +287,21 @@ final class AppCoordinator {
         }
         
         switch host {
-        case "settings":
+        case .settings:
             // Settings has no tab; it opens as a sheet, as from the Home settings button.
             navigate(to: .settings)
-            return true
-        case "help":
-            presentedSheet = nil
-            presentedFullScreenCover = nil
+        case .help:
+            dismissAllModals()
             popToRoot()
             navigate(to: .help)
-            return true
-        case "home":
+        case .home:
             switchTab(to: .home)
             if selectedTab == .home {
-                presentedSheet = nil
-                presentedFullScreenCover = nil
+                dismissAllModals()
                 popToRoot(in: .home)
             }
-            return true
-        default:
-            return false
         }
+        return true
     }
 }
 

@@ -21,4 +21,20 @@ enum LogReaderError: Error, Equatable, Sendable {
     
     /// Export write to the temporary directory failed.
     case writeFailed(underlying: String)
+    
+    static func read(_ error: any Error) -> LogReaderError {
+        .read(error)
+    }
+    
+    static func write(_ error: any Error) -> LogReaderError {
+        .write(error)
+    }
+}
+
+extension [LogEntry] {
+    /// The export file body: one raw line per entry, newline-terminated, so a
+    /// shared file reads the same as the log it came from.
+    var exportText: String {
+        map(\.rawLine).joined(separator: "\n").appending("\n")
+    }
 }

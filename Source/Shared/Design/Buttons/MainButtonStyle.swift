@@ -26,26 +26,6 @@ struct MainButtonStyle: ButtonStyle {
     
     private let isIconOnly: Bool
     
-    private var paddingHorizontal: CGFloat {
-        isIconOnly ? (.padding.m - .padding.xxs) : .padding.xl
-    }
-    
-    private var paddingVertical: CGFloat {
-        .padding.m - .padding.xxs
-    }
-    
-    private var isLoading: Bool {
-        state == .loading
-    }
-    
-    private var isComplete: Bool {
-        state == .complete
-    }
-    
-    private var showShimmer: Bool {
-        state != .base
-    }
-    
     init(state: ButtonState = .base, isFullWidth: Bool = false, isIconOnly: Bool = false) {
         self.state = state
         self.isFullWidth = isFullWidth
@@ -57,51 +37,49 @@ struct MainButtonStyle: ButtonStyle {
             .buttonLarge()
             .dynamicTypeSize(.xSmall ... .xxxLarge)
             .foregroundStyle(labelColor(isPressed: configuration.isPressed))
-            .padding(.horizontal, paddingHorizontal)
-            .padding(.vertical, paddingVertical)
+            .padding(.horizontal, ButtonPadding.horizontal(isIconOnly: isIconOnly))
+            .padding(.vertical, ButtonPadding.vertical)
             .frame(maxWidth: isFullWidth ? .infinity : nil)
             .clipped()
             .background {
                 backgroundColor(isPressed: configuration.isPressed)
                     .shimmerEffect(
                         colors: [.Button.Background.Primary.loading, .Background.primary, .Button.Background.Primary.loading],
-                        isEnabled: isLoading,
-                        isAnimated: isLoading
+                        isEnabled: state.isLoading,
+                        isAnimated: state.isLoading
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
+                    .clipShape(.pill)
             }
             .padding(.border.thin)
             .background {
                 Color.Button.Background.Primary.Border.default
-                    .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
+                    .clipShape(.pill)
             }
-            .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
-            .animation(.easeInOut(duration: AnimationDuration.fast), value: configuration.isPressed)
-            .animation(.easeInOut(duration: AnimationDuration.normal), value: state)
+            .clipShape(.pill)
+            .animation(.quick, value: configuration.isPressed)
+            .animation(.standard, value: state)
     }
     
+    private static let background = ButtonPalette(
+        disabled: .Button.Background.Primary.disabled,
+        loading: .Button.Background.Primary.loading,
+        pressed: .Button.Background.Primary.pressed,
+        normal: .Button.Background.Primary.default
+    )
+    
+    private static let label = ButtonPalette(
+        disabled: .Button.Label.Primary.disabled,
+        loading: .Button.Label.Primary.loading,
+        pressed: .Button.Label.Primary.pressed,
+        normal: .Button.Label.Primary.default
+    )
+    
     private func backgroundColor(isPressed: Bool) -> Color {
-        if !isEnabled {
-            .Button.Background.Primary.disabled
-        } else if showShimmer {
-            .Button.Background.Primary.loading
-        } else if isPressed {
-            .Button.Background.Primary.pressed
-        } else {
-            .Button.Background.Primary.default
-        }
+        state.color(Self.background, isEnabled: isEnabled, isPressed: isPressed)
     }
     
     private func labelColor(isPressed: Bool) -> Color {
-        if !isEnabled {
-            .Button.Label.Primary.disabled
-        } else if showShimmer {
-            .Button.Label.Primary.loading
-        } else if isPressed {
-            .Button.Label.Primary.pressed
-        } else {
-            .Button.Label.Primary.default
-        }
+        state.color(Self.label, isEnabled: isEnabled, isPressed: isPressed)
     }
 }
 

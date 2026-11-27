@@ -46,14 +46,7 @@ enum AccessibilityAnnouncer {
             if delay > .zero {
                 try? await Task.sleep(for: delay)
             }
-#if canImport(UIKit)
-            UIAccessibility.post(notification: .announcement, argument: message)
-#elseif os(macOS)
-            NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested, userInfo: [
-                .announcement: message,
-                .priority: NSAccessibilityPriorityLevel.high
-            ])
-#endif
+            postAnnouncement(message)
         }
     }
     
@@ -97,12 +90,16 @@ enum AccessibilityAnnouncer {
     static func announceError(_ message: String) {
         guard isVoiceOverRunning else { return }
         
-        let errorMessage = String(localized: "Error: \(message)")
+        postAnnouncement(String(localized: "Error: \(message)"))
+    }
+    
+    /// High priority on macOS, so the announcement interrupts what VoiceOver is reading.
+    private static func postAnnouncement(_ message: String) {
 #if canImport(UIKit)
-        UIAccessibility.post(notification: .announcement, argument: errorMessage)
+        UIAccessibility.post(notification: .announcement, argument: message)
 #elseif os(macOS)
         NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested, userInfo: [
-            .announcement: errorMessage,
+            .announcement: message,
             .priority: NSAccessibilityPriorityLevel.high
         ])
 #endif

@@ -69,14 +69,19 @@ final class AppContainer {
     
     /// Builds the production container with real service implementations.
     static func production() -> AppContainer {
+        // No enrollment flow exists yet, so the device has no client identity
+        // and the feed stays idle rather than connecting unauthenticated.
+        live(configurationService: ConfigurationService.live(bundle: .main, identityProvider: NoClientIdentityProvider()))
+    }
+    
+    /// The real services; only the configuration feed differs between callers.
+    private static func live(configurationService: any ConfigurationServiceProtocol) -> AppContainer {
         AppContainer(
             alertManager: AlertManager(),
             logReaderService: LogReaderService(),
             hapticFeedback: HapticFeedbackService(),
             telemetry: TelemetryService(),
-            // No enrollment flow exists yet, so the device has no client identity
-            // and the feed stays idle rather than connecting unauthenticated.
-            configurationService: ConfigurationService.live(bundle: .main, identityProvider: NoClientIdentityProvider()),
+            configurationService: configurationService,
             systemExtensionService: SystemExtensionService(bundle: .main)
         )
     }
@@ -84,24 +89,21 @@ final class AppContainer {
 #if DEBUG
     /// Builds a container suitable for SwiftUI previews. All services are mocked.
     static func preview(configurationService: MockConfigurationService = MockConfigurationService()) -> AppContainer {
-        AppContainer(
-            alertManager: MockAlertManager(),
-            logReaderService: MockLogReaderService(scenario: .sampleEntries),
-            hapticFeedback: MockHapticFeedbackService(),
-            telemetry: MockTelemetryService(),
-            configurationService: configurationService,
-            systemExtensionService: MockSystemExtensionService()
-        )
+        mocked(logScenario: .sampleEntries, configurationService: configurationService)
     }
     
     /// Builds a container suitable for unit tests. All services are mocked.
     static func testing() -> AppContainer {
+        mocked(logScenario: .empty, configurationService: MockConfigurationService())
+    }
+    
+    private static func mocked(logScenario: MockLogReaderService.Scenario, configurationService: MockConfigurationService) -> AppContainer {
         AppContainer(
             alertManager: MockAlertManager(),
-            logReaderService: MockLogReaderService(scenario: .empty),
+            logReaderService: MockLogReaderService(scenario: logScenario),
             hapticFeedback: MockHapticFeedbackService(),
             telemetry: MockTelemetryService(),
-            configurationService: MockConfigurationService(),
+            configurationService: configurationService,
             systemExtensionService: MockSystemExtensionService()
         )
     }
@@ -120,21 +122,14 @@ final class AppContainer {
             testing()
 #else
             // Never touches the user's files and never connects: no server URL, no
-            // cache, no identity.
-            AppContainer(
-                alertManager: AlertManager(),
-                logReaderService: LogReaderService(),
-                hapticFeedback: HapticFeedbackService(),
-                telemetry: TelemetryService(),
-                configurationService: ConfigurationService(
-                    apiConfiguration: nil,
-                    identityProvider: NoClientIdentityProvider(),
-                    transport: URLSessionWebSocketTransport(),
-                    cache: NoConfigurationCache()
-                ),
-                // Inert until called; only a DEBUG view calls it.
-                systemExtensionService: SystemExtensionService(bundle: .main)
-            )
+            // cache, no identity. The system extension service is inert until
+            // called, and only a DEBUG view calls it.
+            live(configurationService: ConfigurationService(
+                apiConfiguration: nil,
+                identityProvider: NoClientIdentityProvider(),
+                transport: URLSessionWebSocketTransport(),
+                cache: NoConfigurationCache()
+            ))
 #endif
         }
     }

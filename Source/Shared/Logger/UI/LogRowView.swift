@@ -36,6 +36,7 @@ struct LogRowView: View {
     
     let entry: LogEntry
     
+    @Environment(\.appContainer) private var container
     @State private var isExpanded: Bool = false
     @State private var isCopied: Bool = false
     
@@ -43,7 +44,7 @@ struct LogRowView: View {
     
     var body: some View {
         Button {
-            withAnimation(.easeInOut(duration: AnimationDuration.fast)) {
+            withAnimation(.quick) {
                 isExpanded.toggle()
             }
         } label: {
@@ -53,7 +54,7 @@ struct LogRowView: View {
         .overlay(alignment: .topLeading) {
             copyFeedbackOverlay
         }
-        .animation(.easeInOut(duration: AnimationDuration.normal), value: isCopied)
+        .animation(.standard, value: isCopied)
         .simultaneousGesture(
             LongPressGesture(minimumDuration: Constants.longPressDuration)
                 .onEnded { _ in copyRawLine() }
@@ -101,13 +102,9 @@ struct LogRowView: View {
 #endif
     }
     
-    /// Tactile feedback on copy. iOS/iPadOS/visionOS only; no-op elsewhere.
+    /// A light tap on copy, through the service so tests and other platforms get its no-op.
     private func triggerHapticFeedback() {
-#if canImport(UIKit) && !os(watchOS) && !os(tvOS)
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.prepare()
-        generator.impactOccurred()
-#endif
+        container.hapticFeedback.playProgress(intensity: 1)
     }
     
     @ViewBuilder
@@ -159,8 +156,7 @@ struct LogRowView: View {
             Text(L.Settings.Logs.rawBadge)
                 .labelSmall()
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, .spacing.m)
-                .padding(.vertical, .spacing.xs)
+                .badgePadding()
                 .background(Color.gray.opacity(.opacity.subtle))
                 .clipShape(Capsule())
             
@@ -187,7 +183,7 @@ struct LogRowView: View {
             let levelName = Log.Level.name(parsed.level)
             return "\(levelName), \(timestamp), \(parsed.category.rawValue), \(parsed.message)"
         case .raw(let text):
-            return "Raw entry: \(text)"
+            return String(localized: "Raw entry: \(text)")
         }
     }
 }
@@ -231,8 +227,7 @@ struct LogLevelBadge: View {
                 .labelSmall()
                 .foregroundStyle(.primary)
         }
-        .padding(.horizontal, .spacing.m)
-        .padding(.vertical, .spacing.xs)
+        .badgePadding()
         .background(level.stateColor.opacity(.opacity.faint))
         .clipShape(Capsule())
     }

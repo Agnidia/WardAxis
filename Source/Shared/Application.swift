@@ -43,7 +43,7 @@ struct Application: App {
         }
 #if os(macOS)
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 800, height: 600)
+        .defaultSize(WindowSize.main)
 #endif
     }
 }

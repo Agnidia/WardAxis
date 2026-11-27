@@ -16,16 +16,13 @@ import WardAxisTelemetry
 /// - NavigationStack in sheet context
 ///
 /// Diagnostics section exposes a navigation entry into the in-app log
-/// viewer. Top-level Share / Clean log affordances and their alert
-/// state live in ``SettingsViewModel`` (replaces the deleted
-/// ``LogActionsModel`` per analyzing-0.md ad4).
+/// viewer, which owns the share and clear actions.
 @MainActor
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appContainer) private var container
     
     @State private var viewModel: SettingsViewModel?
-    @State private var isShowingClearConfirmation: Bool = false
 #if DEBUG && os(macOS)
     @State private var systemExtensionViewModel: SystemExtensionDebugViewModel?
 #endif
@@ -50,7 +47,7 @@ struct SettingsView: View {
                 
                 Section(L.Settings.diagnostics) {
                     NavigationLink(value: Route.logs) {
-                        Label(L.Settings.Logs.title, systemImage: "doc.text.magnifyingglass")
+                        Label(L.Settings.Logs.title, systemImage: Symbol.logs)
                     }
                 }
 #if DEBUG && os(macOS)
@@ -60,7 +57,7 @@ struct SettingsView: View {
             .padding(.padding.xl)
             .navigationTitle(L.Settings.title)
             .navigationDestination(for: Route.self) { route in
-                destinationView(for: route)
+                RouteResolver().view(for: route)
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -69,31 +66,6 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
-            }
-            .confirmationDialog(
-                L.Settings.Logs.clearTitle,
-                isPresented: $isShowingClearConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button(L.Settings.Logs.clearConfirm, role: .destructive) {
-                    Task { await viewModel?.clearAll() }
-                }
-                Button(L.Settings.Logs.clearCancel, role: .cancel) {}
-            } message: {
-                Text(L.Settings.Logs.clearMessage)
-            }
-            .alert(item: clearedNoticeBinding) { _ in
-                Alert(
-                    title: Text(L.Settings.Logs.clearedToast),
-                    dismissButton: .default(Text(L.Common.ok))
-                )
-            }
-            .alert(item: shareErrorBinding) { error in
-                Alert(
-                    title: Text(L.Settings.Logs.errorTitle),
-                    message: Text(error.message),
-                    dismissButton: .default(Text(L.Common.ok))
-                )
             }
             .task {
                 if viewModel == nil {
@@ -108,38 +80,7 @@ struct SettingsView: View {
             }
         }
         .accessibilityIdentifier(AccessibilityID.Screen.settings)
-        .onAppear {
-            logger.debug("SettingsView appeared")
-        }
-    }
-    
-    @ViewBuilder
-    private func destinationView(for route: Route) -> some View {
-        switch route {
-        case .logs:
-            LogsViewerView()
-        default:
-            EmptyView()
-        }
-    }
-    
-    // MARK: - Alert bindings
-    
-    /// Binds the ``SettingsViewModel.clearedNotice`` through an
-    /// optional-aware binding so the existing `.alert(item:)` overloads
-    /// keep working even when the view model has not yet been built.
-    private var clearedNoticeBinding: Binding<SettingsViewModel.ClearedNotice?> {
-        Binding(
-            get: { viewModel?.clearedNotice },
-            set: { newValue in viewModel?.clearedNotice = newValue }
-        )
-    }
-    
-    private var shareErrorBinding: Binding<SettingsViewModel.ShareError?> {
-        Binding(
-            get: { viewModel?.shareError },
-            set: { newValue in viewModel?.shareError = newValue }
-        )
+        .logAppearance("SettingsView")
     }
     
     // MARK: - Subviews

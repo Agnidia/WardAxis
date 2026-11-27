@@ -55,11 +55,11 @@ actor MockLogReaderService: LogReaderServiceProtocol {
         exportCallCount += 1
         let filename = "mock-export-\(UUID().uuidString).txt"
         let url = FileManager.default.temporaryDirectory.appending(path: filename)
-        let body = entries.map(\.rawLine).joined(separator: "\n").appending("\n")
+        let body = entries.exportText
         do {
             try body.write(to: url, atomically: true, encoding: .utf8)
         } catch {
-            throw LogReaderError.writeFailed(underlying: String(describing: error))
+            throw LogReaderError.write(error)
         }
         return url
     }

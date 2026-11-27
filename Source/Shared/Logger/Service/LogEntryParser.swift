@@ -180,14 +180,13 @@ struct LogEntryParser: Sendable {
     
     /// Maps the textual level token (as produced by `Log.Level.name(_:)`) to
     /// the corresponding single-bit `Log.Level`. Composite tokens fall through.
+    /// The reverse of `Log.Level.name(_:)`, which wrote the token, so the two cannot drift.
+    private static let levelsByName: [String: Log.Level] = Dictionary(
+        uniqueKeysWithValues: [Log.Level.error, .warning, .info, .debug].map { (Log.Level.name($0), $0) }
+    )
+    
     private static func level(named name: String) -> Log.Level? {
-        switch name {
-        case "error": .error
-        case "warning": .warning
-        case "info": .info
-        case "debug": .debug
-        default: nil
-        }
+        levelsByName[name]
     }
     
     /// Recovers a `Date` from a textual timestamp.

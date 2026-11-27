@@ -63,7 +63,7 @@ actor LogReaderService: LogReaderServiceProtocol {
             }
             content = text
         } catch {
-            throw LogReaderError.readFailed(underlying: String(describing: error))
+            throw LogReaderError.read(error)
         }
         
         let entries = parser.parseAll(content)
@@ -74,12 +74,12 @@ actor LogReaderService: LogReaderServiceProtocol {
         let filename = Self.exportFilename(for: now())
         let url = FileManager.default.temporaryDirectory.appending(path: filename)
         
-        let body = entries.map(\.rawLine).joined(separator: "\n").appending("\n")
+        let body = entries.exportText
         
         do {
             try body.write(to: url, atomically: true, encoding: .utf8)
         } catch {
-            throw LogReaderError.writeFailed(underlying: String(describing: error))
+            throw LogReaderError.write(error)
         }
         return url
     }
@@ -101,7 +101,7 @@ actor LogReaderService: LogReaderServiceProtocol {
         do {
             try Data().write(to: fileURL, options: .atomic)
         } catch {
-            throw LogReaderError.writeFailed(underlying: String(describing: error))
+            throw LogReaderError.write(error)
         }
     }
     

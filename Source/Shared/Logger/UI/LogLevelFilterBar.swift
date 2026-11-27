@@ -38,7 +38,7 @@ struct LogLevelFilterBar: View {
         let isOn = isSelected(level)
         let canRemove = canDeselect(level)
         
-        LogFilterChip(
+        SelectableChip(
             title: level.filterTitleKey,
             isSelected: isOn,
             accessibility: level.filterAccessibility
