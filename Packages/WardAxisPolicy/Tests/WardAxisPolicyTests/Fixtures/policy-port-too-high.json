@@ -1,0 +1,1 @@
+{"schema": "wardaxis.security-policy", "schemaVersion": 1, "body": {"identifier": "office-network", "revision": 7, "mode": "enforce", "defaultAction": "deny", "rules": [{"identifier": "r1", "priority": 100, "enabled": true, "action": "deny", "match": {"destinationPorts": [{"first": 443, "last": 65536}]}}]}}

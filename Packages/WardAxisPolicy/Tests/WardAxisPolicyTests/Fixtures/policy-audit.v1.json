@@ -1,0 +1,77 @@
+{
+  "schema": "wardaxis.security-policy",
+  "schemaVersion": 1,
+  "body": {
+    "identifier": "office-network",
+    "revision": 7,
+    "mode": "audit",
+    "defaultAction": "deny",
+    "rules": [
+      {
+        "identifier": "browser-web",
+        "priority": 100,
+        "enabled": true,
+        "action": "allow",
+        "match": {
+          "application": {
+            "signingIdentifier": "com.example.browser",
+            "teamIdentifier": "EXAMPLE001",
+            "isPlatformBinary": false
+          },
+          "destinationHosts": [
+            "example.com",
+            "*.example.org"
+          ],
+          "transport": "tcp",
+          "destinationPorts": [
+            {
+              "first": 443,
+              "last": 443
+            },
+            {
+              "first": 8000,
+              "last": 8099
+            }
+          ]
+        }
+      },
+      {
+        "identifier": "system-curl",
+        "priority": 50,
+        "enabled": true,
+        "action": "allow",
+        "match": {
+          "application": {
+            "signingIdentifier": "com.apple.curl",
+            "isPlatformBinary": true
+          }
+        }
+      },
+      {
+        "identifier": "block-tracker",
+        "priority": 900,
+        "enabled": true,
+        "action": "deny",
+        "match": {
+          "destinationHosts": [
+            "tracker.example.net"
+          ]
+        }
+      },
+      {
+        "identifier": "block-test-networks",
+        "priority": 800,
+        "enabled": false,
+        "action": "deny",
+        "match": {
+          "destinationNetworks": [
+            "198.51.100.0/24",
+            "2001:db8::/32",
+            "0.0.0.0/0"
+          ],
+          "transport": "udp"
+        }
+      }
+    ]
+  }
+}

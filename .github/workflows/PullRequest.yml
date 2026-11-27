@@ -125,6 +125,6 @@ jobs:
       - name: Test
         run: |
           set -euo pipefail
-          for package in WardAxisCore WardAxisTelemetry WardAxisManagement WardAxisManagementAPI; do
+          for package in WardAxisCore WardAxisPolicy WardAxisTelemetry WardAxisManagement WardAxisManagementAPI; do
             (cd "Packages/$package" && swift test --force-resolved-versions)
           done

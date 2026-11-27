@@ -45,6 +45,7 @@ public struct SchemaViolation: Error, Sendable, Equatable {
         case malformedIdentifier
         case malformedTeamIdentifier
         case malformedHost
+        case malformedNetwork
         case outOfRange
         case tooMany
         case duplicate

@@ -8,12 +8,13 @@
 import Foundation
 import Testing
 import WardAxisCore
+import WardAxisPolicy
 @testable import WardAxisManagement
 
 @Suite("Typed configuration values")
 struct ConfigurationSchemaTests {
     private static let policyFrame = #"""
-    {"type":"snapshot","version":3,"values":{"policy":{"schema":"wardaxis.security-policy","schemaVersion":1,"body":{"identifier":"office-network","revision":7,"defaultAction":"deny","rules":[{"identifier":"block-tracker","action":"deny","destinationHosts":["tracker.example.net"]}]}}}}
+    {"type":"snapshot","version":3,"values":{"policy":{"schema":"wardaxis.security-policy","schemaVersion":1,"body":{"identifier":"office-network","revision":7,"mode":"enforce","defaultAction":"deny","rules":[{"identifier":"block-tracker","priority":100,"enabled":true,"action":"deny","match":{"destinationHosts":["tracker.example.net"]}}]}}}}
     """#
     
     private static func configuration(policy: ConfigurationValue) -> ManagedConfiguration {
@@ -46,6 +47,7 @@ struct ConfigurationSchemaTests {
             "body": .object([
                 "identifier": .string("p"),
                 "revision": .integer(1),
+                "mode": .string("enforce"),
                 "defaultAction": .string("deny"),
                 "rules": .string("allow everything")
             ])

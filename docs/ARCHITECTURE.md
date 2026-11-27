@@ -175,7 +175,8 @@ Each service is a `Sendable` protocol, a concrete type and a mock.
 
 | Package | Products | Depends on | Content |
 |---|---|---|---|
-| `WardAxisCore` | `WardAxisCore`, `WardAxisCoreSynthetic` | none | Versioned event, policy and application identity schemas, `SchemaCodec`, `BoundedJSON`, source protocols; seeded synthetic sources. See [Schemas](#schemas) |
+| `WardAxisCore` | `WardAxisCore`, `WardAxisCoreSynthetic` | none | Versioned event and application identity schemas, the envelope, `SchemaCodec`, `BoundedJSON`, field rules, source protocols; seeded synthetic sources. See [Schemas](#schemas) |
+| `WardAxisPolicy` | `WardAxisPolicy`, `WardAxisPolicyTestSupport` | `WardAxisCore` | Versioned policy and rule models, `PolicySourceProtocol`; `FixturePolicySource` for tests. See [Schemas](#schemas) |
 | `WardAxisTelemetry` | `WardAxisTelemetry` | none | `Log` over `os.Logger`, categories, signposter, file sink, `TelemetryService`. See [LOGGING.md](LOGGING.md) |
 | `WardAxisManagementAPI` | `WardAxisAPIClient`, `WardAxisAPIServer`, `WardAxisAPIFixtures` | swift-openapi-generator, swift-openapi-runtime | The OpenAPI contract and the code generated from it; golden configuration frames for tests |
 | `WardAxisManagement` | `WardAxisManagement`, `WardAxisManagementTestSupport` | `WardAxisCore`, `WardAxisTelemetry`, `WardAxisAPIClient` | Endpoint configuration, configuration feed, client identity, Keychain storage |
@@ -278,7 +279,7 @@ Evidence: `ConfigurationServiceTests`, `ConfigurationWireTests`, `ConfigurationC
 
 ## Schemas
 
-`WardAxisCore` defines the documents that cross a trust boundary: `SecurityEvent`, `SecurityPolicy` and `ApplicationIdentity`. [ADR 0011](adr/0011-versioned-schemas.md) records the decisions.
+The documents that cross a trust boundary are `SecurityEvent` and `ApplicationIdentity` in `WardAxisCore`, and `SecurityPolicy` in `WardAxisPolicy`. [ADR 0011](adr/0011-versioned-schemas.md) records the envelope and codec decisions; [ADR 0015](adr/0015-policy-schema.md) records the policy fields.
 
 Trust boundary: every decode. A document comes from a peer that may be hostile (X5) or out of date.
 
@@ -293,14 +294,16 @@ Trust boundary: every decode. A document comes from a peer that may be hostile (
 | `SchemaCodec` | The only decode and encode path; a body's `init(from:)` refuses any other decoder. Refusals, in order: bounds and repeated keys, envelope, kind, version, shape, unknown field, validation |
 | `SchemaError`, `SchemaViolation` | Typed refusals. Paths hold schema keys and indexes only, never input content |
 | `BoundedJSON` | Iterative byte pre-scan: size, depth, strict JSON object, no repeated key. Shared with the configuration feed |
-| `SchemaLimits` | 64 KiB, depth 16, 256 rules, 64 hosts per rule, 256 events per batch |
+| `SchemaLimits` | 64 KiB, depth 16, 256 events per batch |
+| `PolicyLimits` (`WardAxisPolicy`) | 256 rules; per rule 64 hosts, 64 networks, 32 port ranges; priority `0...10_000` |
+| `SecurityPolicy`, `PolicyRule`, `PolicyMatch` (`WardAxisPolicy`) | Required `mode` (`enforce`, `audit`), `defaultAction`, rule `priority` and `enabled`. A higher priority wins; array order has no meaning. A match names at least one criterion; networks are canonical CIDR |
 | `ApplicationMatcher` | Pins a Team ID or a platform binary; a signing identifier alone is refused |
 | `ProcessReference` | PID and PID version, so a reused PID resolves to nothing |
-| `SecurityEventSourceProtocol`, `ApplicationIdentityResolverProtocol`, `PolicySourceProtocol` | The seams for real and synthetic sources |
+| `SecurityEventSourceProtocol`, `ApplicationIdentityResolverProtocol`, `PolicySourceProtocol` (`WardAxisPolicy`) | The seams for real and synthetic sources |
 
-`WardAxisCoreSynthetic` holds `SyntheticEventSource` (seeded, `synthetic` provenance only), `SyntheticIdentityResolver` and `FixturePolicySource`. Link it from tests and previews only.
+`WardAxisCoreSynthetic` holds `SyntheticEventSource` (seeded, `synthetic` provenance only) and `SyntheticIdentityResolver`. `WardAxisPolicyTestSupport` holds `FixturePolicySource`. Link both from tests and previews only.
 
-Evidence: `SchemaFixtureTests`, `SchemaBoundsTests`, `FieldRulesTests` and `SyntheticSourceTests` in `Packages/WardAxisCore/Tests/`.
+Evidence: `SchemaFixtureTests`, `SchemaBoundsTests`, `FieldRulesTests` and `SyntheticSourceTests` in `Packages/WardAxisCore/Tests/`; `PolicyFixtureTests` and `PolicyBoundsTests` in `Packages/WardAxisPolicy/Tests/`.
 
 ---
 

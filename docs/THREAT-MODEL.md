@@ -122,7 +122,7 @@ STRIDE per boundary. A cell names the threat that covers it: an ADR threat (`ADR
 | TB1 | ADR 0002 (foreign bundle claims a WardAxis ID), ADR 0010 T1 | ADR 0010 T1, T5; ADR 0003 T1 | n/a | n/a | n/a | ADR 0010 T5, ADR 0009 T1 |
 | TB2 | ADR 0006 T2 | ADR 0005 T2, ADR 0008 T2, ADR 0008 T5, TM2 | TBD (phase 3, IPC audit) | ADR 0005 T3, TM2 | TBD (phase 1) | ADR 0004 T1, T2; ADR 0008 T1, T3, T4 |
 | TB3 | n/a | n/a | n/a | ADR 0002 (component reads a secret it does not need) | n/a | n/a |
-| TB4 | ADR 0001 (identity from TLS only), TM1, TM4 | TM1, TM5, ADR 0011 T1–T3; TBD (phase 5, signed policy, roadmap ADR-011) | TBD (phase 5) | TM1, TM4; ADR 0001 gaps (Known gaps) | TBD (phase 5, rate limits) | ADR 0010 T2, T3 |
+| TB4 | ADR 0001 (identity from TLS only), TM1, TM4 | TM1, TM5, ADR 0011 T1–T3, ADR 0015 T1–T6; TBD (phase 5, signed policy, roadmap ADR-011) | TBD (phase 5) | TM1, TM4; ADR 0001 gaps (Known gaps) | TBD (phase 5, rate limits) | ADR 0010 T2, T3 |
 | TB5 | n/a | TBD (phase 5) | n/a | TM6, TBD (phase 5) | n/a | n/a |
 | TB6 | TBD (phase 4) | TBD (phase 4) | n/a | TBD (phase 4) | TBD (phase 4) | TBD (phase 4) |
 | TB7 | n/a | TBD (phase 4) | n/a | TBD (phase 4) | TBD (phase 4) | n/a |

@@ -62,10 +62,6 @@ public enum SchemaLimits {
     /// Deepest array or object nesting, envelope included.
     public static let maximumNestingDepth = 16
     
-    public static let maximumRuleCount = 256
-    
-    public static let maximumHostsPerRule = 64
-    
     /// Most events one ``SecurityEventSourceProtocol`` batch may hold.
     public static let maximumBatchSize = 256
     

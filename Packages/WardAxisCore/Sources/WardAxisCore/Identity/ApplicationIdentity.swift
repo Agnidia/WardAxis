@@ -85,7 +85,8 @@ public struct ApplicationMatcher: Sendable, Hashable, Codable {
             && identity.isPlatformBinary == isPlatformBinary
     }
     
-    func validate(at path: String) throws(SchemaViolation) {
+    /// Refuses a matcher that names a signing identifier alone, which any developer can claim (ADR 0011 D3).
+    public func validate(at path: String) throws(SchemaViolation) {
         guard FieldRules.isSigningIdentifier(signingIdentifier) else {
             throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.signingIdentifier), reason: .malformedIdentifier)
         }

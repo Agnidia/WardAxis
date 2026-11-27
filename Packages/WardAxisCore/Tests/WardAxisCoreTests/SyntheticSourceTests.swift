@@ -89,17 +89,6 @@ struct SyntheticSourceTests {
     }
     
     @Test
-    func `The fixture policy source applies every codec refusal`() async throws {
-        let valid = try FixturePolicySource(data: Fixture.data("policy.v1"))
-        let newer = try FixturePolicySource(data: Fixture.data("policy-unknown-version"))
-        
-        #expect(try await valid.currentPolicy().identifier == "office-network")
-        await #expect(throws: SchemaError.unsupportedVersion(2, supported: SchemaVersion.onlyV1)) {
-            try await newer.currentPolicy()
-        }
-    }
-    
-    @Test
     func `A matcher pins the Team ID and the platform-binary claim`() {
         let matcher = ApplicationMatcher(signingIdentifier: "com.example.browser", teamIdentifier: "EXAMPLE001", isPlatformBinary: false)
         

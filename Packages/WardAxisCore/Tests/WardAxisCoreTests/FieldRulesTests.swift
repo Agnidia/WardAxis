@@ -63,4 +63,18 @@ struct FieldRulesTests {
     func `Non-numeric host names remain valid`(host: String) {
         #expect(FieldRules.isHostName(host))
     }
+    
+    @Test(arguments: ["192.0.2.0/24", "0.0.0.0/0", "198.51.100.7/32", "10.0.0.0/8", "2001:db8::/32", "::/0", "fe80::/10", "2001:db8::1/128"])
+    func `A canonical network with zero host bits is accepted`(network: String) {
+        #expect(FieldRules.isCanonicalNetwork(network))
+    }
+    
+    @Test(arguments: [
+        "", "192.0.2.0", "/24", "192.0.2.0/", "192.0.2.0/24/8", "192.0.2.1/24", "192.0.2.0/33", "192.0.2.0/024", "192.0.2.0/-1",
+        "192.0.2.0/+8", "192.0.2.0/ 24", "192.000.2.0/24", "0x7f.0.0.0/8", "127.1/8", "2001:DB8::/32", "2001:0db8::/32",
+        "2001:db8::1/32", "2001:db8::/129", "fe80::%en0/64", "::ffff:192.0.2.0/120", "example.com/24", "2001:db8::/0032"
+    ])
+    func `Any other network spelling is refused`(network: String) {
+        #expect(!FieldRules.isCanonicalNetwork(network))
+    }
 }

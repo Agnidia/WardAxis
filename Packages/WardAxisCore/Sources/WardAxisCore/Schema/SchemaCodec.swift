@@ -76,7 +76,11 @@ public enum SchemaCodec {
     
     /// Refuses a body decode that did not start in ``SchemaCodec``, so a plain
     /// `JSONDecoder` cannot skip the bounds, version, field and rule checks.
-    static func requireCodec(_ decoder: any Decoder) throws {
+    ///
+    /// Every ``SchemaBody`` calls it first in `init(from:)`, in any package. It is
+    /// public so that bodies outside this module can call it; the marker it checks
+    /// stays private, so no caller can forge it.
+    public static func requireCodec(_ decoder: any Decoder) throws {
         guard decoder.userInfo[codecKey] is CodecMarker else {
             throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Decode through SchemaCodec"))
         }

@@ -6,6 +6,8 @@ Accepted on 2026-11-26 (PRE-009, #9).
 
 Amended on 2026-11-26: refuse hexadecimal and mixed numeric address forms before hostname validation.
 
+Amended on 2026-11-27 (NET-007, #13): the policy body moves to `WardAxisPolicy` and gains mode, priority, enabled, networks, transport and ports. See [ADR 0015](0015-policy-schema.md).
+
 ## Context
 
 Events, policies and application identities cross the boundaries between the server, the app, the extensions and the agent. Each of them is data that an untrusted or partly trusted peer can write.
@@ -54,7 +56,7 @@ Every document is `{"schema": <kind>, "schemaVersion": <Int>, "body": {...}}`. `
 
 The unknown-field step refuses an explicit `null` for an optional field. Absence is the only way to omit one. `SchemaCodec.encode` validates and bounds its own output, so a writer never produces what a reader refuses. `BoundedJSON` is the same pre-scan that the configuration feed uses; `ConfigurationLimits` calls it with the feed's limits, so the feed refuses repeated keys too.
 
-The body types decode only inside `SchemaCodec`. Each body's `init(from:)` requires a marker in the decoder's `userInfo` whose type cannot be named outside `WardAxisCore`, so a plain `JSONDecoder` cannot skip these steps. Nested types such as `PolicyRule` stay freely decodable: on their own they are not a policy.
+The body types decode only inside `SchemaCodec`. Each body's `init(from:)` calls the public `SchemaCodec.requireCodec(_:)`, which requires a marker in the decoder's `userInfo` whose type cannot be named outside `WardAxisCore`, so a plain `JSONDecoder` cannot skip these steps. A body in another package, such as `SecurityPolicy` in `WardAxisPolicy`, gets the same check. Nested types such as `PolicyRule` stay freely decodable: on their own they are not a policy.
 
 ### D3: Identity and host rules (T4, T9)
 
@@ -67,8 +69,8 @@ The body types decode only inside `SchemaCodec`. Each body's `init(from:)` requi
 | Host pattern | A host name, or `*.` and a name of at least two labels. `*.com` is refused. No public-suffix list is consulted, so `*.co.uk` passes (known gap) |
 | Remote host of a flow | A host name, a dotted-quad IPv4 with no leading zeros, or an IPv6 address in RFC 5952 form. No zone, no embedded IPv4, no short or hex forms |
 | Event time | Whole seconds; `validate()` refuses a fraction, which the wire format would drop |
-| Policy rule | Names at least one criterion. A rule without one would override `defaultAction` |
-| Policy | `defaultAction` is required, `revision` ≥ 1, rule identifiers are unique, at most 256 rules and 64 hosts per rule |
+| Policy rule | Its `match` names at least one criterion. A rule without one would override `defaultAction` |
+| Policy | `mode` and `defaultAction` are required, `revision` ≥ 1, rule identifiers are unique, at most 256 rules. Every other field rule is in [ADR 0015](0015-policy-schema.md) D2 and D4 |
 
 `ProcessReference` keys identity resolution by PID and PID version, so a reused PID never inherits an exited process's identity.
 
@@ -82,7 +84,7 @@ A `SchemaError` path is built from schema keys and array indexes, such as `$.bod
 
 ### D6: Synthetic sources behind protocols
 
-`SecurityEventSourceProtocol`, `ApplicationIdentityResolverProtocol` and `PolicySourceProtocol` live in `WardAxisCore`. The deterministic stand-ins (`SyntheticEventSource`, `SyntheticIdentityResolver`, `FixturePolicySource`) live in the separate `WardAxisCoreSynthetic` product, for tests and previews only. `SyntheticEventSource` is seeded (SplitMix64) and takes every choice straight from the raw stream, not from `Int.random(in:using:)`, whose mapping the standard library may change. A failure therefore reproduces from its seed on any toolchain. The initializer validates the catalog, so a batch never fails midway.
+`SecurityEventSourceProtocol` and `ApplicationIdentityResolverProtocol` live in `WardAxisCore`. The deterministic stand-ins `SyntheticEventSource` and `SyntheticIdentityResolver` live in the separate `WardAxisCoreSynthetic` product, for tests and previews only. `PolicySourceProtocol` and `FixturePolicySource` moved to `WardAxisPolicy` and its `WardAxisPolicyTestSupport` product ([ADR 0015](0015-policy-schema.md) D1). `SyntheticEventSource` is seeded (SplitMix64) and takes every choice straight from the raw stream, not from `Int.random(in:using:)`, whose mapping the standard library may change. A failure therefore reproduces from its seed on any toolchain. The initializer validates the catalog, so a batch never fails midway.
 
 ## Alternatives considered
 
@@ -94,7 +96,7 @@ A `SchemaError` path is built from schema keys and array indexes, such as `$.bod
 ## Consequences
 
 - `WardAxisManagement` depends on `WardAxisCore`. `ManagedConfiguration.document(_:forKey:)` is the typed read path for feed values (TM5). Nothing yet forces a consumer to use it; code review does.
-- A new field or enum case needs a new schema version. A v1 reader refuses v2 documents until it is updated. The server must keep serving v1 to devices that have not updated.
+- From the first App Store release, a new field or enum case needs a new schema version. Before it, a version may be redefined in place ([ADR 0015](0015-policy-schema.md) D5). A v1 reader refuses v2 documents until it is updated. The server must keep serving v1 to devices that have not updated.
 - An explicit `null` for an optional field is refused. Writers omit the field.
 - The unknown-field check decodes each document twice. The 64 KiB bound keeps the cost small.
 - A wildcard over a public suffix (`*.co.uk`, `*.github.io`) passes validation. A public-suffix check needs a bundled list and its updates; it waits for the policy engine.
@@ -105,8 +107,9 @@ A `SchemaError` path is built from schema keys and array indexes, such as `$.bod
 
 | Check | Kind | Scope | Decision |
 |---|---|---|---|
-| `SchemaFixtureTests` | Unit tests, fixtures in `Packages/WardAxisCore/Tests/WardAxisCoreTests/Fixtures/` | Unknown versions, wrong kind, wrong shape, unknown and `null` fields, repeated keys, fractional and offset times, a plain `JSONDecoder` refused, every validation rule with its path | D1, D2, D3, D5 |
-| `SchemaBoundsTests` | Unit tests | Oversize, too deep, not a strict object, trailing data, mismatched brackets, repeated keys, encoder refusals, rule and host limits | D2, D3 |
+| `SchemaFixtureTests`, `PolicyFixtureTests` (`WardAxisPolicy`) | Unit tests, fixtures in `Packages/WardAxisCore/Tests/WardAxisCoreTests/Fixtures/` and `Packages/WardAxisPolicy/Tests/WardAxisPolicyTests/Fixtures/` | Unknown versions, wrong kind, wrong shape, unknown and `null` fields, repeated keys, fractional and offset times, a plain `JSONDecoder` refused, every validation rule with its path | D1, D2, D3, D5 |
+| `SchemaBoundsTests`, `PolicyBoundsTests` (`WardAxisPolicy`) | Unit tests | Oversize, too deep, not a strict object, trailing data, mismatched brackets, repeated keys, encoder refusals, rule and host limits | D2, D3 |
 | `FieldRulesTests` | Unit tests | Host names, patterns, canonical IP literals, Team IDs, signing identifiers, homoglyphs | D3 |
 | `SyntheticSourceTests` | Unit tests | Determinism from SplitMix64 alone, `synthetic` provenance, catalog checked at init, codec round trip, batch bounds, PID reuse, matcher pinning | D3, D4, D6 |
+| `PolicyFixtureTests` (`WardAxisPolicy`) | Unit tests | `FixturePolicySource` applies every codec refusal | D6 |
 | `ConfigurationSchemaTests` (`WardAxisManagement`) | Unit tests | A feed value of the wrong shape, an unknown version or a non-object is refused; a frame with a repeated key is dropped | D2, ADR 0010 D3 |

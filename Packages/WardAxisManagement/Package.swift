@@ -12,6 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../WardAxisCore"),
+        // Test target only: the feed tests read a policy, but the library does not depend on the engine.
+        .package(path: "../WardAxisPolicy"),
         .package(path: "../WardAxisTelemetry"),
         .package(path: "../WardAxisManagementAPI")
     ],
@@ -33,6 +35,7 @@ let package = Package(
             dependencies: [
                 "WardAxisManagement",
                 "WardAxisManagementTestSupport",
+                .product(name: "WardAxisPolicy", package: "WardAxisPolicy"),
                 .product(name: "WardAxisAPIFixtures", package: "WardAxisManagementAPI")
             ]
         )

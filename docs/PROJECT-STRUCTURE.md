@@ -99,12 +99,13 @@ Packaging shells for the embedded components ([ADR 0005](adr/0005-extension-shel
 
 | Package | Targets | Tests |
 |---|---|---|
-| `WardAxisCore` | `WardAxisCore` (`Schema/`, `Event/`, `Policy/`, `Identity/`, `Sources/`), `WardAxisCoreSynthetic` | `WardAxisCoreTests` (fixtures in `Fixtures/`) |
+| `WardAxisCore` | `WardAxisCore` (`Schema/`, `Event/`, `Identity/`, `Sources/`), `WardAxisCoreSynthetic` | `WardAxisCoreTests` (fixtures in `Fixtures/`) |
+| `WardAxisPolicy` | `WardAxisPolicy`, `WardAxisPolicyTestSupport` | `WardAxisPolicyTests` (fixtures in `Fixtures/`) |
 | `WardAxisTelemetry` | `WardAxisTelemetry` | `WardAxisTelemetryTests` |
 | `WardAxisManagement` | `WardAxisManagement` (`Endpoint/`, `Feed/`, `Identity/`, `SecureStorage/`), `WardAxisManagementTestSupport` | `WardAxisManagementTests` |
 | `WardAxisManagementAPI` | `WardAxisAPIClient`, `WardAxisAPIServer`, `WardAxisAPIFixtures`; `scripts/lint-openapi.sh` | `WardAxisAPITests` |
 
-The app target links `WardAxisTelemetry` and `WardAxisManagement`. `WardAxisManagement` brings in `WardAxisCore`. `WardAxisCoreSynthetic`, `WardAxisManagementTestSupport` and `WardAxisAPIFixtures` are for test targets only. See [ARCHITECTURE.md](ARCHITECTURE.md#packages).
+The app target links `WardAxisTelemetry` and `WardAxisManagement`. `WardAxisManagement` brings in `WardAxisCore`. No app target links `WardAxisPolicy` yet. `WardAxisCoreSynthetic`, `WardAxisPolicyTestSupport`, `WardAxisManagementTestSupport` and `WardAxisAPIFixtures` are for test targets only. See [ARCHITECTURE.md](ARCHITECTURE.md#packages).
 
 ---
 
