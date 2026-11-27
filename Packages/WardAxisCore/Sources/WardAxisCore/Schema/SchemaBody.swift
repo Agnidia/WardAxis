@@ -84,4 +84,7 @@ public enum SchemaLimits {
     public static let maximumHostLabelLength = 63
     
     public static let validPorts = 1...65_535
+    
+    /// The longest IPv6 text without an IPv4 tail: eight groups of four hex digits and seven colons.
+    public static let maximumIPv6TextLength = 8 * 4 + 7
 }

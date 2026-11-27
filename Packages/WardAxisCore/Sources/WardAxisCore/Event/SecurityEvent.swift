@@ -146,11 +146,7 @@ public struct PolicyReference: Sendable, Hashable, Codable {
     }
     
     func validate(at path: String) throws(SchemaViolation) {
-        guard FieldRules.isIdentifier(identifier) else {
-            throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.identifier), reason: .malformedIdentifier)
-        }
-        guard revision >= SchemaLimits.minimumRevision else {
-            throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.revision), reason: .outOfRange)
-        }
+        try FieldRules.requireIdentifier(identifier, at: path, CodingKeys.identifier)
+        try FieldRules.requireRevision(revision, at: path, CodingKeys.revision)
     }
 }

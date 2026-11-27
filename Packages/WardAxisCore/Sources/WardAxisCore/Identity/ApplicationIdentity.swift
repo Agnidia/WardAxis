@@ -45,9 +45,7 @@ public struct ApplicationIdentity: SchemaBody, Hashable {
     }
     
     func validate(at path: String) throws(SchemaViolation) {
-        guard FieldRules.isSigningIdentifier(signingIdentifier) else {
-            throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.signingIdentifier), reason: .malformedIdentifier)
-        }
+        try FieldRules.requireSigningIdentifier(signingIdentifier, at: path, CodingKeys.signingIdentifier)
         if let teamIdentifier {
             guard FieldRules.isTeamIdentifier(teamIdentifier) else {
                 throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.teamIdentifier), reason: .malformedTeamIdentifier)
@@ -57,9 +55,7 @@ public struct ApplicationIdentity: SchemaBody, Hashable {
                 throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.teamIdentifier), reason: .contradictory)
             }
         }
-        if let bundleIdentifier, !FieldRules.isSigningIdentifier(bundleIdentifier) {
-            throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.bundleIdentifier), reason: .malformedIdentifier)
-        }
+        try FieldRules.requireSigningIdentifier(bundleIdentifier, at: path, CodingKeys.bundleIdentifier)
     }
 }
 
@@ -88,9 +84,7 @@ public struct ApplicationMatcher: Sendable, Hashable, Codable {
     
     /// Refuses a matcher that names a signing identifier alone, which any developer can claim (ADR 0011 D3).
     public func validate(at path: String) throws(SchemaViolation) {
-        guard FieldRules.isSigningIdentifier(signingIdentifier) else {
-            throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.signingIdentifier), reason: .malformedIdentifier)
-        }
+        try FieldRules.requireSigningIdentifier(signingIdentifier, at: path, CodingKeys.signingIdentifier)
         switch (teamIdentifier, isPlatformBinary) {
         case (.some(let team), false):
             guard FieldRules.isTeamIdentifier(team) else {
@@ -103,9 +97,7 @@ public struct ApplicationMatcher: Sendable, Hashable, Codable {
         case (.some, true):
             throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.teamIdentifier), reason: .contradictory)
         }
-        if let bundleIdentifier, !FieldRules.isSigningIdentifier(bundleIdentifier) {
-            throw SchemaViolation(path: SchemaPath.member(path, CodingKeys.bundleIdentifier), reason: .malformedIdentifier)
-        }
+        try FieldRules.requireSigningIdentifier(bundleIdentifier, at: path, CodingKeys.bundleIdentifier)
     }
 }
 

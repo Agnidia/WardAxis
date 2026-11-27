@@ -8,6 +8,7 @@
 import Testing
 import WardAxisCore
 import WardAxisPolicy
+import WardAxisPolicyTestSupport
 
 private let browser = ApplicationMatcher(
     signingIdentifier: "com.example.browser",
@@ -25,13 +26,7 @@ private let browserFlow = FlowApplication(
 )
 
 private func rule(_ action: PolicyAction, application: ApplicationMatcher?, enabled: Bool = true) -> PolicyRule {
-    PolicyRule(
-        identifier: "r1",
-        priority: 100,
-        enabled: enabled,
-        action: action,
-        match: PolicyMatch(application: application, destinationHosts: application == nil ? ["example.com"] : nil)
-    )
+    .fixture(action, match: PolicyMatch(application: application, destinationHosts: application == nil ? ["example.com"] : nil), enabled: enabled)
 }
 
 @Suite("Application identity matching")

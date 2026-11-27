@@ -9,6 +9,7 @@ import Foundation
 import Testing
 import WardAxisCore
 import WardAxisPolicy
+import WardAxisPolicyTestSupport
 
 @Suite("Policy bounds")
 struct PolicyBoundsTests {
@@ -19,13 +20,13 @@ struct PolicyBoundsTests {
     }
     
     private static func rule(_ match: PolicyMatch, priority: Int = 100) -> PolicyRule {
-        PolicyRule(identifier: "r", priority: priority, enabled: true, action: .deny, match: match)
+        .fixture(match: match, identifier: "r", priority: priority)
     }
     
     @Test
     func `A policy over the rule limit is refused`() {
         let rules = (0...PolicyLimits.maximumRuleCount).map {
-            PolicyRule(identifier: "r\($0)", priority: 100, enabled: true, action: .deny, match: Self.hosts)
+            PolicyRule.fixture(match: Self.hosts, identifier: "r\($0)")
         }
         #expect(throws: SchemaViolation(path: "$.body.rules", reason: .tooMany)) {
             try Self.policy(rules).validate()

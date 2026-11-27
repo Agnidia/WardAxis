@@ -54,7 +54,7 @@ public enum BoundedJSON {
             }
             if isInString {
                 if hexDigitsLeft > 0 {
-                    guard isHexDigit(byte) else { return .outOfBounds }
+                    guard ASCII.isHexDigit(byte) else { return .outOfBounds }
                     hexDigitsLeft -= 1
                 } else if isEscaped {
                     isEscaped = false
@@ -171,9 +171,5 @@ public enum BoundedJSON {
         }
         let quoted = Data([UInt8(ascii: "\"")] + bytes + [UInt8(ascii: "\"")])
         return try? JSONDecoder().decode(String.self, from: quoted)
-    }
-    
-    private static func isHexDigit(_ byte: UInt8) -> Bool {
-        ASCII.digits.contains(byte) || ASCII.lowercaseHexLetters.contains(byte) || ASCII.uppercaseHexLetters.contains(byte)
     }
 }

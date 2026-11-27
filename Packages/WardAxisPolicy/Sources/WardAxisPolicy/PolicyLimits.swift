@@ -24,10 +24,16 @@ public enum PolicyLimits {
     /// Unicode labels that shrink when mapped.
     public static let maximumReportedHostLength = 1024
     
+    /// The longest zone after `%` that a reported IPv6 address may carry.
+    public static let maximumZoneLength = 16
+    
     /// A reported address above this many UTF-8 bytes is refused before parsing
     /// (ADR 0018 N5). The longest legitimate form fits: a bracketed IPv6 with an
-    /// IPv4 tail (47 bytes), the RFC 6874 `%25` delimiter and a 16-byte zone.
-    public static let maximumReportedAddressLength = 66
+    /// IPv4 tail, the RFC 6874 `%25` delimiter and a zone.
+    public static let maximumReportedAddressLength = bracketedIPv6WithIPv4TailLength + "%25".utf8.count + maximumZoneLength
+    
+    /// `[` + six groups of four hex digits with their colons + a dotted IPv4 + `]`.
+    private static let bracketedIPv6WithIPv4TailLength = 1 + 6 * 5 + 15 + 1
     
     /// A higher priority wins (ADR 0015 D3). The upper bound leaves room to
     /// insert a rule between two others without renumbering.

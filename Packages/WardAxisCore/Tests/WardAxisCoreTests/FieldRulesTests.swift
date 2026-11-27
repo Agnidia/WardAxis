@@ -10,7 +10,7 @@ import Testing
 
 @Suite("Field rules")
 struct FieldRulesTests {
-    @Test(arguments: ["example.com", "a.b.c", "xn--bcher-kva.example", "a-b.example", String(repeating: "a", count: 63) + ".com"])
+    @Test(arguments: ["example.com", "a.b.c", "xn--bcher-kva.example", "a-b.example", String(repeating: "a", count: SchemaLimits.maximumHostLabelLength) + ".com"])
     func `Canonical host names are accepted`(host: String) {
         #expect(FieldRules.isHostName(host))
     }
@@ -18,8 +18,8 @@ struct FieldRulesTests {
     @Test(arguments: [
         "", "Example.com", "example.com.", ".example.com", "exa mple.com", "-a.example", "a-.example",
         "bücher.example", "ex\u{0430}mple.com", "example.com/path", "a..b", "999.0.0.1", "127.1", "192.0.2.10",
-        String(repeating: "a", count: 64) + ".com",
-        Array(repeating: String(repeating: "a", count: 63), count: 4).joined(separator: ".") + ".com"
+        String(repeating: "a", count: SchemaLimits.maximumHostLabelLength + 1) + ".com",
+        Array(repeating: String(repeating: "a", count: SchemaLimits.maximumHostLabelLength), count: 4).joined(separator: ".") + ".com"
     ])
     func `Non-canonical host names are refused`(host: String) {
         #expect(!FieldRules.isHostName(host))
@@ -47,7 +47,7 @@ struct FieldRulesTests {
         #expect(FieldRules.isTeamIdentifier(team) == isValid)
     }
     
-    @Test(arguments: [("com.example.app", true), ("a", true), (".hidden", false), ("com/example", false), ("com.ex\u{0430}mple", false), (String(repeating: "a", count: 256), false)])
+    @Test(arguments: [("com.example.app", true), ("a", true), (".hidden", false), ("com/example", false), ("com.ex\u{0430}mple", false), (String(repeating: "a", count: SchemaLimits.maximumSigningIdentifierLength + 1), false)])
     func `A signing identifier is an ASCII token of at most 255 bytes`(identifier: String, isValid: Bool) {
         #expect(FieldRules.isSigningIdentifier(identifier) == isValid)
     }

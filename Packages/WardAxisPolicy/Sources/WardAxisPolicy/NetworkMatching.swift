@@ -30,8 +30,8 @@ public struct FlowAddress: Sendable, Hashable {
     /// Network byte order, as in `in_addr` and `in6_addr`. `nil` unless 4 or 16 bytes.
     public init?(bytes: some Collection<UInt8>) {
         switch bytes.count {
-        case 4: value = .ipv4(bytes.reduce(0) { $0 << 8 | UInt32($1) })
-        case 16: value = Self.normalized(bytes.reduce(0) { $0 << 8 | UInt128($1) })
+        case 4: value = .ipv4(bigEndian(bytes))
+        case 16: value = Self.normalized(bigEndian(bytes))
         default: return nil
         }
     }
@@ -100,20 +100,17 @@ public struct FlowAddress: Sendable, Hashable {
             }
             text = text[..<percent]
         }
-        return ipv6Bits(text.lowercased()).map(normalized)
+        // ASCII only: a Unicode case map must not be what makes untrusted text parse.
+        return ipv6Bits(ASCII.lowercased(text)).map(normalized)
     }
 
     private static func ipv4Bits(_ canonical: some StringProtocol) -> UInt32 {
         canonical.split(separator: ".").compactMap { UInt32($0) }.reduce(0) { $0 << 8 | $1 }
     }
 
-    private static func isHexDigit(_ byte: UInt8) -> Bool {
-        (UInt8(ascii: "0")...UInt8(ascii: "9")).contains(byte) || (UInt8(ascii: "a")...UInt8(ascii: "f")).contains(byte)
-    }
-    
     private static func isZone(_ zone: Substring) -> Bool {
-        (1...16).contains(zone.utf8.count) && zone.utf8.allSatisfy { byte in
-            (UInt8(ascii: "a")...UInt8(ascii: "z")).contains(byte | 0x20) || (UInt8(ascii: "0")...UInt8(ascii: "9")).contains(byte)
+        (1...PolicyLimits.maximumZoneLength).contains(zone.utf8.count) && zone.utf8.allSatisfy { byte in
+            ASCII.lowercaseLetters.contains(byte) || ASCII.uppercaseLetters.contains(byte) || ASCII.digits.contains(byte)
                 || byte == UInt8(ascii: ".") || byte == UInt8(ascii: "_") || byte == UInt8(ascii: "-")
         }
     }
@@ -140,7 +137,7 @@ public struct FlowAddress: Sendable, Hashable {
                     groups += [UInt16(bits >> 16), UInt16(bits & 0xFFFF)]
                 } else {
                     // `UInt16(_:radix:)` alone also takes a sign, so `+f` would parse.
-                    guard (1...4).contains(field.utf8.count), field.utf8.allSatisfy(isHexDigit), let group = UInt16(field, radix: 16) else {
+                    guard (1...4).contains(field.utf8.count), field.utf8.allSatisfy(ASCII.isLowercaseHexDigit), let group = UInt16(field, radix: 16) else {
                         return nil
                     }
                     groups.append(group)
@@ -185,10 +182,10 @@ public struct IPNetwork: Sendable, Hashable {
         // A shift by the full width is not zero in every language; `/0` is spelled out (N1).
         if bytes.count == 4 {
             let mask: UInt32 = prefixLength == 0 ? 0 : .max << (32 - prefixLength)
-            base = .ipv4(bytes.reduce(0) { $0 << 8 | UInt32($1) }, mask: mask)
+            base = .ipv4(bigEndian(bytes), mask: mask)
         } else {
             let mask: UInt128 = prefixLength == 0 ? 0 : .max << (128 - prefixLength)
-            base = .ipv6(bytes.reduce(0) { $0 << 8 | UInt128($1) }, mask: mask)
+            base = .ipv6(bigEndian(bytes), mask: mask)
         }
     }
     
@@ -227,8 +224,7 @@ public extension PolicyMatch {
         guard let compiledNetworks else {
             return .match
         }
-        switch address {
-        case .known(.some(let address)):
+        return address.evaluate { address in
             var result = MatchResult.noMatch
             for network in compiledNetworks {
                 // An entry that bypassed validation could narrow a deny, so it fails closed by action (N6).
@@ -239,10 +235,6 @@ public extension PolicyMatch {
                 }
             }
             return result
-        case .known(nil):
-            return .noMatch
-        case .unknown:
-            return .unknown
         }
     }
 }
@@ -252,14 +244,12 @@ public extension PolicyRule {
     /// address fails closed by action (ADR 0016 D3): a `deny` rule applies and
     /// an `allow` rule does not. A disabled rule never applies.
     func networkApplies(to address: Observed<FlowAddress?>) -> Bool {
-        guard enabled else {
-            return false
-        }
-
-        return switch match.evaluateNetwork(address) {
-        case .match: true
-        case .noMatch: false
-        case .unknown: action == .deny
-        }
+        applies(match.evaluateNetwork(address))
     }
+}
+
+/// Address bytes in network byte order as one integer. Callers pass exactly
+/// `T.bitWidth / 8` bytes; a longer run would shift the high bytes out.
+private func bigEndian<T: FixedWidthInteger & UnsignedInteger>(_ bytes: some Collection<UInt8>) -> T {
+    bytes.reduce(0) { $0 << 8 | T($1) }
 }

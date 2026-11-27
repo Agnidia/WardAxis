@@ -59,12 +59,8 @@ public struct SecurityPolicy: SchemaBody {
     }
     
     public func validate() throws(SchemaViolation) {
-        guard FieldRules.isIdentifier(identifier) else {
-            throw SchemaViolation(path: SchemaPath.member(SchemaPath.body, CodingKeys.identifier), reason: .malformedIdentifier)
-        }
-        guard revision >= SchemaLimits.minimumRevision else {
-            throw SchemaViolation(path: SchemaPath.member(SchemaPath.body, CodingKeys.revision), reason: .outOfRange)
-        }
+        try FieldRules.requireIdentifier(identifier, at: SchemaPath.body, CodingKeys.identifier)
+        try FieldRules.requireRevision(revision, at: SchemaPath.body, CodingKeys.revision)
         let rulesPath = SchemaPath.member(SchemaPath.body, CodingKeys.rules)
         guard rules.count <= PolicyLimits.maximumRuleCount else {
             throw SchemaViolation(path: rulesPath, reason: .tooMany)
