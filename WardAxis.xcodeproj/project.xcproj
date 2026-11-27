@@ -25,6 +25,9 @@
     }, {
       "kind": "local",
       "path": "Packages/WardAxisManagement",
+    }, {
+      "kind": "local",
+      "path": "Packages/WardAxisPolicy",
     },
   ],
   "files": [

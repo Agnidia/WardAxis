@@ -99,7 +99,7 @@ A `SchemaError` path is built from schema keys and array indexes, such as `$.bod
 - From the first App Store release, a new field or enum case needs a new schema version. Before it, a version may be redefined in place ([ADR 0015](0015-policy-schema.md) D5). A v1 reader refuses v2 documents until it is updated. The server must keep serving v1 to devices that have not updated.
 - An explicit `null` for an optional field is refused. Writers omit the field.
 - The unknown-field check decodes each document twice. The 64 KiB bound keeps the cost small.
-- A wildcard over a public suffix (`*.co.uk`, `*.github.io`) passes validation. A public-suffix check needs a bundled list and its updates; it waits for the policy engine.
+- A wildcard over a public suffix (`*.co.uk`, `*.github.io`) passes validation. A public-suffix check needs a bundled list and its updates; it is still open after host matching ([ADR 0017](0017-host-name-matching.md)).
 - `WardAxisCore` does not import `Network`, so the server can share these schemas later.
 - `revision` gives a consumer what it needs to refuse a replayed older policy. The comparison and its storage come with signed policy distribution (roadmap ADR-011).
 

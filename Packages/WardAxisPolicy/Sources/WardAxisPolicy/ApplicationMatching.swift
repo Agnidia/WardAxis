@@ -8,14 +8,6 @@
 import Foundation
 import WardAxisCore
 
-/// One identity field as an enforcement component saw it. `unknown` means the
-/// platform or the resolver could not supply the field; it is never the same
-/// as a known empty value (ADR 0016 D2).
-public enum Observed<Value: Sendable & Hashable>: Sendable, Hashable {
-    case known(Value)
-    case unknown
-}
-
 /// Who signed an application, beyond its signing identifier.
 public enum TeamAttribution: Sendable, Hashable {
     case team(String)
@@ -53,18 +45,18 @@ public enum TeamAttribution: Sendable, Hashable {
 public struct FlowApplication: Sendable, Hashable {
     public let signingIdentifier: Observed<String>
     public let team: Observed<TeamAttribution>
-
+    
     /// `.known(nil)` is a code object with no bundle, such as a command-line tool.
     public let bundleIdentifier: Observed<String?>
-
+    
     public static let unknown = FlowApplication(signingIdentifier: .unknown, team: .unknown, bundleIdentifier: .unknown)
-
+    
     public init(signingIdentifier: Observed<String>, team: Observed<TeamAttribution>, bundleIdentifier: Observed<String?>) {
         self.signingIdentifier = signingIdentifier
         self.team = team
         self.bundleIdentifier = bundleIdentifier
     }
-
+    
     /// An identity from the code signature.
     ///
     /// A `nil` bundle ID may mean "not read", so it maps to `unknown`; only a
@@ -80,7 +72,7 @@ public struct FlowApplication: Sendable, Hashable {
         let bundleIdentifier: Observed<String?> = identity.bundleIdentifier.map { .known($0) } ?? .unknown
         self.init(signingIdentifier: .known(identity.signingIdentifier), team: team, bundleIdentifier: bundleIdentifier)
     }
-
+    
     /// A resolver answer. `nil` (exited process, reused PID, unreadable
     /// signature) is an unknown application, never a match.
     public init(resolved identity: ApplicationIdentity?) {
@@ -130,22 +122,13 @@ public struct FlowApplication: Sendable, Hashable {
     }
 }
 
-/// The outcome of one ``WardAxisCore/ApplicationMatcher`` against one flow.
-public enum ApplicationMatchResult: Sendable, Hashable {
-    case match
-    /// A known field differs. Definite, whatever the other fields are.
-    case noMatch
-    /// No known field differs, but a field that the matcher names is unknown.
-    case unknown
-}
-
 public extension ApplicationMatcher {
     /// Compares every field the matcher names, byte for byte (ADR 0016 D1).
     ///
     /// Byte comparison, not `String ==`: Swift equality is canonical
     /// equivalence, so `"K"` (U+212A KELVIN SIGN) would equal `"K"`, and a
     /// flow value is not validated like a policy value.
-    func evaluate(_ flow: FlowApplication) -> ApplicationMatchResult {
+    func evaluate(_ flow: FlowApplication) -> MatchResult {
         // An unpinned or contradictory matcher fails `validate(at:)`. If one
         // reaches here anyway, it has no team to compare, so the field counts
         // as unknown and the fail-closed fallback decides.
@@ -154,7 +137,7 @@ public extension ApplicationMatcher {
         case (nil, true): .platformBinary
         default: nil
         }
-
+        
         var isComplete = expectedTeam != nil
         switch flow.signingIdentifier {
         case .known(let value):
@@ -184,7 +167,7 @@ public extension ApplicationMatcher {
         }
         return isComplete ? .match : .unknown
     }
-
+    
     private static func isExactlyEqual(_ lhs: String, _ rhs: String) -> Bool {
         lhs.utf8.elementsEqual(rhs.utf8)
     }

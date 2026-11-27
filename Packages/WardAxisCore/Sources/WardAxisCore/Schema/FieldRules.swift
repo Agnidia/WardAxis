@@ -28,7 +28,7 @@ public enum FieldRules {
     /// A canonical host name: lowercase LDH labels of 1–63 bytes, 253 bytes in
     /// all, no trailing dot. Internationalized names must arrive as punycode.
     /// Lowercase only, so a matcher never has to case-fold untrusted input.
-    static func isHostName(_ value: String) -> Bool {
+    public static func isHostName(_ value: String) -> Bool {
         let bytes = Array(value.utf8)
         guard (1...SchemaLimits.maximumHostNameLength).contains(bytes.count) else {
             return false
@@ -68,7 +68,7 @@ public enum FieldRules {
     /// Four decimal octets with no leading zero. Refuses the short, octal and
     /// hex forms (`127.1`, `010.0.0.1`, `0x7f.0.0.1`) that system parsers accept,
     /// so one address has one spelling.
-    static func isCanonicalIPv4(_ value: String) -> Bool {
+    public static func isCanonicalIPv4(_ value: String) -> Bool {
         let octets = value.utf8.split(separator: UInt8(ascii: "."), omittingEmptySubsequences: false)
         return octets.count == 4 && octets.allSatisfy { octet in
             guard (1...3).contains(octet.count),
@@ -85,7 +85,7 @@ public enum FieldRules {
     /// The RFC 5952 text form only: lowercase, no leading zeros, the longest run
     /// of two or more zero groups shortened to `::`. Refuses a zone (`%en0`),
     /// whose meaning depends on the device, and an embedded IPv4 tail.
-    static func isCanonicalIPv6(_ value: String) -> Bool {
+    public static func isCanonicalIPv6(_ value: String) -> Bool {
         guard let groups = ipv6Groups(value) else {
             return false
         }

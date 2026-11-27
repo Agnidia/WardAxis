@@ -83,9 +83,9 @@ No build has shipped, so this change redefines the body of `schemaVersion` 1 in 
 - `WardAxisManagement` does not depend on `WardAxisPolicy`. Its test target does, to read a policy from a feed snapshot.
 - `FieldRules`, `SchemaPath`, `ApplicationMatcher.validate(at:)` and `SchemaCodec.requireCodec(_:)` are public API of `WardAxisCore`. Each is a pure check or a path builder and holds no state.
 - `0.0.0.0/0` and `::/0` pass validation. They are valid "all IPv4" and "all IPv6" criteria; review of the policy content catches a misuse, not the schema.
-- A public-suffix wildcard (`*.co.uk`) still passes (ADR 0011 known gap).
+- A public-suffix wildcard (`*.co.uk`) still passes (ADR 0011 known gap, still open after [ADR 0017](0017-host-name-matching.md)).
 - Audit mode is data only here. NET-014 defines what an audit decision reports.
-- No app target links `WardAxisPolicy` yet. The Xcode project gets a package reference when a target first imports it.
+- The Xcode project references `WardAxisPolicy` as a local package, so it shows in the navigator, but no target links it yet. A target links its product when it first imports it.
 
 ## Validation
 
