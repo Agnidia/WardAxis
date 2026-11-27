@@ -7,7 +7,7 @@ struct FileLoggingTests {
     private func temporaryFile() -> URL {
         FileManager.default.temporaryDirectory.appending(path: "WardAxis-log-\(UUID()).log")
     }
-
+    
     @Test
     func `Startup rotation and pending writes cannot restore cleared entries`() async throws {
         let url = temporaryFile()
@@ -28,7 +28,7 @@ struct FileLoggingTests {
         await writer.drain()
         #expect(try String(contentsOf: url, encoding: .utf8) == "[ui] [error] new\n")
     }
-
+    
     @Test
     func `Every append respects the byte limit and retains complete recent lines`() throws {
         let url = temporaryFile()
@@ -43,7 +43,7 @@ struct FileLoggingTests {
         try file.append(Data(repeating: 120, count: 128))
         #expect(try Data(contentsOf: url).count == 128)
     }
-
+    
     @Test
     func `A failed truncate throws instead of confirming deletion`() throws {
         let url = temporaryFile()
@@ -54,14 +54,14 @@ struct FileLoggingTests {
         #expect(throws: (any Error).self) { try file.clear() }
         #expect(try String(contentsOf: url, encoding: .utf8) == "entry\n")
     }
-
+    
     @Test
     func `Oversize Unicode entries are capped without splitting a scalar`() {
         let data = FileLogHandler.boundedEntry(String(repeating: "🔒", count: 10_000))
         #expect(data.count <= LogFileLimits.maximumEntryBytes)
         #expect(String(data: data, encoding: .utf8)?.hasSuffix(" [truncated]\n") == true)
     }
-
+    
     @Test
     func `A tail read discards a cut line and never reads over its budget`() throws {
         let url = temporaryFile()
