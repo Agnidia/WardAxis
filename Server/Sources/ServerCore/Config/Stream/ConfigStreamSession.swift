@@ -9,6 +9,8 @@ import Foundation
 import HummingbirdWebSocket
 import Logging
 import NIOWebSocket
+import WardAxisAPIContract
+import WardAxisCore
 
 /// One upgraded `GET /v1/config/stream` connection, from admission to close.
 ///
@@ -19,11 +21,11 @@ import NIOWebSocket
 /// session.
 struct ConfigStreamSession {
     /// Close code 1013 (Try Again Later), which `WebSocketErrorCode` has no case for.
-    static let tryAgainLater: WebSocketErrorCode = .unknown(1013)
+    static let tryAgainLater: WebSocketErrorCode = .unknown(ConfigStreamCloseCode.tryAgainLater)
     
     /// Close code 1000 with this reason ends a stream at its lifetime cap; the client
     /// reconnects at once with a new TLS handshake.
-    static let lifetimeReason: String = "lifetime"
+    static let lifetimeReason: String = ConfigStream.lifetimeReason
     
     let store: any ConfigStore
     let hub: ConfigConnectionHub
@@ -43,6 +45,10 @@ struct ConfigStreamSession {
         case graceElapsed
         case idle
     }
+    
+    /// A frame the client would refuse unread (ADR 0019). Sending it would only make
+    /// the client reconnect for the same frame, so the stream closes with 1011 instead.
+    private struct FrameOutOfBounds: Error {}
     
     private enum RelayReadiness: Sendable {
         case alreadyReady
@@ -91,7 +97,11 @@ struct ConfigStreamSession {
             return
         }
         do {
-            try await outbound.writeTextMessage(ConfigFrameEncoder.snapshot(snapshot))
+            try await write(ConfigFrameEncoder.snapshot(snapshot), to: outbound)
+        } catch is FrameOutOfBounds {
+            logger.error("Config stream snapshot exceeds the frame bounds")
+            await close(outbound, code: .unexpectedServerError, reason: nil, cause: "frame_out_of_bounds")
+            return
         } catch {
             logger.debug("Config stream ended before the snapshot was sent", metadata: ["error.type": "\(type(of: error))"])
             return
@@ -191,7 +201,7 @@ struct ConfigStreamSession {
                         currentVersion = filled
                         continue
                     }
-                    try await outbound.writeTextMessage(frame.text)
+                    try await write(frame.text, to: outbound)
                     currentVersion = frame.version
                 case .heartbeat:
                     try await outbound.writeTextMessage(ConfigFrameEncoder.heartbeat(version: currentVersion))
@@ -200,6 +210,10 @@ struct ConfigStreamSession {
                     return .serverClosed
                 }
             }
+        } catch is FrameOutOfBounds {
+            logger.error("Config stream delta exceeds the frame bounds")
+            await close(outbound, code: .unexpectedServerError, reason: nil, cause: "frame_out_of_bounds")
+            return .serverClosed
         } catch {
             logger.debug("Config stream write failed", metadata: ["error.type": "\(type(of: error))"])
             return .writeFailed
@@ -224,11 +238,26 @@ struct ConfigStreamSession {
             guard !changes.isEmpty else { return nil }
             for change in changes {
                 guard change.version == currentVersion + 1 else { return nil }
-                try await outbound.writeTextMessage(ConfigFrameEncoder.delta(change).text)
+                try await write(ConfigFrameEncoder.delta(change).text, to: outbound)
                 currentVersion = change.version
             }
         }
         return currentVersion
+    }
+    
+    /// Writes `text` only when the client's pre-scan would accept it: the same
+    /// ``BoundedJSON`` scan at the same ``ConfigStreamLimits``.
+    ///
+    /// - Throws: ``FrameOutOfBounds`` before anything is written, or the writer's error.
+    private func write(_ text: String, to outbound: WebSocketOutboundWriter) async throws {
+        guard BoundedJSON.isWithinBounds(
+            Data(text.utf8),
+            maximumSize: ConfigStreamLimits.maximumFrameBytes,
+            maximumDepth: ConfigStreamLimits.maximumNestingDepth
+        ) else {
+            throw FrameOutOfBounds()
+        }
+        try await outbound.writeTextMessage(text)
     }
     
     /// Reads and discards client frames. Ends on the client's close frame or a dropped connection.

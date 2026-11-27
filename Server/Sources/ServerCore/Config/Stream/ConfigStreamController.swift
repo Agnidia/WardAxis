@@ -7,6 +7,7 @@
 
 import Hummingbird
 import HummingbirdWebSocket
+import WardAxisAPIContract
 
 /// Mounts `GET /v1/config/stream`, the WebSocket the contract's `streamConfig` describes.
 ///
@@ -27,7 +28,7 @@ package struct ConfigStreamController {
     
     package func addRoutes(to group: RouterGroup<AppRequestContext>) {
         let dependencies = dependencies
-        group.group("config/stream")
+        group.group(RouterPath(ConfigStream.path))
             .add(middleware: ConfigStreamAdmissionMiddleware())
             .ws(
                 shouldUpgrade: { request, _ in

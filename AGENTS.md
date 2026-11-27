@@ -209,7 +209,7 @@ Add `(cd Server && swift test)` when the change touches `Server/` or the contrac
 | `WardAxisPolicy` | `WardAxisPolicy`, `WardAxisPolicyTestSupport` | Versioned `SecurityPolicy` and `PolicyRule` models, `PolicySourceProtocol`, application identity matching ([ADR 0016](docs/adr/0016-application-identity-matching.md)), host name matching ([ADR 0017](docs/adr/0017-host-name-matching.md)), CIDR network matching ([ADR 0018](docs/adr/0018-cidr-network-matching.md)); `FixturePolicySource` for tests ([ADR 0015](docs/adr/0015-policy-schema.md)) |
 | `WardAxisTelemetry` | `WardAxisTelemetry` | `Log` facade over `os.Logger`, file sink, `TelemetryService` (opt-in) |
 | `WardAxisManagement` | `WardAxisManagement`, `WardAxisManagementTestSupport` | Server endpoint configuration, configuration feed and its typed read, client identity, Keychain storage |
-| `WardAxisManagementAPI` | `WardAxisAPIClient`, `WardAxisAPIServer`, `WardAxisAPIFixtures` | OpenAPI contract and generated code; golden frames |
+| `WardAxisManagementAPI` | `WardAxisAPIClient`, `WardAxisAPIServer`, `WardAxisAPIContract`, `WardAxisAPIFixtures` | OpenAPI contract and generated code; hand-written stream path, close codes, frame bounds and error codes shared by server and client ([ADR 0019](docs/adr/0019-shared-api-contract-constants.md)); golden frames |
 
 ### Other folders
 

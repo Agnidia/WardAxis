@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import WardAxisAPIContract
 import WardAxisAPIServer
 
 /// The path prefix every route is served under: the path of the contract's `servers` URL.
@@ -32,10 +33,9 @@ package enum APIBasePath {
         try validate(Servers.Server1.url().path(percentEncoded: true))
     }
     
-    /// Accepts `/v1` and `/api/v1`. A spec edit to `/` would serve the API unversioned, and
-    /// `/v1/` or `//v1` would produce paths that no client sends, so all three fail loudly.
+    /// Applies ``APIBasePathRule``, the rule the client applies to the same path.
     package static func validate(_ path: String) throws(InvalidPath) -> String {
-        guard path.hasPrefix("/"), path != "/", !path.hasSuffix("/"), !path.contains("//") else {
+        guard APIBasePathRule.isValid(path) else {
             throw InvalidPath(path: path)
         }
         return path

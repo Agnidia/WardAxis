@@ -12,6 +12,7 @@ import NIOConcurrencyHelpers
 import NIOWebSocket
 import ServerCore
 import Testing
+import WardAxisAPIContract
 
 @Suite("Config stream snapshot and deltas")
 struct ConfigStreamSnapshotTests {
@@ -154,6 +155,46 @@ struct ConfigStreamSnapshotTests {
             #expect(recording.closeCode == .unexpectedServerError)
             #expect(recording.messages.isEmpty)
             try await waitUntil("every slot released") { harness.hub.subscriberCount == 0 }
+        }
+    }
+    
+    @Test(arguments: [
+        // One byte past the frame bound once the envelope is added.
+        #"{"blob":"\#(String(repeating: "x", count: ConfigStreamLimits.maximumFrameBytes))"}"#,
+        // One level deeper than the client accepts: envelope, `values`, then the nest.
+        #"{"deep":\#(String(repeating: "[", count: ConfigStreamLimits.maximumNestingDepth - 1))\#(String(repeating: "]", count: ConfigStreamLimits.maximumNestingDepth - 1))}"#
+    ])
+    func `A snapshot the client would refuse is never sent; the stream closes with 1011 before any frame`(valuesJSON: String) async throws {
+        let store = try InMemoryConfigStore(version: 41, valuesJSON: valuesJSON)
+        let harness = try await ConfigStreamHarness(configStore: store)
+        let user = try harness.enrollDevice()
+        try await harness.application().test(.live) { client in
+            try await harness.waitForRelay()
+            let recording = try await client.openConfigStream(as: user)
+            #expect(recording.closeCode == .unexpectedServerError)
+            #expect(recording.messages.isEmpty)
+        }
+    }
+    
+    @Test
+    func `A delta the client would refuse is never sent; the stream closes with 1011 after the snapshot`() async throws {
+        let store = try InMemoryConfigStore(version: 41, valuesJSON: Self.seed)
+        let harness = try await ConfigStreamHarness(configStore: store)
+        let user = try harness.enrollDevice()
+        let nest = String(repeating: "[", count: ConfigStreamLimits.maximumNestingDepth - 1)
+            + String(repeating: "]", count: ConfigStreamLimits.maximumNestingDepth - 1)
+        try await harness.application().test(.live) { client in
+            try await harness.waitForRelay()
+            let recording = try await client.openConfigStream(as: user) { messages in
+                if messages.count == 1 {
+                    try store.commit(changedJSON: #"{"deep":\#(nest)}"#)
+                    let change = try #require(store.change(at: 42))
+                    try harness.hub.publish(ConfigFrameEncoder.delta(change))
+                }
+                return false
+            }
+            #expect(recording.closeCode == .unexpectedServerError)
+            #expect(recording.messages.map(\.version) == [41])
         }
     }
 }

@@ -23,7 +23,8 @@ let package = Package(
             dependencies: [
                 .product(name: "WardAxisCore", package: "WardAxisCore"),
                 .product(name: "WardAxisTelemetry", package: "WardAxisTelemetry"),
-                .product(name: "WardAxisAPIClient", package: "WardAxisManagementAPI")
+                .product(name: "WardAxisAPIClient", package: "WardAxisManagementAPI"),
+                .product(name: "WardAxisAPIContract", package: "WardAxisManagementAPI")
             ]
         ),
         .target(

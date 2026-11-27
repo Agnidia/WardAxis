@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import WardAxisAPIContract
 
 /// What the service does after a connection ends.
 ///
@@ -28,11 +29,13 @@ enum ConfigurationCloseRoute: Sendable, Equatable {
     
     static func route(for close: ConfigurationStreamClose) -> ConfigurationCloseRoute {
         switch close {
-        case .clientCertificateRejected, .closeCode(1008):
+        case .clientCertificateRejected, .closeCode(Int(ConfigStreamCloseCode.policyViolation)):
             .identityRejected
         case .handshakeRejected(let status) where identityRejectedStatuses.contains(status):
             .identityRejected
-        case .closeCode(1000), .closeCode(1001), .closeCode(1011):
+        case .closeCode(Int(ConfigStreamCloseCode.normalClosure)),
+             .closeCode(Int(ConfigStreamCloseCode.goingAway)),
+             .closeCode(Int(ConfigStreamCloseCode.internalError)):
             .reconnect
         case .closeCode, .handshakeRejected, .connectionFailed, .bufferOverflow:
             .backOff

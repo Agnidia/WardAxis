@@ -6,11 +6,12 @@
 //
 
 import Foundation
+import WardAxisAPIContract
 
 /// Builds the `GET /v1/config/stream` WebSocket upgrade request.
 enum ConfigurationStreamRequest {
     /// Relative to ``APIConfiguration/baseURL``, which already carries the contract prefix.
-    static let path = "config/stream"
+    static let path = ConfigStream.path
     
     /// The upgrade request, or `nil` when no connection may be attempted.
     ///
