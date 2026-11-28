@@ -31,12 +31,9 @@ extension Observed {
     /// field decide; an unknown field stays unknown.
     func evaluate<Wrapped>(_ present: (Wrapped) -> MatchResult) -> MatchResult where Value == Wrapped? {
         switch self {
-        case .known(.some(let value)):
-            present(value)
-        case .known(nil):
-            .noMatch
-        case .unknown:
-            .unknown
+        case .known(.some(let value)): present(value)
+        case .known(nil): .noMatch
+        case .unknown: .unknown
         }
     }
 }
@@ -50,6 +47,7 @@ extension PolicyRule {
         guard enabled else {
             return false
         }
+        
         return switch result() {
         case .match: true
         case .noMatch: false

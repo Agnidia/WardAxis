@@ -64,13 +64,10 @@ enum KeychainQuery {
     ) throws(Failure) -> Lookup {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        switch status {
-        case errSecSuccess:
-            return .found(result)
-        case errSecItemNotFound:
-            return .notFound
-        default:
-            throw failure(status)
+        return switch status {
+        case errSecSuccess: .found(result)
+        case errSecItemNotFound: .notFound
+        default: throw failure(status)
         }
     }
     
