@@ -7,20 +7,16 @@
 
 import Testing
 import WardAxisCore
+import WardAxisCoreSynthetic
 import WardAxisPolicy
+import WardAxisPolicyTestSupport
 
 private func host(_ name: String) throws -> FlowHost {
     try #require(FlowHost(normalizing: name))
 }
 
 private func rule(_ action: PolicyAction, hosts: [String]?, enabled: Bool = true) -> PolicyRule {
-    PolicyRule(
-        identifier: "r1",
-        priority: 100,
-        enabled: enabled,
-        action: action,
-        match: PolicyMatch(destinationHosts: hosts, transport: hosts == nil ? .tcp : nil)
-    )
+    .fixture(action, match: PolicyMatch(destinationHosts: hosts, transport: hosts == nil ? .tcp : nil), enabled: enabled)
 }
 
 @Suite("Host name matching")
@@ -97,7 +93,7 @@ struct HostMatchingTests {
         "-lead.test", "trail-.test", "*.example.test", "127.1", "0x7f.1", "010.0.0.1", "999", "[192.0.2.1]",
         "xn--zz.test", "ü.xn--zz", "xn--abc-.test", "xn--fa-hia.de", "faß.de", "FAẞ.de", "ς.test", "a\u{200D}b.test",
         "exa mple.bücher.de", "bücher.de/path", "user@example.test", "example.test:443",
-        String(repeating: "a", count: 64) + ".test",
+        String(repeating: "a", count: SchemaLimits.maximumHostLabelLength + 1) + ".test",
         Array(repeating: "abcdefghi", count: 26).joined(separator: "."),
         String(repeating: "a", count: PolicyLimits.maximumReportedHostLength + 1),
         String(repeating: "ü", count: 200) + ".test"
@@ -182,7 +178,7 @@ struct HostMatchingTests {
     
     @Test(arguments: seeds)
     func `Normalization is idempotent and yields a canonical host name`(seed: UInt64) {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let reported = random.noisyString()
             guard let normalized = FlowHost(normalizing: reported) else {
@@ -195,7 +191,7 @@ struct HostMatchingTests {
     
     @Test(arguments: seeds)
     func `Case and trailing-dot variants normalize alike and match alike`(seed: UInt64) throws {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let name = random.hostName()
             let parent = name.split(separator: ".", maxSplits: 1).last.map(String.init) ?? name
@@ -211,7 +207,7 @@ struct HostMatchingTests {
     
     @Test(arguments: seeds)
     func `Wildcards respect label boundaries`(seed: UInt64) throws {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let suffix = random.hostName(minimumLabels: 2)
             let label = random.label()
@@ -229,7 +225,7 @@ struct HostMatchingTests {
     
     @Test(arguments: seeds)
     func `Arbitrary input is either refused or canonical`(seed: UInt64) {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let reported = random.noisyString(maximumLength: index.isMultiple(of: 50) ? 1100 : 40)
             switch FlowHost.observed(reportedName: reported) {
@@ -244,27 +240,27 @@ struct HostMatchingTests {
     }
 }
 
-private extension SplitMix64 {
+private extension SeededGenerator {
     mutating func label() -> String {
         let letters = Array("abcdefghijklmnopqrstuvwxyz0123456789")
-        let length = 1 + below(12)
-        var bytes = (0..<length).map { _ in letters[below(letters.count)] }
-        if length > 2, below(4) == 0 {
-            bytes[1 + below(length - 2)] = "-"
+        let length = 1 + next(below: 12)
+        var bytes = (0..<length).map { _ in letters[next(below: letters.count)] }
+        if length > 2, next(below: 4) == 0 {
+            bytes[1 + next(below: length - 2)] = "-"
         }
         return String(bytes)
     }
     
     /// A canonical host name whose last label holds a letter, so it never reads as an address.
     mutating func hostName(minimumLabels: Int = 1) -> String {
-        var labels = (0..<(minimumLabels + below(3))).map { _ in label() }
+        var labels = (0..<(minimumLabels + next(below: 3))).map { _ in label() }
         labels[labels.count - 1] = "t" + labels[labels.count - 1]
         return labels.joined(separator: ".")
     }
     
     mutating func variant(of name: String) -> String {
-        let flipped = String(name.map { below(2) == 0 ? Character($0.uppercased()) : $0 })
-        return below(2) == 0 ? flipped + "." : flipped
+        let flipped = String(name.map { next(below: 2) == 0 ? Character($0.uppercased()) : $0 })
+        return next(below: 2) == 0 ? flipped + "." : flipped
     }
     
     mutating func noisyString(maximumLength: Int = 40) -> String {
@@ -272,7 +268,7 @@ private extension SplitMix64 {
             "a", "z", "0", "9", "A", "Z", "-", ".", ".", "%", " ", "_", "*", ":", "/", "[", "]", "@",
             "ü", "ß", "ｅ", "。", "\u{200B}", "\u{0301}", "K", "а", "😀", "\u{0}"
         ]
-        let length = below(maximumLength + 1)
-        return (0..<length).map { _ in alphabet[below(alphabet.count)] }.joined()
+        let length = next(below: maximumLength + 1)
+        return (0..<length).map { _ in alphabet[next(below: alphabet.count)] }.joined()
     }
 }

@@ -24,21 +24,15 @@ struct TestAuthority: Sendable {
         let subject = try DistinguishedName {
             CommonName(name)
         }
-        let now = Date()
-        certificate = try Certificate(
-            version: .v3,
-            serialNumber: Certificate.SerialNumber(),
-            publicKey: Certificate.PublicKey(key.publicKey),
-            notValidBefore: now.addingTimeInterval(-3600),
-            notValidAfter: now.addingTimeInterval(3600),
-            issuer: subject,
+        certificate = try Self.sign(
             subject: subject,
-            signatureAlgorithm: .ecdsaWithSHA256,
+            publicKey: key.publicKey,
+            issuer: subject,
+            issuerKey: key,
             extensions: Certificate.Extensions {
                 Critical(BasicConstraints.isCertificateAuthority(maxPathLength: 0))
                 Critical(KeyUsage(keyCertSign: true))
-            },
-            issuerPrivateKey: Certificate.PrivateKey(key)
+            }
         )
     }
     
@@ -89,18 +83,30 @@ struct TestAuthority: Sendable {
     }
     
     private func issue(subject: DistinguishedName, key leafKey: P256.Signing.PrivateKey, extensions: Certificate.Extensions) throws -> Certificate {
+        try Self.sign(subject: subject, publicKey: leafKey.publicKey, issuer: certificate.subject, issuerKey: key, extensions: extensions)
+    }
+    
+    /// Valid from an hour ago to an hour from now, so clock skew between the
+    /// test and the TLS stack never fails a handshake.
+    private static func sign(
+        subject: DistinguishedName,
+        publicKey: P256.Signing.PublicKey,
+        issuer: DistinguishedName,
+        issuerKey: P256.Signing.PrivateKey,
+        extensions: Certificate.Extensions
+    ) throws -> Certificate {
         let now = Date()
         return try Certificate(
             version: .v3,
             serialNumber: Certificate.SerialNumber(),
-            publicKey: Certificate.PublicKey(leafKey.publicKey),
+            publicKey: Certificate.PublicKey(publicKey),
             notValidBefore: now.addingTimeInterval(-3600),
             notValidAfter: now.addingTimeInterval(3600),
-            issuer: certificate.subject,
+            issuer: issuer,
             subject: subject,
             signatureAlgorithm: .ecdsaWithSHA256,
             extensions: extensions,
-            issuerPrivateKey: Certificate.PrivateKey(key)
+            issuerPrivateKey: Certificate.PrivateKey(issuerKey)
         )
     }
 }

@@ -221,10 +221,6 @@ enum L {
                 "settings.logs.clearConfirm"
             }
             
-            static var clearCancel: LocalizedStringKey {
-                "settings.logs.clearCancel"
-            }
-            
             static var errorTitle: LocalizedStringKey {
                 "settings.logs.errorTitle"
             }

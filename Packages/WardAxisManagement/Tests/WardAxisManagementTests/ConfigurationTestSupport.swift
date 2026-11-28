@@ -19,7 +19,7 @@ import WardAxisManagementTestSupport
 struct ConfigurationHarness {
     static let enrollment = EnrollmentID("device-1")
     static let apiConfiguration = APIConfiguration(baseURL: URL(string: "https://api.example.com")!)
-    static let identity = ClientIdentity(testCredential: URLCredential(user: "device", password: "unused", persistence: .none))
+    nonisolated static let identity = ClientIdentity(testCredential: URLCredential(user: "device", password: "unused", persistence: .none))
     
     let service: ConfigurationService
     let transport = ScriptedStreamTransport()

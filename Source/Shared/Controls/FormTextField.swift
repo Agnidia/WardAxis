@@ -149,7 +149,7 @@ struct FormTextField: View {
             .focused($isFocused)
             .accessibleTextField(accessibilityConfig,
                                  label: label,
-                                 value: text.isEmpty ? nil : text)
+                                 value: text.realValue)
             .padding(.vertical, FormSize.innerPaddingVertical)
             .padding(.horizontal, FormSize.innerPaddingHorizontal)
             .frame(minHeight: minHeight)

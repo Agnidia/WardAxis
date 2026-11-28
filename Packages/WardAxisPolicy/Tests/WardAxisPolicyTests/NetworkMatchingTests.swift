@@ -8,7 +8,9 @@
 import Foundation
 import Testing
 import WardAxisCore
+import WardAxisCoreSynthetic
 import WardAxisPolicy
+import WardAxisPolicyTestSupport
 
 private func address(_ text: String) throws -> FlowAddress {
     try #require(FlowAddress(reported: text))
@@ -19,13 +21,7 @@ private func network(_ cidr: String) throws -> IPNetwork {
 }
 
 private func rule(_ action: PolicyAction, networks: [String]?, enabled: Bool = true) -> PolicyRule {
-    PolicyRule(
-        identifier: "r1",
-        priority: 100,
-        enabled: enabled,
-        action: action,
-        match: PolicyMatch(destinationNetworks: networks, transport: networks == nil ? .tcp : nil)
-    )
+    .fixture(action, match: PolicyMatch(destinationNetworks: networks, transport: networks == nil ? .tcp : nil), enabled: enabled)
 }
 
 @Suite("CIDR network matching")
@@ -295,10 +291,10 @@ struct NetworkMatchingTests {
 
     @Test(arguments: seeds)
     func `An IPv4 address lies in every network of its own prefixes and leaves it at the last prefix bit`(seed: UInt64) throws {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let bits = UInt32(truncatingIfNeeded: random.next())
-            let prefix = random.below(33)
+            let prefix = random.next(below: 33)
             let mask: UInt32 = prefix == 0 ? 0 : .max << (32 - prefix)
             let context = "seed \(seed), case \(index), prefix \(prefix)"
             let network = try #require(IPNetwork("\(ipv4Text(bits & mask))/\(prefix)"), "\(context)")
@@ -312,10 +308,10 @@ struct NetworkMatchingTests {
 
     @Test(arguments: seeds)
     func `An IPv6 address lies in every network of its own prefixes and leaves it at the last prefix bit`(seed: UInt64) throws {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let bits = random.ipv6()
-            let prefix = random.below(129)
+            let prefix = random.next(below: 129)
             // A mapped base is refused by validation and is IPv4 as a flow.
             guard (bits & (prefix == 0 ? 0 : .max << (128 - prefix))) >> 32 != 0xFFFF, bits >> 32 != 0xFFFF else {
                 continue
@@ -333,7 +329,7 @@ struct NetworkMatchingTests {
 
     @Test(arguments: seeds)
     func `Canonical, expanded, uppercase and bracketed IPv6 spellings parse alike`(seed: UInt64) {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let bits = random.ipv6()
             guard bits >> 32 != 0xFFFF else {
@@ -355,11 +351,11 @@ struct NetworkMatchingTests {
 
     @Test(arguments: seeds)
     func `Arbitrary accepted input is the address the system parser reads`(seed: UInt64) {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         let alphabet: [String] = ["0", "1", "9", "a", "f", "F", "g", ":", ":", ".", "%", "[", "]", "+", "-", " ", "/", "x", "１"]
         for index in 0..<Self.caseCount {
-            let length = random.below(index.isMultiple(of: 50) ? 80 : 24)
-            let text = (0..<length).map { _ in alphabet[random.below(alphabet.count)] }.joined()
+            let length = random.next(below: index.isMultiple(of: 50) ? 80 : 24)
+            let text = (0..<length).map { _ in alphabet[random.next(below: alphabet.count)] }.joined()
             guard let parsed = FlowAddress(reported: text) else {
                 continue
             }
@@ -369,7 +365,7 @@ struct NetworkMatchingTests {
     
     @Test(arguments: seeds)
     func `Every RFC 4291 spelling of a random address is the address the system parser reads`(seed: UInt64) {
-        var random = SplitMix64(seed: seed)
+        var random = SeededGenerator(seed: seed)
         for index in 0..<Self.caseCount {
             let bits = random.ipv6()
             let text = random.spelling(of: bits)
@@ -442,28 +438,28 @@ private func canonicalIPv6Text(_ bits: UInt128) -> String {
     return text[..<bestStart].joined(separator: ":") + "::" + text[(bestStart + bestLength)...].joined(separator: ":")
 }
 
-private extension SplitMix64 {
+private extension SeededGenerator {
     /// A random RFC 4291 §2.2 spelling: leading zeros, mixed case, any zero run
     /// compressed or none, and an optional dotted IPv4 tail.
     mutating func spelling(of bits: UInt128) -> String {
         let groups = (0..<8).map { UInt16(truncatingIfNeeded: bits >> (112 - 16 * $0)) }
-        let hasTail = below(3) == 0
+        let hasTail = next(below: 3) == 0
         let hexCount = hasTail ? 6 : 8
         var fields = groups[..<hexCount].map { group in
             var text = String(group, radix: 16)
-            text = String(repeating: "0", count: below(5 - text.count)) + text
-            return below(2) == 0 ? text.uppercased() : text
+            text = String(repeating: "0", count: next(below: 5 - text.count)) + text
+            return next(below: 2) == 0 ? text.uppercased() : text
         }
         if hasTail {
             fields.append(ipv4Text(UInt32(groups[6]) << 16 | UInt32(groups[7])))
         }
         let zeroIndices = (0..<hexCount).filter { groups[$0] == 0 }
-        guard !zeroIndices.isEmpty, below(4) != 0 else {
+        guard !zeroIndices.isEmpty, next(below: 4) != 0 else {
             return fields.joined(separator: ":")
         }
-        let start = zeroIndices[below(zeroIndices.count)]
+        let start = zeroIndices[next(below: zeroIndices.count)]
         var end = start + 1
-        while end < hexCount, groups[end] == 0, below(3) != 0 {
+        while end < hexCount, groups[end] == 0, next(below: 3) != 0 {
             end += 1
         }
         return fields[..<start].joined(separator: ":") + "::" + fields[end...].joined(separator: ":")
@@ -472,7 +468,7 @@ private extension SplitMix64 {
     /// Biased toward zero groups, so `::` compression is exercised.
     mutating func ipv6() -> UInt128 {
         (0..<8).reduce(UInt128(0)) { bits, _ in
-            let group: UInt128 = below(3) == 0 ? 0 : UInt128(UInt16(truncatingIfNeeded: next()))
+            let group: UInt128 = next(below: 3) == 0 ? 0 : UInt128(UInt16(truncatingIfNeeded: next()))
             return bits << 16 | group
         }
     }

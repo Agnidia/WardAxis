@@ -56,13 +56,7 @@ struct LogEntryParser: Sendable {
     /// Time-of-day formatter (no date component). Output dates land on
     /// `DateFormatter`'s reference epoch — see `parseTimestamp(_:now:)` for
     /// the reanchor step that pins them to today.
-    private static let timeOnlyFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = LogDateFormat.timeWithMilliseconds
-        return formatter
-    }()
+    private static let timeOnlyFormatter = LogDateFormat.posixFormatter(LogDateFormat.timeWithMilliseconds)
     
     /// Date+time formatters used when the file logger emits a date-bearing
     /// timestamp (`.short` or `.full` configuration). Output dates already
@@ -186,14 +180,13 @@ struct LogEntryParser: Sendable {
     
     /// Maps the textual level token (as produced by `Log.Level.name(_:)`) to
     /// the corresponding single-bit `Log.Level`. Composite tokens fall through.
+    /// The reverse of `Log.Level.name(_:)`, which wrote the token, so the two cannot drift.
+    private static let levelsByName: [String: Log.Level] = Dictionary(
+        uniqueKeysWithValues: [Log.Level.error, .warning, .info, .debug].map { (Log.Level.name($0), $0) }
+    )
+    
     private static func level(named name: String) -> Log.Level? {
-        switch name {
-        case "error": .error
-        case "warning": .warning
-        case "info": .info
-        case "debug": .debug
-        default: nil
-        }
+        levelsByName[name]
     }
     
     /// Recovers a `Date` from a textual timestamp.

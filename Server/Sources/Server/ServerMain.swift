@@ -24,10 +24,9 @@ enum ServerMain {
         
         bootstrapLogging(level: configuration.logLevel)
         let logger = Logger(label: "server")
-        // Capped at notice: below it the driver logs connection errors in full and, at
-        // trace, protocol messages that include row data and the SCRAM exchange.
         var postgresLogger = Logger(label: "server.postgres")
-        postgresLogger.logLevel = max(configuration.logLevel, .notice)
+        postgresLogger.logLevel = configuration.logLevel
+        postgresLogger = postgresLogger.cappedForPostgres()
         let client = PostgresClientFactory.makeClient(configuration: configuration.database, logger: postgresLogger)
         let dependencies = ServerDependencies.production(
             configuration: configuration,
@@ -47,7 +46,7 @@ enum ServerMain {
         } catch {
             // Driver errors (PSQLError) print a generic description by design; the
             // detailed form needs String(reflecting:), which is never used here.
-            logger.critical("Server stopped: \(error)", metadata: ["error.type": "\(type(of: error))"])
+            logger.critical("Server stopped: \(error)", metadata: .errorType(error))
             exit(1)
         }
     }

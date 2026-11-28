@@ -25,4 +25,15 @@ package struct RetryBackoff: Sendable, Equatable {
         let ceiling = min(maximum, initial * (1 << exponent))
         return ceiling / 2 + ceiling * (Double.random(in: 0...1) / 2)
     }
+    
+    /// Waits ``delay(forAttempt:)``. Returns `false` when the task was cancelled
+    /// meanwhile, so the caller stops retrying.
+    package func wait(beforeAttempt attempt: Int) async -> Bool {
+        do {
+            try await Task.sleep(for: delay(forAttempt: attempt))
+            return true
+        } catch {
+            return false
+        }
+    }
 }

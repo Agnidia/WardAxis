@@ -72,7 +72,7 @@ public struct FlowHost: Sendable, Hashable {
         var name: String
         if reported.utf8.allSatisfy({ $0 < 0x80 }) {
             // Folding A–Z only adds no character, so ASCII never depends on Foundation's mapping.
-            name = lowercasedASCII(reported)
+            name = ASCII.lowercased(reported)
         } else {
             guard let encoded = idnaEncoded(reported) else {
                 return .malformed
@@ -102,7 +102,7 @@ public struct FlowHost: Sendable, Hashable {
         guard let encoded = components.encodedHost, encoded.utf8.allSatisfy({ $0 < 0x80 && $0 != UInt8(ascii: "%") }) else {
             return nil
         }
-        return lowercasedASCII(encoded)
+        return ASCII.lowercased(encoded)
     }
     
     /// Every `xn--` label must decode and map back to the same bytes, the UTS 46
@@ -120,11 +120,6 @@ public struct FlowHost: Sendable, Hashable {
             }
             return idnaEncoded(decoded) == String(label)
         }
-    }
-    
-    private static func lowercasedASCII(_ value: String) -> String {
-        let uppercase = UInt8(ascii: "A")...UInt8(ascii: "Z")
-        return String(decoding: value.utf8.map { uppercase.contains($0) ? $0 | 0x20 : $0 }, as: UTF8.self)
     }
 }
 
@@ -201,8 +196,8 @@ private enum Punycode {
     
     private static func digitValue(_ byte: UInt8) -> Int? {
         switch byte {
-        case UInt8(ascii: "a")...UInt8(ascii: "z"): Int(byte - UInt8(ascii: "a"))
-        case UInt8(ascii: "0")...UInt8(ascii: "9"): Int(byte - UInt8(ascii: "0")) + 26
+        case ASCII.lowercaseLetters: Int(byte - UInt8(ascii: "a"))
+        case ASCII.digits: Int(byte - UInt8(ascii: "0")) + 26
         default: nil
         }
     }
@@ -233,14 +228,9 @@ public extension PolicyMatch {
         guard let compiledHosts else {
             return .match
         }
-        return switch host {
-        case .known(.some(let host)):
+        return host.evaluate { host in
             // A pattern that bypassed validation could widen an allow or narrow a deny, so it only fails closed by action.
             compiledHosts.patterns.contains(where: host.matches) ? .match : compiledHosts.hasInvalid ? .unknown : .noMatch
-        case .known(nil):
-            .noMatch
-        case .unknown:
-            .unknown
         }
     }
 }
@@ -253,14 +243,6 @@ public extension PolicyRule {
     /// identity does (ADR 0016 D3): a `deny` rule applies and an `allow` rule
     /// does not. A disabled rule never applies.
     func hostApplies(to host: Observed<FlowHost?>) -> Bool {
-        guard enabled else {
-            return false
-        }
-        
-        return switch match.evaluateHost(host) {
-        case .match: true
-        case .noMatch: false
-        case .unknown: action == .deny
-        }
+        applies(match.evaluateHost(host))
     }
 }

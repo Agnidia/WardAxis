@@ -86,9 +86,9 @@ package struct DocsController: Sendable {
                 status: .ok,
                 headers: [
                     .contentType: Self.pageContentType,
-                    .cacheControl: "no-cache",
+                    .cacheControl: HeaderValue.revalidate,
                     .contentSecurityPolicy: Self.contentSecurityPolicy,
-                    .xContentTypeOptions: "nosniff",
+                    .xContentTypeOptions: HeaderValue.noSniff,
                     Self.referrerPolicy: "no-referrer"
                 ],
                 body: ResponseBody(byteBuffer: pageBody)
@@ -99,8 +99,8 @@ package struct DocsController: Sendable {
                 status: .ok,
                 headers: [
                     .contentType: Self.documentContentType,
-                    .cacheControl: "no-cache",
-                    .xContentTypeOptions: "nosniff"
+                    .cacheControl: HeaderValue.revalidate,
+                    .xContentTypeOptions: HeaderValue.noSniff
                 ],
                 body: ResponseBody(byteBuffer: docs.openAPIDocument)
             )
@@ -111,7 +111,7 @@ package struct DocsController: Sendable {
                 headers: [
                     .contentType: Self.scriptContentType,
                     .cacheControl: "public, max-age=31536000, immutable",
-                    .xContentTypeOptions: "nosniff"
+                    .xContentTypeOptions: HeaderValue.noSniff
                 ],
                 body: ResponseBody(byteBuffer: docs.redocScript)
             )

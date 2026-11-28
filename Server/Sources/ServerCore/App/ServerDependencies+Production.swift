@@ -11,16 +11,14 @@ import PostgresNIO
 package extension ServerDependencies {
     /// The production composition root.
     ///
-    /// - Parameter logger: The server logger; the stores get a copy capped at `notice`,
-    ///   because below it the driver logs bind values.
+    /// - Parameter logger: The server logger; the stores get ``Logging/Logger/cappedForPostgres()``.
     static func production(
         configuration: AppConfiguration,
         client: PostgresClient,
         logger: Logger
     ) -> ServerDependencies {
         let streamPolicy = ConfigStreamPolicy.standard
-        var storeLogger = logger
-        storeLogger.logLevel = max(logger.logLevel, .notice)
+        let storeLogger = logger.cappedForPostgres()
         return ServerDependencies(
             databaseProbe: PostgresHealthProbe(client: client, logger: Logger(label: "server.health")),
             configStore: PostgresConfigStore(client: client, logger: storeLogger),

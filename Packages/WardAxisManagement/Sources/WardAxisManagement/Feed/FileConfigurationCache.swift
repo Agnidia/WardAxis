@@ -31,33 +31,18 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
     }
     
     /// The cache for the main bundle: `<Application Support>/<bundle identifier>/Configuration`,
-    /// or under Caches on tvOS, which gives an app no other local storage.
+    /// or under Caches on tvOS. A purge there only costs a fresh snapshot from the server.
     public static func live() -> any ConfigurationCacheProtocol {
-#if os(tvOS)
-        let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-#else
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-#endif
-        return live(in: base, bundleIdentifier: Bundle.main.bundleIdentifier)
+        live(in: AppStorageLocation.liveBase, bundleIdentifier: Bundle.main.bundleIdentifier)
     }
     
-    /// The cache under `base/<bundleIdentifier>`. Without App Sandbox `base` is
-    /// shared by every app of the user, so a missing or unsafe identifier gets
-    /// ``NoConfigurationCache`` rather than a shared fallback folder.
+    /// The cache under `base/<bundleIdentifier>`. A missing or unsafe identifier
+    /// gets ``NoConfigurationCache`` rather than a shared fallback folder (see ``AppStorageLocation``).
     public static func live(in base: URL, bundleIdentifier: String?) -> any ConfigurationCacheProtocol {
-        guard let bundleIdentifier, isSinglePathComponent(bundleIdentifier) else {
+        guard let directory = AppStorageLocation.directory(directoryName, in: base, bundleIdentifier: bundleIdentifier) else {
             return NoConfigurationCache()
         }
-        let directory = base.appending(path: bundleIdentifier, directoryHint: .isDirectory)
-            .appending(path: directoryName, directoryHint: .isDirectory)
         return Self(directory: directory)
-    }
-    
-    /// Letters, digits, hyphen and period, with at least one letter or digit, so
-    /// the identifier can be neither a separator nor `.` or `..`.
-    private static func isSinglePathComponent(_ identifier: String) -> Bool {
-        identifier.contains { $0.isLetter || $0.isNumber }
-            && identifier.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == ".") }
     }
     
     // MARK: - ConfigurationCacheProtocol
@@ -74,13 +59,13 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
             return nil
         } catch {
             // Before first unlock the file is unreadable but intact: keep it.
-            logger.warning("Reading the configuration cache failed: \(Self.logName(of: error))", privacy: .public)
+            logger.warning("Reading the configuration cache failed: \(Log.safeName(of: error))", privacy: .public)
             return nil
         }
         guard ConfigurationLimits.isWithinBounds(data),
               let file = try? JSONDecoder().decode(CacheFile.self, from: data),
               file.schema == Self.schemaVersion,
-              file.values.count <= ConfigurationLimits.maximumEntryCount
+              ConfigurationLimits.fitsEntryCount(file.values.count)
         else {
             logger.warning("Configuration cache is unreadable; deleting it", privacy: .public)
             try? removeFile()
@@ -107,11 +92,7 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
     }
     
     private func removeFile() throws {
-        do {
-            try FileManager.default.removeItem(at: fileURL)
-        } catch CocoaError.fileNoSuchFile {
-            return
-        }
+        try AppStorageLocation.removeItemIfPresent(at: fileURL)
     }
     
     private static func isMissingFile(_ error: any Error) -> Bool {
@@ -122,13 +103,6 @@ public struct FileConfigurationCache: ConfigurationCacheProtocol {
         default:
             return false
         }
-    }
-    
-    /// The error domain and code only: a file error's description holds the
-    /// container path, which names the user on macOS.
-    static func logName(of error: any Error) -> String {
-        let error = error as NSError
-        return "\(error.domain) \(error.code)"
     }
 }
 

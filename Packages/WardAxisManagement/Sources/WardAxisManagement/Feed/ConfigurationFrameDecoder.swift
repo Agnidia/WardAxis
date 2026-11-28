@@ -35,7 +35,7 @@ struct ConfigurationFrameDecoder: Sendable {
             case .snapshot(let snapshot):
                 return try .snapshot(ManagedConfiguration(version: snapshot.version, values: values(of: snapshot.values)))
             case .delta(let delta):
-                guard delta.removed.count <= ConfigurationLimits.maximumEntryCount else {
+                guard ConfigurationLimits.fitsEntryCount(delta.removed.count) else {
                     return nil
                 }
                 return try .delta(version: delta.version, changed: values(of: delta.changed), removed: delta.removed)
@@ -48,7 +48,7 @@ struct ConfigurationFrameDecoder: Sendable {
     }
     
     private func values(of entries: Components.Schemas.ConfigEntries) throws -> [String: ConfigurationValue] {
-        guard entries.additionalProperties.value.count <= ConfigurationLimits.maximumEntryCount else {
+        guard ConfigurationLimits.fitsEntryCount(entries.additionalProperties.value.count) else {
             throw TooManyEntries()
         }
         let data = try JSONEncoder().encode(entries.additionalProperties)

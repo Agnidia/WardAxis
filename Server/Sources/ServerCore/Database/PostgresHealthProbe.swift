@@ -33,7 +33,7 @@ package struct PostgresHealthProbe: DatabaseHealthProbe {
                     return true
                 } catch {
                     // The type only: driver errors can carry connection details.
-                    logger.warning("Database health probe failed", metadata: ["error.type": "\(type(of: error))"])
+                    logger.warning("Database health probe failed", metadata: .errorType(error))
                     return false
                 }
             }

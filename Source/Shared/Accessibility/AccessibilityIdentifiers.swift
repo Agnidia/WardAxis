@@ -37,6 +37,16 @@ extension AccessibilityProtocol {
     }
 }
 
+// MARK: - Shared Hints
+
+/// Hints that several controls give for the same action.
+enum AccessibilityHint {
+    /// For an alert or banner that a tap dismisses.
+    static var dismiss: String {
+        String(localized: "Double tap to dismiss")
+    }
+}
+
 // MARK: - Accessibility Identifiers
 
 /// Centralized accessibility identifiers organized by feature.
@@ -99,11 +109,6 @@ enum AccessibilityID: Sendable {
         case shareButton = "logs.shareButton"
         case clearButton = "logs.clearButton"
         case testButton = "logs.testButton"
-        
-        case settingsShareButton = "logs.settings.shareButton"
-        case settingsClearButton = "logs.settings.clearButton"
-        case bodyShareButton = "logs.body.shareButton"
-        case bodyClearButton = "logs.body.clearButton"
         
         case filterError = "logs.filter.error"
         case filterWarning = "logs.filter.warning"

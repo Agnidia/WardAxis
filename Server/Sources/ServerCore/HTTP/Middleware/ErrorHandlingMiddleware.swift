@@ -8,6 +8,7 @@
 import Foundation
 import Hummingbird
 import Logging
+import WardAxisAPIContract
 import WardAxisAPIServer
 
 /// Turns every error thrown inside the router into an `ErrorResponse` body.
@@ -58,9 +59,9 @@ package struct ErrorHandlingMiddleware: RouterMiddleware {
     
     package static func response(for error: APIError, requestID: String?) -> Response {
         let body = Components.Schemas.ErrorResponse(code: error.code, message: error.message, requestId: requestID)
-        let headers: HTTPFields = [.contentType: "application/json; charset=utf-8", .cacheControl: "no-store"]
+        let headers: HTTPFields = [.contentType: HeaderValue.json, .cacheControl: HeaderValue.noStore]
         // Encoding three strings cannot fail; the fallback still sends a valid body.
-        let data = (try? JSONEncoder().encode(body)) ?? Data(#"{"code":"internal_error","message":""}"#.utf8)
+        let data = (try? JSONEncoder().encode(body)) ?? Data(#"{"code":"\#(APIErrorCode.internalError)","message":""}"#.utf8)
         return Response(status: error.status, headers: headers, body: ResponseBody(byteBuffer: ByteBuffer(bytes: data)))
     }
 }

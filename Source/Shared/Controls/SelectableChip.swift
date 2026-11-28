@@ -36,8 +36,7 @@ struct SelectableChip: View {
                 .bodyMono()
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, .spacing.xl)
-        .padding(.vertical, .spacing.m)
+        .chipPadding()
         .foregroundStyle(isSelected ? Color.Background.primary : Color.Background.secondary)
         .background(isSelected ? Color.Background.secondary : Color.Background.secondary.opacity(.opacity.faint))
         .clipShape(Capsule())

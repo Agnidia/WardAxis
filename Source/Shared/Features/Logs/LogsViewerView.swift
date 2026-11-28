@@ -93,7 +93,7 @@ struct LogsViewerView: View {
                         Task { await vm.clear() }
                     }
                 }
-                Button(L.Settings.Logs.clearCancel, role: .cancel) {}
+                Button(L.Common.cancel, role: .cancel) {}
             } message: {
                 Text(L.Settings.Logs.clearMessage)
             }
@@ -114,10 +114,9 @@ struct LogsViewerView: View {
             
             if let url = preparedShareURL {
                 ShareLink(item: url) {
-                    Image(systemName: "square.and.arrow.up")
+                    Image(systemName: Symbol.share)
                 }
-                .accessibilityIdentifier(AccessibilityID.Logs.shareButton.id)
-                .accessibilityLabel(AccessibilityID.Logs.shareButton.label)
+                .accessibleIcon(AccessibilityID.Logs.shareButton)
             } else {
                 prepareShareButton(viewModel: viewModel)
             }
@@ -132,8 +131,7 @@ struct LogsViewerView: View {
         } label: {
             Image(systemName: "arrow.clockwise")
         }
-        .accessibilityIdentifier(AccessibilityID.Logs.refreshButton.id)
-        .accessibilityLabel(AccessibilityID.Logs.refreshButton.label)
+        .accessibleIcon(AccessibilityID.Logs.refreshButton)
         .disabled(viewModel.state.isLoading)
     }
     
@@ -141,10 +139,9 @@ struct LogsViewerView: View {
         Button {
             Task { await prepareShare(viewModel: viewModel) }
         } label: {
-            Image(systemName: "square.and.arrow.up")
+            Image(systemName: Symbol.share)
         }
-        .accessibilityIdentifier(AccessibilityID.Logs.shareButton.id)
-        .accessibilityLabel(AccessibilityID.Logs.shareButton.label)
+        .accessibleIcon(AccessibilityID.Logs.shareButton)
         .disabled(!viewModel.isShareEnabled)
     }
     
@@ -154,8 +151,7 @@ struct LogsViewerView: View {
         } label: {
             Image(systemName: "trash")
         }
-        .accessibilityIdentifier(AccessibilityID.Logs.clearButton.id)
-        .accessibilityLabel(AccessibilityID.Logs.clearButton.label)
+        .accessibleIcon(AccessibilityID.Logs.clearButton)
         .disabled(!viewModel.isClearEnabled)
     }
     
@@ -247,9 +243,7 @@ struct LogsViewerView: View {
             Spacer()
             Text(messageKey)
                 .bodyLarge()
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, .padding.l)
+                .placeholderMessage()
             Spacer()
         }
     }
@@ -264,9 +258,7 @@ struct LogsViewerView: View {
             
             Text(errorKey(for: error))
                 .bodySmall()
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, .padding.l)
+                .placeholderMessage()
             
             Button(L.Common.tryAgain) {
                 Task { await viewModel.refresh() }

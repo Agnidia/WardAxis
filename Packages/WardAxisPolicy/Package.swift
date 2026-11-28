@@ -24,7 +24,13 @@ let package = Package(
         ),
         .testTarget(
             name: "WardAxisPolicyTests",
-            dependencies: ["WardAxisPolicy", "WardAxisPolicyTestSupport", .product(name: "WardAxisCore", package: "WardAxisCore")],
+            dependencies: [
+                "WardAxisPolicy",
+                "WardAxisPolicyTestSupport",
+                .product(name: "WardAxisCore", package: "WardAxisCore"),
+                // SeededGenerator: one SplitMix64 for every seeded property test.
+                .product(name: "WardAxisCoreSynthetic", package: "WardAxisCore")
+            ],
             resources: [.copy("Fixtures")]
         )
     ],

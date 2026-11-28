@@ -40,7 +40,7 @@ final class SystemExtensionService: SystemExtensionServiceProtocol {
                 return state
             }
         } catch {
-            throw error as? SystemExtensionError ?? .unknown(code: (error as NSError).code)
+            throw SystemExtensionError(error)
         }
         throw .endedWithoutResult
     }
@@ -56,13 +56,8 @@ final class SystemExtensionService: SystemExtensionServiceProtocol {
     
     private func submit(_ kind: Kind) -> AsyncThrowingStream<SystemExtensionEvent, any Error> {
         AsyncThrowingStream { continuation in
-            let extensionID: String
-            switch identifier {
-            case .success(let value):
-                extensionID = value
-            case .failure(let error):
+            guard let extensionID = resolvedIdentifier(or: continuation) else {
                 Self.logger.error("System extension request refused: invalid identifier", privacy: .public)
-                continuation.finish(throwing: error)
                 return
             }
             
@@ -72,33 +67,42 @@ final class SystemExtensionService: SystemExtensionServiceProtocol {
             case .deactivate:
                 OSSystemExtensionRequest.deactivationRequest(forExtensionWithIdentifier: extensionID, queue: Self.queue)
             }
-            let delegate = RequestDelegate(continuation: continuation)
-            request.delegate = delegate
-            // The request holds its delegate weakly; the stream keeps it alive until it ends.
-            continuation.onTermination = { _ in withExtendedLifetime(delegate) {} }
-            OSSystemExtensionManager.shared.submitRequest(request)
+            Self.submit(request, delegate: RequestDelegate(continuation: continuation), keptAliveBy: continuation)
         }
     }
     
     /// Not logged: the Developer section polls it every second.
     private func queryInstallState() -> AsyncThrowingStream<SystemExtensionInstallState, any Error> {
         AsyncThrowingStream { continuation in
-            let extensionID: String
-            switch identifier {
-            case .success(let value):
-                extensionID = value
-            case .failure(let error):
-                continuation.finish(throwing: error)
+            guard let extensionID = resolvedIdentifier(or: continuation) else {
                 return
             }
-            
             let request = OSSystemExtensionRequest.propertiesRequest(forExtensionWithIdentifier: extensionID, queue: Self.queue)
-            let delegate = PropertiesDelegate(continuation: continuation)
-            request.delegate = delegate
-            // The request holds its delegate weakly; the stream keeps it alive until it ends.
-            continuation.onTermination = { _ in withExtendedLifetime(delegate) {} }
-            OSSystemExtensionManager.shared.submitRequest(request)
+            Self.submit(request, delegate: PropertiesDelegate(continuation: continuation), keptAliveBy: continuation)
         }
+    }
+    
+    /// The validated identifier, or `nil` after ending `continuation` with the
+    /// validation error, so no request is built for a refused identifier.
+    private func resolvedIdentifier<Element>(or continuation: AsyncThrowingStream<Element, any Error>.Continuation) -> String? {
+        switch identifier {
+        case .success(let value):
+            return value
+        case .failure(let error):
+            continuation.finish(throwing: error)
+            return nil
+        }
+    }
+    
+    private static func submit<Element>(
+        _ request: OSSystemExtensionRequest,
+        delegate: some OSSystemExtensionRequestDelegate & Sendable,
+        keptAliveBy continuation: AsyncThrowingStream<Element, any Error>.Continuation
+    ) {
+        request.delegate = delegate
+        // The request holds its delegate weakly; the stream keeps it alive until it ends.
+        continuation.onTermination = { _ in withExtendedLifetime(delegate) {} }
+        OSSystemExtensionManager.shared.submitRequest(request)
     }
     
     /// Maps an `OSSystemExtensionError` to ``SystemExtensionError``; any other error is `.unknown`.

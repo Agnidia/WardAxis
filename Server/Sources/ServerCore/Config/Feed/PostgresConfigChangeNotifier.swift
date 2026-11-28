@@ -15,7 +15,7 @@ import PostgresNIO
 /// yields a wake-up, so the relay catches up on what committed in between. LISTEN does
 /// not work through a transaction-pooling proxy such as PgBouncer in transaction mode.
 package struct PostgresConfigChangeNotifier: ConfigChangeNotifier {
-    /// The channel migration 6's trigger notifies.
+    /// The channel migration 0002's trigger notifies.
     package static let channel: String = "config_changes"
     
     private let client: PostgresClient
@@ -56,12 +56,10 @@ package struct PostgresConfigChangeNotifier: ConfigChangeNotifier {
                     break
                 }
                 // The type only: a driver error can carry connection details.
-                logger.warning("Config change listener lost its connection", metadata: ["error.type": "\(type(of: error))"])
+                logger.warning("Config change listener lost its connection", metadata: .errorType(error))
             }
             attempt += 1
-            do {
-                try await Task.sleep(for: backoff.delay(forAttempt: attempt))
-            } catch {
+            guard await backoff.wait(beforeAttempt: attempt) else {
                 break
             }
         }

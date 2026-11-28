@@ -178,7 +178,7 @@ Each service is a `Sendable` protocol, a concrete type and a mock.
 | `WardAxisCore` | `WardAxisCore`, `WardAxisCoreSynthetic` | none | Versioned event and application identity schemas, the envelope, `SchemaCodec`, `BoundedJSON`, field rules, source protocols; seeded synthetic sources. See [Schemas](#schemas) |
 | `WardAxisPolicy` | `WardAxisPolicy`, `WardAxisPolicyTestSupport` | `WardAxisCore` | Versioned policy and rule models, `PolicySourceProtocol`; `FixturePolicySource` for tests. See [Schemas](#schemas) |
 | `WardAxisTelemetry` | `WardAxisTelemetry` | none | `Log` over `os.Logger`, categories, signposter, file sink, `TelemetryService`. See [LOGGING.md](LOGGING.md) |
-| `WardAxisManagementAPI` | `WardAxisAPIClient`, `WardAxisAPIServer`, `WardAxisAPIFixtures` | swift-openapi-generator, swift-openapi-runtime | The OpenAPI contract and the code generated from it; golden configuration frames for tests |
+| `WardAxisManagementAPI` | `WardAxisAPIClient`, `WardAxisAPIServer`, `WardAxisAPIContract`, `WardAxisAPIFixtures` | swift-openapi-generator, swift-openapi-runtime | The OpenAPI contract and the code generated from it; the hand-written stream path, close codes, frame bounds and error codes that the server and the client share ([ADR 0019](adr/0019-shared-api-contract-constants.md)); golden configuration frames for tests |
 | `WardAxisManagement` | `WardAxisManagement`, `WardAxisManagementTestSupport` | `WardAxisCore`, `WardAxisTelemetry`, `WardAxisAPIClient` | Endpoint configuration, configuration feed, client identity, Keychain storage |
 
 Each package has its own `swift test` suite. The Xcode scheme does not run them; see [TESTING.md](TESTING.md#package-tests).

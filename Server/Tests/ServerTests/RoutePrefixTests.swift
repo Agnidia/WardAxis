@@ -29,14 +29,9 @@ struct RoutePrefixTests {
         "GET /v1/config/stream"
     ]
     
-    private static let stubDocs = APIDocs(
-        openAPIDocument: ByteBuffer(string: "openapi: 3.1.0\n"),
-        redocScript: ByteBuffer(string: "/* redoc */")
-    )
-    
     private static func dependencies(environment: ServerEnvironment) -> ServerDependencies {
         var dependencies = ServerDependencies.testing(environment: environment)
-        dependencies.apiDocs = stubDocs
+        dependencies.apiDocs = APIDocs.stub
         return dependencies
     }
     

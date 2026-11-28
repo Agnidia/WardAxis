@@ -38,7 +38,7 @@ struct ShimmerEffectModifier<MaskShape: Shape>: ViewModifier {
         )
         .onAppear {
             if isAnimated {
-                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                withAnimation(.linear(duration: AnimationDuration.shimmer).repeatForever(autoreverses: false)) {
                     startPoint = .init(x: 2, y: 0.5)
                 }
             }

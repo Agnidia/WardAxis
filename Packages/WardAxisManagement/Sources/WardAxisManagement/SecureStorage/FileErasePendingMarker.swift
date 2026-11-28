@@ -30,17 +30,11 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
     
     /// The marker for the main bundle: `<Application Support>/<bundle identifier>/Vault`,
     /// or under Caches on tvOS.
+    ///
+    /// On tvOS a purge of Caches only brings back the pre-marker behaviour for
+    /// the one erased item; a volatile marker would lose the flag on every relaunch.
     public static func live() -> any ErasePendingMarkerProtocol {
-#if os(tvOS)
-        // tvOS gives an app no persistent local storage outside Caches, and the
-        // system may purge Caches while the app is not running. A purge only
-        // brings back the pre-marker behaviour for that one erased item; a
-        // volatile marker would lose the flag on every relaunch.
-        let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-#else
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-#endif
-        return live(in: base, bundleIdentifier: Bundle.main.bundleIdentifier)
+        live(in: AppStorageLocation.liveBase, bundleIdentifier: Bundle.main.bundleIdentifier)
     }
     
     /// The marker under `base`, in a folder named by `bundleIdentifier`.
@@ -55,24 +49,15 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
     ///   same identifier and falls back to ``UnavailableTokenStore``, so no item
     ///   outlives the process and a persisted marker would guard nothing.
     public static func live(in base: URL, bundleIdentifier: String?) -> any ErasePendingMarkerProtocol {
-        guard let bundleIdentifier, isSinglePathComponent(bundleIdentifier) else {
+        guard let directory = directory(in: base, bundleIdentifier: bundleIdentifier) else {
             return VolatileErasePendingMarker()
         }
-        return Self(directory: directory(in: base, bundleIdentifier: bundleIdentifier))
+        return Self(directory: directory)
     }
     
-    /// `<base>/<bundleIdentifier>/Vault`.
-    static func directory(in base: URL, bundleIdentifier: String) -> URL {
-        base.appending(path: bundleIdentifier, directoryHint: .isDirectory)
-            .appending(path: directoryName, directoryHint: .isDirectory)
-    }
-    
-    /// The bundle identifier character set (letters, digits, hyphen, period) has
-    /// no separator, and a letter or digit rules out `.` and `..`, so the
-    /// identifier cannot move the marker out of `base`.
-    private static func isSinglePathComponent(_ identifier: String) -> Bool {
-        identifier.contains { $0.isLetter || $0.isNumber }
-            && identifier.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == ".") }
+    /// `<base>/<bundleIdentifier>/Vault`, or `nil` for an unsafe identifier.
+    static func directory(in base: URL, bundleIdentifier: String?) -> URL? {
+        AppStorageLocation.directory(directoryName, in: base, bundleIdentifier: bundleIdentifier)
     }
     
     public var isSet: Bool {
@@ -136,9 +121,8 @@ public struct FileErasePendingMarker: ErasePendingMarkerProtocol {
     
     /// The throwing form of `clear()`. A missing file is success.
     func removeFile() throws {
-        do {
-            try FileManager.default.removeItem(at: fileURL)
-        } catch CocoaError.fileNoSuchFile {
+        // Nothing removed, nothing to flush; the directory may not exist either.
+        guard try AppStorageLocation.removeItemIfPresent(at: fileURL) else {
             return
         }
         try Self.flush(directory, isDirectory: true)

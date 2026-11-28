@@ -23,35 +23,24 @@ public struct KeychainClientIdentityProvider: ClientIdentityProvider {
     }
     
     public func currentIdentity() async throws(ClientIdentityError) -> ClientIdentity? {
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(Self.query(label: label, accessGroup: accessGroup) as CFDictionary, &result)
-        switch status {
-        case errSecSuccess:
+        switch try KeychainQuery.copyMatching(Self.query(label: label, accessGroup: accessGroup), orThrow: ClientIdentityError.osStatus) {
+        case .found(let result):
             guard let result, CFGetTypeID(result) == SecIdentityGetTypeID() else {
                 return nil
             }
             // The type ID check above makes the forced cast safe.
             return ClientIdentity(identity: result as! SecIdentity)
-        case errSecItemNotFound:
+        case .notFound:
             return nil
-        default:
-            throw .osStatus(status)
         }
     }
     
     static func query(label: String, accessGroup: String?) -> [String: Any] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassIdentity,
+        KeychainQuery.base(class: kSecClassIdentity, accessGroup: accessGroup).merging([
             kSecAttrLabel as String: label,
-            kSecUseDataProtectionKeychain as String: true,
-            kSecAttrSynchronizable as String: false,
             kSecReturnRef as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
-        ]
-        if let accessGroup {
-            query[kSecAttrAccessGroup as String] = accessGroup
-        }
-        return query
+        ]) { _, new in new }
     }
 }
 

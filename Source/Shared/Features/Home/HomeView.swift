@@ -19,8 +19,6 @@ struct HomeView: View {
     @Environment(\.coordinator) private var coordinator
     @Environment(\.appContainer) private var container
     
-    private let logger = Log(category: .ui)
-    
     var body: some View {
         ScrollView {
             VStack(spacing: CGFloat.spacing.xxl) {
@@ -36,22 +34,20 @@ struct HomeView: View {
                     coordinator.navigate(to: .settings)
                     container.hapticFeedback.playSelection()
                 } label: {
-                    Image(systemName: "gear")
+                    Image(systemName: Symbol.settings)
                 }
                 .accessible(AccessibilityID.Home.settingsButton)
             }
         }
         .accessibilityIdentifier(AccessibilityID.Screen.home)
-        .onAppear {
-            logger.debug("HomeView appeared")
-        }
+        .logAppearance("HomeView")
     }
     
     // MARK: - Sections
     
     private var welcomeSection: some View {
         VStack(spacing: CGFloat.spacing.m) {
-            Image(systemName: "house.fill")
+            Image(systemName: Symbol.homeFilled)
                 .font(.system(size: IconSize.xxl))
                 .foregroundStyle(Color.Background.secondary)
                 .accessibleDecorativeImage()
@@ -73,7 +69,7 @@ struct HomeView: View {
                 .labelBold()
             
             VStack(spacing: CGFloat.spacing.s) {
-                featureButton(title: L.Main.Home.helpCenter, route: .help, icon: "questionmark.circle")
+                featureButton(title: L.Main.Home.helpCenter, route: .help, icon: Symbol.help)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

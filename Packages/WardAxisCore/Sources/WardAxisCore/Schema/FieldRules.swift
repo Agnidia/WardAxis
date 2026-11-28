@@ -71,9 +71,7 @@ public enum FieldRules {
     public static func isCanonicalIPv4(_ value: String) -> Bool {
         let octets = value.utf8.split(separator: UInt8(ascii: "."), omittingEmptySubsequences: false)
         return octets.count == 4 && octets.allSatisfy { octet in
-            guard (1...3).contains(octet.count),
-                  octet.allSatisfy(ASCII.digits.contains),
-                  octet.count == 1 || octet.first != UInt8(ascii: "0"),
+            guard isCanonicalDecimal(octet, maximumDigits: 3),
                   let number = Int(String(decoding: octet, as: UTF8.self))
             else {
                 return false
@@ -111,9 +109,7 @@ public enum FieldRules {
     public static func canonicalNetwork(_ value: String) -> (bytes: [UInt8], prefixLength: Int)? {
         let parts = value.split(separator: "/", omittingEmptySubsequences: false)
         guard parts.count == 2,
-              (1...3).contains(parts[1].utf8.count),
-              parts[1].utf8.allSatisfy(ASCII.digits.contains),
-              parts[1].utf8.count == 1 || parts[1].utf8.first != UInt8(ascii: "0"),
+              isCanonicalDecimal(parts[1].utf8, maximumDigits: 3),
               let prefix = Int(parts[1])
         else {
             return nil
@@ -160,15 +156,45 @@ public enum FieldRules {
         return labels.allSatisfy { label in
             if label.starts(with: [UInt8(ascii: "0"), UInt8(ascii: "x")]) {
                 let digits = label.dropFirst(2)
-                return !digits.isEmpty && digits.allSatisfy { ASCII.digits.contains($0) || ASCII.lowercaseHexLetters.contains($0) }
+                return !digits.isEmpty && digits.allSatisfy(ASCII.isLowercaseHexDigit)
             }
             return !label.isEmpty && label.allSatisfy(ASCII.digits.contains)
         }
     }
     
+    /// Throws ``SchemaViolation/Reason/malformedIdentifier`` at `key` unless `value` passes ``isIdentifier(_:)``.
+    public static func requireIdentifier(_ value: String, at path: String, _ key: some CodingKey) throws(SchemaViolation) {
+        guard isIdentifier(value) else {
+            throw SchemaViolation(path: SchemaPath.member(path, key), reason: .malformedIdentifier)
+        }
+    }
+    
+    /// Throws ``SchemaViolation/Reason/malformedIdentifier`` at `key` unless `value` is absent
+    /// or passes ``isSigningIdentifier(_:)``. Bundle identifiers use the same grammar.
+    public static func requireSigningIdentifier(_ value: String?, at path: String, _ key: some CodingKey) throws(SchemaViolation) {
+        if let value, !isSigningIdentifier(value) {
+            throw SchemaViolation(path: SchemaPath.member(path, key), reason: .malformedIdentifier)
+        }
+    }
+    
+    /// Throws ``SchemaViolation/Reason/outOfRange`` at `key` below ``SchemaLimits/minimumRevision``.
+    public static func requireRevision(_ value: Int64, at path: String, _ key: some CodingKey) throws(SchemaViolation) {
+        guard value >= SchemaLimits.minimumRevision else {
+            throw SchemaViolation(path: SchemaPath.member(path, key), reason: .outOfRange)
+        }
+    }
+    
+    /// Decimal digits with no leading zero, so `010` cannot read as octal and
+    /// one number has one spelling.
+    private static func isCanonicalDecimal(_ digits: some Collection<UInt8>, maximumDigits: Int) -> Bool {
+        (1...maximumDigits).contains(digits.count)
+            && digits.allSatisfy(ASCII.digits.contains)
+            && (digits.count == 1 || digits.first != UInt8(ascii: "0"))
+    }
+    
     private static func ipv6Groups(_ value: String) -> [UInt16]? {
         let bytes = Array(value.utf8)
-        guard bytes.count <= 39, bytes.allSatisfy({ ASCII.digits.contains($0) || ASCII.lowercaseHexLetters.contains($0) || $0 == UInt8(ascii: ":") }) else {
+        guard bytes.count <= SchemaLimits.maximumIPv6TextLength, bytes.allSatisfy({ ASCII.isLowercaseHexDigit($0) || $0 == UInt8(ascii: ":") }) else {
             return nil
         }
         let halves = value.components(separatedBy: "::")

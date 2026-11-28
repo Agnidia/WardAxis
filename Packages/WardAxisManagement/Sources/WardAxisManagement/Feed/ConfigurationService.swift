@@ -346,7 +346,7 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
             for name in removed {
                 entries[name] = nil
             }
-            guard entries.count <= ConfigurationLimits.maximumEntryCount, ConfigurationLimits.fitsByteLimit(entries) else {
+            guard ConfigurationLimits.fitsEntryCount(entries.count), ConfigurationLimits.fitsByteLimit(entries) else {
                 logger.warning("Configuration delta \(version) exceeds the size limits", privacy: .public)
                 return false
             }
@@ -420,13 +420,13 @@ public final class ConfigurationService: ConfigurationServiceProtocol {
                         cacheReadBlocked = false
                     } catch {
                         cacheReadBlocked = true
-                        logger.error("Configuration cache delete failed: \(FileConfigurationCache.logName(of: error))", privacy: .public)
+                        logger.error("Configuration cache delete failed: \(Log.safeName(of: error))", privacy: .public)
                     }
                 case .save(let configuration):
                     do {
                         try await cache.save(configuration)
                     } catch {
-                        logger.error("Configuration cache save failed: \(FileConfigurationCache.logName(of: error))", privacy: .public)
+                        logger.error("Configuration cache save failed: \(Log.safeName(of: error))", privacy: .public)
                     }
                 }
             }

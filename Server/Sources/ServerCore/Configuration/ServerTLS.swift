@@ -29,6 +29,10 @@ package struct TLSFiles: Sendable, Equatable {
 
 /// Builds the listener's TLS settings from ``TLSFiles``.
 package enum ServerTLS {
+    /// The lowest version the listener and the database client accept. The NIOSSL
+    /// client default still accepts TLS 1.0 and 1.1.
+    package static let minimumVersion: TLSVersion = .tlsv12
+    
     /// TLS 1.2 suites with forward secrecy and an AEAD cipher only, the set App Transport
     /// Security accepts. TLS 1.3 negotiates its own suites, which are all of that kind.
     package static let cipherSuites: String = "ECDHE+AESGCM:ECDHE+CHACHA20"
@@ -48,22 +52,8 @@ package enum ServerTLS {
         let chainVariable = AppConfiguration.Variable.tlsCertificateChainPath
         let keyVariable = AppConfiguration.Variable.tlsPrivateKeyPath
         
-        guard let chainPEM = FileManager.default.contents(atPath: files.certificateChainPath) else {
-            throw .invalid(variable: chainVariable, reason: "must name a readable file")
-        }
-        let chain: [NIOSSLCertificate]
-        do {
-            chain = try NIOSSLCertificate.fromPEMBytes(Array(chainPEM))
-        } catch {
-            throw .invalid(variable: chainVariable, reason: "must hold a PEM certificate chain")
-        }
-        guard !chain.isEmpty else {
-            throw .invalid(variable: chainVariable, reason: "must hold a PEM certificate chain")
-        }
-        
-        guard let keyPEM = FileManager.default.contents(atPath: files.privateKeyPath) else {
-            throw .invalid(variable: keyVariable, reason: "must name a readable file")
-        }
+        let chain = try loadCertificates(at: files.certificateChainPath, variable: chainVariable, unusableReason: "must hold a PEM certificate chain")
+        let keyPEM = try readFile(at: files.privateKeyPath, variable: keyVariable)
         let key: NIOSSLPrivateKey
         do {
             key = try NIOSSLPrivateKey(bytes: Array(keyPEM), format: .pem)
@@ -75,7 +65,7 @@ package enum ServerTLS {
             certificateChain: chain.map { .certificate($0) },
             privateKey: .privateKey(key)
         )
-        configuration.minimumTLSVersion = .tlsv12
+        configuration.minimumTLSVersion = minimumVersion
         configuration.cipherSuites = cipherSuites
         configuration.applicationProtocols = ["http/1.1"]
         if let authorityPath = files.clientCertificateAuthorityPath {
@@ -110,19 +100,31 @@ package enum ServerTLS {
     }
     
     private static func loadClientCertificateAuthorities(at path: String) throws(ConfigurationError) -> [NIOSSLCertificate] {
-        let variable = AppConfiguration.Variable.tlsClientCAPath
-        guard let pem = FileManager.default.contents(atPath: path) else {
+        try loadCertificates(
+            at: path,
+            variable: AppConfiguration.Variable.tlsClientCAPath,
+            unusableReason: "must hold one or more PEM CA certificates"
+        )
+    }
+    
+    /// One or more PEM certificates. An empty or unparseable file gets `unusableReason`;
+    /// neither reason quotes the path or the bytes.
+    private static func loadCertificates(
+        at path: String,
+        variable: String,
+        unusableReason: String
+    ) throws(ConfigurationError) -> [NIOSSLCertificate] {
+        let pem = try readFile(at: path, variable: variable)
+        guard let certificates = try? NIOSSLCertificate.fromPEMBytes(Array(pem)), !certificates.isEmpty else {
+            throw .invalid(variable: variable, reason: unusableReason)
+        }
+        return certificates
+    }
+    
+    private static func readFile(at path: String, variable: String) throws(ConfigurationError) -> Data {
+        guard let contents = FileManager.default.contents(atPath: path) else {
             throw .invalid(variable: variable, reason: "must name a readable file")
         }
-        let authorities: [NIOSSLCertificate]
-        do {
-            authorities = try NIOSSLCertificate.fromPEMBytes(Array(pem))
-        } catch {
-            throw .invalid(variable: variable, reason: "must hold one or more PEM CA certificates")
-        }
-        guard !authorities.isEmpty else {
-            throw .invalid(variable: variable, reason: "must hold one or more PEM CA certificates")
-        }
-        return authorities
+        return contents
     }
 }

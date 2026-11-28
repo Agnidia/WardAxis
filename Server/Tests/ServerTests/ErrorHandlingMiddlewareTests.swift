@@ -14,12 +14,6 @@ import ServerCore
 import Testing
 
 /// The decoded `ErrorResponse` body, for assertions.
-struct ErrorBody: Decodable, Equatable {
-    let code: String
-    let message: String
-    let requestId: String?
-}
-
 @Suite("Error handling middleware")
 struct ErrorHandlingMiddlewareTests {
     /// A distinctive type name and message that must never reach a body or a log line.

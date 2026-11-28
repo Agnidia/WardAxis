@@ -18,8 +18,6 @@ import WardAxisTelemetry
 struct HelpView: View {
     @State private var expandedFAQ: String?
     
-    private let logger = Log(category: .ui)
-    
     var body: some View {
         List {
             Section {
@@ -44,16 +42,14 @@ struct HelpView: View {
         }
         .navigationTitle(L.Help.title)
         .accessibilityIdentifier(AccessibilityID.Screen.help)
-        .onAppear {
-            logger.debug("HelpView appeared")
-        }
+        .logAppearance("HelpView")
     }
     
     // MARK: - Subviews
     
     private var placeholderContent: some View {
         VStack(alignment: .leading, spacing: CGFloat.spacing.m) {
-            Image(systemName: "questionmark.circle")
+            Image(systemName: Symbol.help)
                 .font(.system(size: IconSize.xl))
                 .foregroundStyle(.tint)
                 .accessibleDecorativeImage()
@@ -83,7 +79,7 @@ struct HelpView: View {
                 set: { isExpanded in
                     expandedFAQ = isExpanded ? item.question : nil
                     if isExpanded {
-                        AccessibilityAnnouncer.announce("Expanded: \(item.question)")
+                        AccessibilityAnnouncer.announce(String(localized: "Expanded: \(item.question)"))
                     }
                 }
             )

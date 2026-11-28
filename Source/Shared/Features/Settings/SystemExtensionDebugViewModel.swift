@@ -129,7 +129,7 @@ final class SystemExtensionDebugViewModel {
             }
         } catch {
             guard isCurrent else { return }
-            let mapped = error as? SystemExtensionError ?? .unknown(code: (error as NSError).code)
+            let mapped = SystemExtensionError(error)
             logger.warning("System extension debug request failed: \(mapped)", privacy: .public)
             status = .failed(mapped)
         }

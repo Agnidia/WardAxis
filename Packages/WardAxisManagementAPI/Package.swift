@@ -9,6 +9,8 @@ let package = Package(
     products: [
         .library(name: "WardAxisAPIServer", targets: ["WardAxisAPIServer"]),
         .library(name: "WardAxisAPIClient", targets: ["WardAxisAPIClient"]),
+        // Hand-written values the generator does not emit; the server and the client both link it (ADR 0019).
+        .library(name: "WardAxisAPIContract", targets: ["WardAxisAPIContract"]),
         // Golden config-stream frames for the contract, server and app test suites; link it from test
         // targets only. Static, so a hosted test bundle carries it without a framework to embed.
         .library(name: "WardAxisAPIFixtures", type: .static, targets: ["WardAxisAPIFixtures"])
@@ -38,13 +40,14 @@ let package = Package(
                 .plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")
             ]
         ),
+        .target(name: "WardAxisAPIContract"),
         .target(
             name: "WardAxisAPIFixtures",
             resources: [.copy("Frames")]
         ),
         .testTarget(
             name: "WardAxisAPITests",
-            dependencies: ["WardAxisAPIClient", "WardAxisAPIFixtures"]
+            dependencies: ["WardAxisAPIClient", "WardAxisAPIContract", "WardAxisAPIFixtures"]
         )
     ],
     swiftLanguageModes: [.v6]

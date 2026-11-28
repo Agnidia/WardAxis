@@ -32,7 +32,6 @@ struct RootView: View {
     @Environment(\.appContainer) private var container
     
     private let resolver = RouteResolver()
-    private let logger = Log(category: .ui)
     
     // MARK: - Body
     
@@ -48,15 +47,13 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in coordinator.handleDeepLink(url) }
-        .animation(.easeInOut(duration: AnimationDuration.normal), value: coordinator.appPhase)
+        .animation(.standard, value: coordinator.appPhase)
         // No enrollment flow exists yet: report the device as unenrolled, which
         // also deletes a configuration cached by an earlier enrollment.
         .onAppear {
             container.configurationService.enrollmentDidChange(to: .unenrolled)
         }
-        .onAppear {
-            logger.debug("RootView appeared")
-        }
+        .logAppearance("RootView")
     }
     
     // MARK: - Splash Overlay
@@ -67,7 +64,7 @@ struct RootView: View {
             coordinator.completeSplash()
         }
 #if os(macOS)
-        .frame(width: 400, height: 300)
+        .frame(width: WindowSize.splashCard.width, height: WindowSize.splashCard.height)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: CGFloat.radius.xl))
         .shadow(radius: Shadow.hoverRadius, y: Shadow.hoverY)
@@ -104,16 +101,12 @@ struct CoordinatedMainTabView: View {
     
     @Environment(\.appContainer) private var container
     
-    private let logger = Log(category: .ui)
-    
     var body: some View {
         // Through switchTab(to:), so a tab with unsaved changes can hold the switch.
         TabView(selection: Binding(get: { coordinator.selectedTab }, set: { coordinator.switchTab(to: $0) })) {
             homeTab
         }
-        .onAppear {
-            logger.debug("CoordinatedMainTabView appeared")
-        }
+        .logAppearance("CoordinatedMainTabView")
         .onChange(of: coordinator.selectedTab) { _, newTab in
             container.telemetry.track(.tabSelected(newTab.rawValue))
             AccessibilityAnnouncer.screenChanged()
@@ -133,19 +126,6 @@ struct CoordinatedMainTabView: View {
             Label(AppCoordinator.Tab.home.title, systemImage: AppCoordinator.Tab.home.systemImage)
         }
         .tag(AppCoordinator.Tab.home)
-    }
-    
-    private var settingsTab: some View {
-        NavigationStack(path: $coordinator.settingsNavigationPath) {
-            SettingsView()
-                .navigationDestination(for: Route.self) { route in
-                    resolver.view(for: route)
-                }
-        }
-        .tabItem {
-            Label(AppCoordinator.Tab.settings.title, systemImage: AppCoordinator.Tab.settings.systemImage)
-        }
-        .tag(AppCoordinator.Tab.settings)
     }
 }
 

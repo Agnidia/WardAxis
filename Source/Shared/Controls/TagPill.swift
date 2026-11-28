@@ -16,10 +16,9 @@ struct TagPill: View {
         Text(tag)
             .bodySmall()
             .foregroundStyle(Color.Text.white)
-            .padding(.horizontal, .spacing.xl)
-            .padding(.vertical, .spacing.m)
+            .chipPadding()
             .background(Color.Background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
+            .clipShape(.pill)
     }
 }
 

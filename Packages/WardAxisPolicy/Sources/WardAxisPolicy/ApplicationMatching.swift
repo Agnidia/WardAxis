@@ -18,7 +18,7 @@ public enum TeamAttribution: Sendable, Hashable {
     /// Byte equality, so `==` and a hash agree with `ApplicationMatcher.evaluate(_:)` (ADR 0016 D1).
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
-        case (.team(let left), .team(let right)): left.utf8.elementsEqual(right.utf8)
+        case (.team(let left), .team(let right)): IdentifierBytes.equal(left, right)
         case (.platformBinary, .platformBinary), (.withoutTeam, .withoutTeam): true
         default: false
         }
@@ -28,8 +28,7 @@ public enum TeamAttribution: Sendable, Hashable {
         switch self {
         case .team(let team):
             hasher.combine(0)
-            hasher.combine(team.utf8.count)
-            team.utf8.forEach { hasher.combine($0) }
+            IdentifierBytes.combine(team, into: &hasher)
         case .platformBinary:
             hasher.combine(1)
         case .withoutTeam:
@@ -81,11 +80,11 @@ public struct FlowApplication: Sendable, Hashable {
     
     /// Byte equality, so `==` and a hash agree with `ApplicationMatcher.evaluate(_:)` (ADR 0016 D1).
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        isEqual(lhs.signingIdentifier, rhs.signingIdentifier) { $0.utf8.elementsEqual($1.utf8) }
+        isEqual(lhs.signingIdentifier, rhs.signingIdentifier, by: IdentifierBytes.equal)
             && lhs.team == rhs.team
             && isEqual(lhs.bundleIdentifier, rhs.bundleIdentifier) { left, right in
                 switch (left, right) {
-                case (.some(let left), .some(let right)): left.utf8.elementsEqual(right.utf8)
+                case (.some(let left), .some(let right)): IdentifierBytes.equal(left, right)
                 case (nil, nil): true
                 default: false
                 }
@@ -95,13 +94,13 @@ public struct FlowApplication: Sendable, Hashable {
     public func hash(into hasher: inout Hasher) {
         switch signingIdentifier {
         case .known(let value): hasher.combine(0)
-            Self.combineBytes(value, into: &hasher)
+            IdentifierBytes.combine(value, into: &hasher)
         case .unknown: hasher.combine(1)
         }
         hasher.combine(team)
         switch bundleIdentifier {
         case .known(.some(let value)): hasher.combine(0)
-            Self.combineBytes(value, into: &hasher)
+            IdentifierBytes.combine(value, into: &hasher)
         case .known(nil): hasher.combine(1)
         case .unknown: hasher.combine(2)
         }
@@ -113,12 +112,6 @@ public struct FlowApplication: Sendable, Hashable {
         case (.unknown, .unknown): true
         default: false
         }
-    }
-    
-    private static func combineBytes(_ value: String, into hasher: inout Hasher) {
-        // The length keeps adjacent fields from hashing as one byte run.
-        hasher.combine(value.utf8.count)
-        value.utf8.forEach { hasher.combine($0) }
     }
 }
 
@@ -141,7 +134,7 @@ public extension ApplicationMatcher {
         var isComplete = expectedTeam != nil
         switch flow.signingIdentifier {
         case .known(let value):
-            guard Self.isExactlyEqual(value, signingIdentifier) else {
+            guard IdentifierBytes.equal(value, signingIdentifier) else {
                 return .noMatch
             }
         case .unknown:
@@ -158,7 +151,7 @@ public extension ApplicationMatcher {
         if let bundleIdentifier {
             switch flow.bundleIdentifier {
             case .known(let value):
-                guard let value, Self.isExactlyEqual(value, bundleIdentifier) else {
+                guard let value, IdentifierBytes.equal(value, bundleIdentifier) else {
                     return .noMatch
                 }
             case .unknown:
@@ -166,10 +159,6 @@ public extension ApplicationMatcher {
             }
         }
         return isComplete ? .match : .unknown
-    }
-    
-    private static func isExactlyEqual(_ lhs: String, _ rhs: String) -> Bool {
-        lhs.utf8.elementsEqual(rhs.utf8)
     }
 }
 
@@ -181,19 +170,21 @@ public extension PolicyRule {
     /// applies and an `allow` rule does not. Hiding or losing the identity
     /// therefore never escapes a deny and never earns an allow. A disabled rule never applies.
     func applicationApplies(to flow: FlowApplication) -> Bool {
-        guard enabled else {
-            return false
-        }
-        guard let application = match.application else {
-            return true
-        }
-        switch application.evaluate(flow) {
-        case .match:
-            return true
-        case .noMatch:
-            return false
-        case .unknown:
-            return action == .deny
-        }
+        // A rule without the criterion matches every application.
+        applies(match.application?.evaluate(flow) ?? .match)
+    }
+}
+
+/// Byte equality and hashing for identifiers (ADR 0016 D1). `String ==` compares
+/// canonical equivalence, so two different byte runs could pass as one identifier.
+private enum IdentifierBytes {
+    static func equal(_ lhs: String, _ rhs: String) -> Bool {
+        lhs.utf8.elementsEqual(rhs.utf8)
+    }
+    
+    static func combine(_ value: String, into hasher: inout Hasher) {
+        // The length keeps adjacent fields from hashing as one byte run.
+        hasher.combine(value.utf8.count)
+        value.utf8.forEach { hasher.combine($0) }
     }
 }

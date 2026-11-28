@@ -7,6 +7,7 @@
 
 import Foundation
 import Testing
+import WardAxisTelemetry
 @testable import WardAxis
 
 @Suite("LogReaderService")
@@ -20,12 +21,17 @@ struct LogReaderServiceTests {
         return url
     }
     
-    private func makeService(fileURL: URL, maxStreamedEntries: Int = 5000) -> LogReaderService {
+    private func makeService(
+        fileURL: URL,
+        maxStreamedEntries: Int = LogFileLimits.maximumStreamedEntries,
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) -> LogReaderService {
         LogReaderService(
             fileURL: fileURL,
             parser: LogEntryParser(),
-            maximumReadBytes: 2 * 1024 * 1024,
-            maxStreamedEntries: maxStreamedEntries
+            maximumReadBytes: LogFileLimits.retainedBytes,
+            maxStreamedEntries: maxStreamedEntries,
+            now: now
         )
     }
     
@@ -71,7 +77,7 @@ struct LogReaderServiceTests {
         let url = try makeTempFile(content: content)
         defer { try? FileManager.default.removeItem(at: url) }
         
-        let cap = 5000
+        let cap = LogFileLimits.maximumStreamedEntries
         let service = makeService(fileURL: url, maxStreamedEntries: cap)
         let entries = try await service.loadEntries()
         
@@ -88,7 +94,7 @@ struct LogReaderServiceTests {
         let url = try makeTempFile(content: content)
         defer { try? FileManager.default.removeItem(at: url) }
         
-        let cap = 5000
+        let cap = LogFileLimits.maximumStreamedEntries
         let service = makeService(fileURL: url, maxStreamedEntries: cap)
         let entries = try await service.loadEntries()
         
@@ -123,13 +129,7 @@ struct LogReaderServiceTests {
         let url = FileManager.default.temporaryDirectory
             .appending(path: "empty-\(UUID().uuidString).log")
         
-        let service = LogReaderService(
-            fileURL: url,
-            parser: LogEntryParser(),
-            maximumReadBytes: 2 * 1024 * 1024,
-            maxStreamedEntries: 5000,
-            now: { fixedDate }
-        )
+        let service = makeService(fileURL: url, now: { fixedDate })
         
         let entries: [LogEntry] = [
             LogEntry(id: UUID(), kind: .raw("test entry"), rawLine: "test entry")

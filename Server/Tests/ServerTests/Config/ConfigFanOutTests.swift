@@ -25,12 +25,7 @@ extension DatabaseSuites {
     struct ConfigFanOutTests {
         private struct RollbackRequested: Error {}
         
-        /// Capped like production: below notice the driver logs bind values.
-        private let logger: Logger = {
-            var logger = Logger(label: "test.config.postgres")
-            logger.logLevel = .notice
-            return logger
-        }()
+        private let logger = Logger(label: "test.config.postgres").cappedForPostgres()
         
         private static let policy: ConfigStreamPolicy = {
             var policy = ConfigStreamHarness.quietPolicy

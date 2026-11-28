@@ -27,6 +27,13 @@ extension View {
             .accessibilityAddTraits(isButton ? .isButton : [])
     }
     
+    /// Identifier and label for an icon-only control. The glyph gives VoiceOver
+    /// nothing to read, and the control keeps its own traits and hint.
+    func accessibleIcon(_ element: any AccessibilityProtocol) -> some View {
+        accessibilityIdentifier(element.id)
+            .accessibilityLabel(element.label)
+    }
+    
     /// Applies accessibility using an `AccessibilityProtocol` with enabled state.
     func accessible(_ element: any AccessibilityProtocol,
                     isButton: Bool = true,

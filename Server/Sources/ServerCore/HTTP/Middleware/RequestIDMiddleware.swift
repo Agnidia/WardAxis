@@ -43,7 +43,7 @@ package struct RequestIDMiddleware: RouterMiddleware {
         } catch {
             // Converted here rather than by the server so the 500 still carries the ID.
             // The type only: an error description can carry request or driver details.
-            context.logger.error("Unhandled error", metadata: ["error.type": "\(type(of: error))"])
+            context.logger.error("Unhandled error", metadata: .errorType(error))
             response = Response(status: .internalServerError)
         }
         response.headers[Self.headerName] = requestID

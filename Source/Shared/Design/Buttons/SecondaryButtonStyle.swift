@@ -28,22 +28,6 @@ struct SecondaryButtonStyle: ButtonStyle {
     
     private let backgroundType: ButtonBackgroundType
     
-    private var paddingHorizontal: CGFloat {
-        isIconOnly ? (.padding.m - .padding.xxs) : .padding.xl
-    }
-    
-    private var paddingVertical: CGFloat {
-        .padding.m - .padding.xxs
-    }
-    
-    private var isLoading: Bool {
-        state == .loading
-    }
-    
-    private var showShimmer: Bool {
-        state != .base
-    }
-    
     init(state: ButtonState = .base, isFullWidth: Bool = false, isIconOnly: Bool = false, backgroundType: ButtonBackgroundType = .blurred) {
         self.state = state
         self.isFullWidth = isFullWidth
@@ -56,57 +40,53 @@ struct SecondaryButtonStyle: ButtonStyle {
             .buttonLarge()
             .dynamicTypeSize(.xSmall ... .xxxLarge)
             .foregroundStyle(labelColor(isPressed: configuration.isPressed))
-            .padding(.horizontal, paddingHorizontal)
-            .padding(.vertical, paddingVertical)
+            .padding(.horizontal, ButtonPadding.horizontal(isIconOnly: isIconOnly))
+            .padding(.vertical, ButtonPadding.vertical)
             .frame(maxWidth: isFullWidth ? .infinity : nil)
             .background {
                 Color.Button.Background.Secondary.default
                     .blur(radius: backgroundType == .blurred ? .blurRadius.xl : .zero)
-                    .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
+                    .clipShape(.pill)
             }
-            .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
+            .clipShape(.pill)
             .padding(.border.thin)
             .overlay {
-                RoundedRectangle(cornerRadius: .radius.xxxl)
+                RoundedRectangle.pill
                     .inset(by: .border.primary.half)
                     .stroke(borderColor(isPressed: configuration.isPressed), lineWidth: .lineWidth.thin)
                     .shimmerEffect(
                         colors: [.Button.Background.Primary.loading, .Background.secondary, .Button.Background.Primary.loading],
-                        isEnabled: isLoading,
-                        isAnimated: isLoading,
-                        mask: RoundedRectangle(cornerRadius: .radius.xxxl)
+                        isEnabled: state.isLoading,
+                        isAnimated: state.isLoading,
+                        mask: RoundedRectangle.pill
                             .inset(by: .border.primary.half)
                             .stroke(lineWidth: .lineWidth.thin)
                     )
             }
-            .animation(.easeInOut(duration: AnimationDuration.fast), value: configuration.isPressed)
-            .animation(.easeInOut(duration: AnimationDuration.normal), value: state)
+            .animation(.quick, value: configuration.isPressed)
+            .animation(.standard, value: state)
     }
     
+    private static let border = ButtonPalette(
+        disabled: .Button.Background.Secondary.Border.disabled,
+        loading: .Button.Background.Secondary.Border.loading,
+        pressed: .Button.Background.Secondary.Border.pressed,
+        normal: .Button.Background.Secondary.Border.default
+    )
+    
+    private static let label = ButtonPalette(
+        disabled: .Button.Label.Secondary.disabled,
+        loading: .Button.Label.Secondary.loading,
+        pressed: .Button.Label.Secondary.pressed,
+        normal: .Button.Label.Secondary.default
+    )
+    
     private func borderColor(isPressed: Bool) -> Color {
-        if !isEnabled {
-            return .Button.Background.Secondary.Border.disabled
-        }
-        if showShimmer {
-            return .Button.Background.Secondary.Border.loading
-        }
-        if isPressed {
-            return .Button.Background.Secondary.Border.pressed
-        }
-        return .Button.Background.Secondary.Border.default
+        state.color(Self.border, isEnabled: isEnabled, isPressed: isPressed)
     }
     
     private func labelColor(isPressed: Bool) -> Color {
-        if !isEnabled {
-            return .Button.Label.Secondary.disabled
-        }
-        if showShimmer {
-            return .Button.Label.Secondary.loading
-        }
-        if isPressed {
-            return .Button.Label.Secondary.pressed
-        }
-        return .Button.Label.Secondary.default
+        state.color(Self.label, isEnabled: isEnabled, isPressed: isPressed)
     }
 }
 

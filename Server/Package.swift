@@ -9,6 +9,7 @@ let package = Package(
     name: "Server",
     platforms: [.macOS(.v26)],
     dependencies: [
+        .package(path: "../Packages/WardAxisCore"),
         .package(path: "../Packages/WardAxisManagementAPI"),
         .package(url: "https://github.com/hummingbird-project/hummingbird", from: "2.27.1"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-websocket", from: "2.8.1"),
@@ -29,6 +30,9 @@ let package = Package(
             name: "ServerCore",
             dependencies: [
                 .product(name: "WardAxisAPIServer", package: "WardAxisManagementAPI"),
+                .product(name: "WardAxisAPIContract", package: "WardAxisManagementAPI"),
+                // BoundedJSON only: the server checks each outgoing frame with the scan the client runs on it.
+                .product(name: "WardAxisCore", package: "WardAxisCore"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdTLS", package: "hummingbird"),
                 .product(name: "HummingbirdWebSocket", package: "hummingbird-websocket"),
@@ -49,6 +53,7 @@ let package = Package(
             name: "ServerTests",
             dependencies: [
                 "ServerCore",
+                .product(name: "WardAxisAPIContract", package: "WardAxisManagementAPI"),
                 .product(name: "WardAxisAPIFixtures", package: "WardAxisManagementAPI"),
                 .product(name: "HummingbirdTesting", package: "hummingbird"),
                 .product(name: "HummingbirdWSClient", package: "hummingbird-websocket"),

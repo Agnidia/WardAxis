@@ -73,3 +73,32 @@ func makeTestApplication(
 func decodeJSON<Value: Decodable>(_: Value.Type, from body: ByteBuffer) throws -> Value {
     try JSONDecoder().decode(Value.self, from: Data(String(buffer: body).utf8))
 }
+
+/// The body of every error response, as the contract's `ErrorResponse` defines it.
+struct ErrorBody: Decodable, Equatable {
+    let code: String
+    let message: String
+    let requestId: String?
+}
+
+extension APIDocs {
+    /// Docs routes with stand-in bytes, for tests of routing rather than content.
+    static let stub = APIDocs(
+        openAPIDocument: ByteBuffer(string: "openapi: 3.1.0\n"),
+        redocScript: ByteBuffer(string: "/* redoc */")
+    )
+}
+
+extension ConfigStreamClient {
+    /// A distinct slot key with stand-in bytes; the hub never parses them.
+    static func sample() -> ConfigStreamClient {
+        ConfigStreamClient(certificateDER: Array(UUID().uuidString.utf8))
+    }
+}
+
+extension ConfigConnectionHub {
+    /// Room for five streams per client and a 32-frame buffer, enough for any relay test.
+    static func testing() -> ConfigConnectionHub {
+        ConfigConnectionHub(maxConnectionsPerClient: 5, bufferSize: 32)
+    }
+}

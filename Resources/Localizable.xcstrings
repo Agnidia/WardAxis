@@ -74,78 +74,6 @@
         }
       }
     },
-    "accessibility.logs.body.clearButton.hint" : {
-      "comment" : "Accessibility hint for the logs viewer body clear button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Permanently deletes all stored log entries"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Назавжди видаляє всі збережені записи журналу"
-          }
-        }
-      }
-    },
-    "accessibility.logs.body.clearButton.label" : {
-      "comment" : "Accessibility label for the logs viewer body clear button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clean logs"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Очистити журнали"
-          }
-        }
-      }
-    },
-    "accessibility.logs.body.shareButton.hint" : {
-      "comment" : "Accessibility hint for the logs viewer body share button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exports currently visible entries"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Експортує наразі видимі записи"
-          }
-        }
-      }
-    },
-    "accessibility.logs.body.shareButton.label" : {
-      "comment" : "Accessibility label for the logs viewer body share button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share filtered logs"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Поділитися відфільтрованими записами"
-          }
-        }
-      }
-    },
     "accessibility.logs.clearButton.label" : {
       "comment" : "Accessibility label for the logs viewer clear button",
       "extractionState" : "manual",
@@ -196,78 +124,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оновити журнали"
-          }
-        }
-      }
-    },
-    "accessibility.logs.settings.clearButton.hint" : {
-      "comment" : "Accessibility hint for the Settings clean logs button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Permanently deletes all stored log entries"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Назавжди видаляє всі збережені записи журналу"
-          }
-        }
-      }
-    },
-    "accessibility.logs.settings.clearButton.label" : {
-      "comment" : "Accessibility label for the Settings clean logs button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clean logs"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Очистити журнали"
-          }
-        }
-      }
-    },
-    "accessibility.logs.settings.shareButton.hint" : {
-      "comment" : "Accessibility hint for the Settings share logs button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exports the current log file"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Експортує поточний файл журналу"
-          }
-        }
-      }
-    },
-    "accessibility.logs.settings.shareButton.label" : {
-      "comment" : "Accessibility label for the Settings share logs button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share logs"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Поділитися журналами"
           }
         }
       }
@@ -522,6 +378,17 @@
         }
       }
     },
+    "Expanded: %@" : {
+      "comment" : "VoiceOver announcement when an FAQ item opens, followed by its question.",
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгорнуто: %@"
+          }
+        }
+      }
+    },
     "help.contact" : {
       "comment" : "Contact section header",
       "extractionState" : "manual",
@@ -626,6 +493,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкрити центр довідки"
+          }
+        }
+      }
+    },
+    "Information: %@" : {
+      "comment" : "VoiceOver label of an info banner: the word Information, then the message.",
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інформація: %@"
           }
         }
       }
@@ -776,6 +654,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Увімк."
+          }
+        }
+      }
+    },
+    "Raw entry: %@" : {
+      "comment" : "VoiceOver label of a log line that could not be parsed, followed by its text.",
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Необроблений запис: %@"
           }
         }
       }
@@ -1172,24 +1061,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Діагностика"
-          }
-        }
-      }
-    },
-    "settings.logs.clearCancel" : {
-      "comment" : "Logs viewer clear cancel button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скасувати"
           }
         }
       }
@@ -1784,6 +1655,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Крок %1$lld з %2$lld"
+          }
+        }
+      }
+    },
+    "Success: %@" : {
+      "comment" : "VoiceOver label of a success banner: the word Success, then the message.",
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Успіх: %@"
           }
         }
       }

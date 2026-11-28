@@ -25,6 +25,37 @@ enum AnimationDuration {
     static let ultraSlow: CGFloat = 1.0
     /// 0s - Without animation
     static let zero: CGFloat = .zero
+    /// 1.5s - One pass of a loading shimmer
+    static let shimmer: CGFloat = 1.5
+}
+
+/// Spring damping tokens (0 bounces forever, 1 never overshoots)
+enum SpringDamping {
+    /// 0.6 - A light bounce for presented alerts
+    static let gentle: CGFloat = 0.6
+}
+
+extension Animation {
+    /// Ease in-out at ``AnimationDuration/normal``: state changes that the user should notice.
+    static let standard: Animation = .easeInOut(duration: AnimationDuration.normal)
+    /// Ease in-out at ``AnimationDuration/fast``: press feedback.
+    static let quick: Animation = .easeInOut(duration: AnimationDuration.fast)
+}
+
+/// How long an in-app alert stays before it dismisses itself, in seconds
+enum AlertDuration {
+    /// 3s - Info and success messages
+    static let short: Double = 3
+    /// 5s - Errors, which take longer to read and act on
+    static let long: Double = 5
+}
+
+/// Window and floating card sizes
+enum WindowSize {
+    /// 800 x 600pt - Default macOS main window
+    static let main = CGSize(width: 800, height: 600)
+    /// 400 x 300pt - macOS splash card
+    static let splashCard = CGSize(width: 400, height: 300)
 }
 
 /// Delay tokens for sequenced animations
@@ -109,7 +140,7 @@ extension CGFloat {
         static let xs: CGFloat = 2
         /// 4pt - Small spacing for compact elements
         static let s: CGFloat = 4
-        /// 8pt - Medium spacing (default)
+        /// 6pt - Medium spacing (default)
         static let m: CGFloat = 6
         /// 8pt - Medium-large spacing
         static let l: CGFloat = 8
@@ -207,29 +238,29 @@ extension Double {
     /// Opacity tokens (0.0 - 1.0)
     enum opacity {
         /// Fully transparent
-        static let transparent: CGFloat = 0.0
+        static let transparent: Double = 0.0
         /// 10% opacity - Very faint
-        static let faint: CGFloat = 0.1
+        static let faint: Double = 0.1
         /// 20% opacity - Light overlay
-        static let light: CGFloat = 0.2
+        static let light: Double = 0.2
         /// 30% opacity - Subtle
-        static let subtle: CGFloat = 0.3
+        static let subtle: Double = 0.3
         /// 40% opacity - Medium-light
-        static let mediumLight: CGFloat = 0.4
+        static let mediumLight: Double = 0.4
         /// 50% opacity - Half
-        static let medium: CGFloat = 0.5
+        static let medium: Double = 0.5
         /// 60% opacity - Medium-strong
-        static let mediumStrong: CGFloat = 0.6
+        static let mediumStrong: Double = 0.6
         /// 70% opacity - Strong
-        static let strong: CGFloat = 0.7
+        static let strong: Double = 0.7
         /// 80% opacity - Very strong
-        static let veryStrong: CGFloat = 0.8
+        static let veryStrong: Double = 0.8
         /// 90% opacity - Nearly opaque
-        static let nearlyOpaque: CGFloat = 0.9
+        static let nearlyOpaque: Double = 0.9
         /// 99% opacity - Almost fully opaque
-        static let almostOpaque: CGFloat = 0.99
+        static let almostOpaque: Double = 0.99
         /// Fully opaque
-        static let opaque: CGFloat = 1.0
+        static let opaque: Double = 1.0
     }
 }
 
@@ -295,19 +326,21 @@ enum IconBadgeSize {
     static let l: CGFloat = 120
     /// 160pt - Hero badge (welcome, splash)
     static let xl: CGFloat = 160
+    /// The icon's size as a fraction of the badge
+    static let iconRatio: CGFloat = 0.42
 }
 
 /// Form control dimension tokens
 enum FormSize {
     /// 4pt - Outer padding around form container
     static let outerPadding: CGFloat = .padding.xs
-    /// 11pt - Vertical padding inside input field
+    /// 7pt - Vertical padding inside input field
     static let innerPaddingVertical: CGFloat = .spacing.l - 1
-    /// 14pt - Horizontal padding inside input field
+    /// 10pt - Horizontal padding inside input field
     static let innerPaddingHorizontal: CGFloat = .spacing.l + 2
     /// 16pt - Outer container corner radius
     static let outerRadius: CGFloat = .radius.l
-    /// 12pt - Inner input field corner radius
+    /// 14pt - Inner input field corner radius
     static let innerRadius: CGFloat = .radius.l - 2
     /// 1pt - Border width for input fields
     static let borderWidth: CGFloat = .border.thin
@@ -343,11 +376,11 @@ enum CarouselDotSize {
 enum AlertSize {
     /// 8pt - Banner alert corner radius
     static let bannerRadius: CGFloat = .radius.m
-    /// 16pt - Horizontal padding for banner alerts
+    /// 8pt - Horizontal padding for banner alerts
     static let bannerPaddingH: CGFloat = .padding.m
-    /// 12pt - Vertical padding for banner alerts
+    /// 8pt - Vertical padding for banner alerts
     static let bannerPaddingV: CGFloat = .spacing.l
-    /// 16pt - Vertical padding for accent alerts
+    /// 8pt - Vertical padding for accent alerts
     static let accentPaddingV: CGFloat = .padding.m
     /// 16pt - Icon size in banner alerts
     static let iconSize: CGFloat = IconSize.s

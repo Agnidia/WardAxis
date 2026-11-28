@@ -13,15 +13,13 @@ import SwiftUI
 struct LogsUnavailableView: View {
     var body: some View {
         VStack(spacing: .spacing.l) {
-            Image(systemName: "doc.text.magnifyingglass")
+            Image(systemName: Symbol.logs)
                 .font(.system(size: IconSize.l))
                 .foregroundStyle(.secondary)
             
             Text(L.Settings.Logs.unsupportedPlatform)
                 .bodyLarge()
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, .padding.l)
+                .placeholderMessage()
         }
         .padding(.padding.l)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

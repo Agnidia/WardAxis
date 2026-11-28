@@ -101,21 +101,15 @@ final class HapticFeedbackService: HapticFeedbackServiceProtocol {
     // MARK: - HapticFeedbackServiceProtocol
     
     func playSuccess() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.prepare()
-        generator.notificationOccurred(.success)
+        notify(.success)
     }
     
     func playError() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.prepare()
-        generator.notificationOccurred(.error)
+        notify(.error)
     }
     
     func playWarning() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.prepare()
-        generator.notificationOccurred(.warning)
+        notify(.warning)
     }
     
     func playProgress(intensity: Float) {
@@ -150,7 +144,24 @@ final class HapticFeedbackService: HapticFeedbackServiceProtocol {
         generator.selectionChanged()
     }
     
+    private func notify(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(type)
+    }
+    
     // MARK: - Custom Haptic Patterns
+    
+    private func transient(intensity: Float, sharpness: Float, at time: TimeInterval) -> CHHapticEvent {
+        CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+            ],
+            relativeTime: time
+        )
+    }
     
     private func createDirectionPattern(direction: HapticDirection) throws -> CHHapticPattern {
         var events: [CHHapticEvent] = []
@@ -159,56 +170,21 @@ final class HapticFeedbackService: HapticFeedbackServiceProtocol {
         case .left:
             // Two quick taps for left
             events = [
-                CHHapticEvent(
-                    eventType: .hapticTransient,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.8),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
-                    ],
-                    relativeTime: 0
-                ),
-                CHHapticEvent(
-                    eventType: .hapticTransient,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.6),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
-                    ],
-                    relativeTime: 0.1
-                )
+                transient(intensity: 0.8, sharpness: 0.5, at: 0),
+                transient(intensity: 0.6, sharpness: 0.5, at: 0.1)
             ]
         
         case .right:
             // Two quick taps with higher sharpness for right
             events = [
-                CHHapticEvent(
-                    eventType: .hapticTransient,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.6),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
-                    ],
-                    relativeTime: 0
-                ),
-                CHHapticEvent(
-                    eventType: .hapticTransient,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.8),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
-                    ],
-                    relativeTime: 0.1
-                )
+                transient(intensity: 0.6, sharpness: 0.8, at: 0),
+                transient(intensity: 0.8, sharpness: 0.8, at: 0.1)
             ]
         
         case .center:
             // Single centered tap
             events = [
-                CHHapticEvent(
-                    eventType: .hapticTransient,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.7)
-                    ],
-                    relativeTime: 0
-                )
+                transient(intensity: 1.0, sharpness: 0.7, at: 0)
             ]
         }
         

@@ -92,6 +92,13 @@ paths:
             - When the server cannot read the configuration or its change log has a gap, the
               server closes the connection with close code 1011. The client reconnects for a
               new snapshot.
+            - Every text frame is at most 262144 bytes and nests at most 32 levels deep. The
+              client refuses a larger frame before it decodes it. The server never sends one:
+              when a snapshot or a delta would exceed the bound, it closes the connection with
+              close code 1011 instead.
+            - Close code 1008 (Policy Violation) is reserved for a refused client identity. The
+              client does not reconnect until its enrollment changes. The server does not send
+              it yet.
         '400':
           description: |
             A plain `GET` without `Upgrade: websocket` gets code `invalid_request`.

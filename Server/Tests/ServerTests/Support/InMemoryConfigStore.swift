@@ -11,7 +11,7 @@ import OpenAPIRuntime
 import ServerCore
 import WardAxisAPIServer
 
-/// ``ConfigStore`` in memory, versioned like migration 6: each commit that changes
+/// ``ConfigStore`` in memory, versioned like migration 0002: each commit that changes
 /// something advances the version by exactly 1 and appends one change to the log.
 final class InMemoryConfigStore: ConfigStore, Sendable {
     struct StoreFailure: Error {}

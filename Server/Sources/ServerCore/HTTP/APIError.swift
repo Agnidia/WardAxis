@@ -6,6 +6,7 @@
 //
 
 import HTTPTypes
+import WardAxisAPIContract
 
 /// An error response in the contract's terms: status, stable code and a fixed message.
 ///
@@ -23,13 +24,13 @@ package struct APIError: Error, Sendable, Equatable {
     }
     
     package static func invalidRequest(message: String) -> APIError {
-        APIError(status: .badRequest, code: "invalid_request", message: message)
+        APIError(status: .badRequest, code: APIErrorCode.invalidRequest, message: message)
     }
     
     package static let malformedRequest: APIError = .invalidRequest(message: "The request is malformed.")
     package static let internalError: APIError = .init(
         status: .internalServerError,
-        code: "internal_error",
+        code: APIErrorCode.internalError,
         message: "Something went wrong. Try again later."
     )
     
@@ -39,13 +40,13 @@ package struct APIError: Error, Sendable, Equatable {
         case 400:
             .malformedRequest
         case 404:
-            APIError(status: status, code: "not_found", message: "The resource does not exist.")
+            APIError(status: status, code: APIErrorCode.notFound, message: "The resource does not exist.")
         case 405:
-            APIError(status: status, code: "method_not_allowed", message: "The method is not allowed on this resource.")
+            APIError(status: status, code: APIErrorCode.methodNotAllowed, message: "The method is not allowed on this resource.")
         case 413:
-            APIError(status: status, code: "payload_too_large", message: "The request body is too large.")
+            APIError(status: status, code: APIErrorCode.payloadTooLarge, message: "The request body is too large.")
         case 400..<500:
-            APIError(status: status, code: "invalid_request", message: "The request cannot be served.")
+            APIError(status: status, code: APIErrorCode.invalidRequest, message: "The request cannot be served.")
         default:
             .internalError
         }

@@ -7,6 +7,7 @@
 
 import Foundation
 import WardAxisAPIClient
+import WardAxisAPIContract
 
 /// The server base URL, validated.
 ///
@@ -90,13 +91,9 @@ public struct APIConfiguration: Sendable, Equatable {
         return try validateContractPath(serverURL.path(percentEncoded: true))
     }
     
-    /// Accepts `/v1` and `/api/v1`, the same rule as the server's `APIBasePath`.
-    ///
-    /// A spec edit to `/` would call the API unversioned, and `/v1/` or `//v1`
-    /// would build paths that the server does not route, so all three fail
-    /// loudly instead.
+    /// Applies ``APIBasePathRule``, the rule the server applies to the same path.
     static func validateContractPath(_ path: String) throws(APIConfigurationError) -> String {
-        guard path.hasPrefix("/"), path != "/", !path.hasSuffix("/"), !path.contains("//") else {
+        guard APIBasePathRule.isValid(path) else {
             throw .invalidContractPath
         }
         return path

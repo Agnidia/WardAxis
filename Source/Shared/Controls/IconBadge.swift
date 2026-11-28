@@ -61,12 +61,12 @@ struct IconBadge: View {
         switch content {
         case .system(let name):
             Image(systemName: name)
-                .font(.system(size: size * 0.42))
+                .font(.system(size: size * IconBadgeSize.iconRatio))
         case .resource(let resource):
             Image(resource)
                 .resizable()
                 .scaledToFit()
-                .frame(width: size * 0.42, height: size * 0.42)
+                .frame(width: size * IconBadgeSize.iconRatio, height: size * IconBadgeSize.iconRatio)
         }
     }
 }

@@ -369,7 +369,7 @@ struct ConfigurationServiceTests {
         let third = await harness.transport.connection(3)
         third.send(frame: ConfigFrames.snapshot(41))
         await waitUntil { harness.service.configuration != nil }
-        harness.clock.advance(by: .seconds(25))
+        harness.clock.advance(by: ConfigurationService.minimumHealthyUptime)
         third.send(frame: ConfigFrames.heartbeat(41))
         await settle()
         third.close(code: 1011)
@@ -429,7 +429,9 @@ struct ConfigurationServiceTests {
         let harness = ConfigurationHarness()
         let connection = await harness.start()
         connection.send(frame: ConfigFrames.snapshot(41))
-        let tooDeep = String(repeating: "[", count: 31) + String(repeating: "]", count: 31)
+        // The envelope and `changed` take two levels, so this nest is one past the limit.
+        let tooDeep = String(repeating: "[", count: ConfigurationLimits.maximumNestingDepth - 1)
+            + String(repeating: "]", count: ConfigurationLimits.maximumNestingDepth - 1)
         
         connection.send(frame: ConfigFrames.delta(42, changed: #"{"deep":\#(tooDeep)}"#))
         connection.send(frame: ConfigFrames.delta(42, changed: #"{"maxItems":25}"#))

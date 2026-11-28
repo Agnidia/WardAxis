@@ -90,21 +90,21 @@ struct SearchField: View {
         .padding(.horizontal, .spacing.xxl)
         .frame(height: FormSize.searchHeight)
         .background {
-            RoundedRectangle(cornerRadius: .radius.xxxl)
+            RoundedRectangle.pill
                 .fill(.ultraThinMaterial)
                 .background(
-                    RoundedRectangle(cornerRadius: .radius.xxxl)
+                    RoundedRectangle.pill
                         .fill(Color.Textfield.background)
                 )
         }
         .overlay {
-            RoundedRectangle(cornerRadius: .radius.xxxl)
+            RoundedRectangle.pill
                 .stroke(borderColor, lineWidth: FormSize.borderWidth)
         }
-        .clipShape(RoundedRectangle(cornerRadius: .radius.xxxl))
+        .clipShape(.pill)
         .accessibleTextField(accessibilityConfig,
                              label: LocalizedStringKey(accessibilityConfig.label),
-                             value: text.isEmpty ? nil : text)
+                             value: text.realValue)
     }
     
     // MARK: - Computed Properties

@@ -24,7 +24,7 @@ struct LogDateRangeFilterBar: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: .spacing.m) {
                 ForEach(ranges, id: \.rawValue) { range in
-                    LogFilterChip(
+                    SelectableChip(
                         title: range.filterTitleKey,
                         isSelected: isSelected(range),
                         accessibility: range.filterAccessibility
@@ -35,31 +35,5 @@ struct LogDateRangeFilterBar: View {
             }
             .padding(.horizontal, .padding.m)
         }
-    }
-}
-
-/// Lightweight chip used by the Logger filter bars. Local to the Logger UI
-/// module (no SelectableChip control exists in the design system yet).
-struct LogFilterChip: View {
-    let title: LocalizedStringKey
-    let isSelected: Bool
-    let accessibility: any AccessibilityProtocol
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .bodySmall()
-                .foregroundStyle(isSelected ? Color.white : .primary)
-                .padding(.horizontal, .spacing.xl)
-                .padding(.vertical, .spacing.m)
-                .background(isSelected ? Color.accentColor : Color.gray.opacity(.opacity.faint))
-                .clipShape(Capsule())
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier(accessibility.id)
-        .accessibilityLabel(accessibility.label)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

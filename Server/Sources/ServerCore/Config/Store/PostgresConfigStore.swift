@@ -10,7 +10,7 @@ import Logging
 import PostgresNIO
 import WardAxisAPIServer
 
-/// ``ConfigStore`` on the migration 6 tables.
+/// ``ConfigStore`` on the migration 0002 tables.
 ///
 /// jsonb is read as text and decoded with `JSONDecoder`, so each value keeps its JSON
 /// type: an integer stays an integer in the frames the clients receive.

@@ -9,13 +9,6 @@ import Foundation
 import ServerCore
 import Testing
 
-extension ConfigStreamClient {
-    /// A distinct slot key with stand-in bytes; the hub never parses them.
-    static func sample() -> ConfigStreamClient {
-        ConfigStreamClient(certificateDER: Array(UUID().uuidString.utf8))
-    }
-}
-
 @Suite("Config connection hub")
 struct ConfigConnectionHubTests {
     private static func frame(_ version: Int64) -> ConfigDeltaFrame {

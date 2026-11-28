@@ -21,7 +21,7 @@ import WardAxisTelemetry
 /// Derived state (`filteredEntries`, `totalEntryCount`, `filteredOutCount`,
 /// `hasAnyEntries`) is **stored**, recomputed only when `state` or
 /// `selectedLevels` mutates. This avoids re-running the O(N) reverse + filter
-/// on every SwiftUI read at the 5000-entry streaming cap.
+/// on every SwiftUI read at the `LogFileLimits.maximumStreamedEntries` streaming cap.
 @Observable @MainActor
 final class LogsViewerViewModel {
     // MARK: - Types
@@ -165,7 +165,7 @@ final class LogsViewerViewModel {
         } catch let error as LogReaderError {
             state = .failed(error)
         } catch {
-            state = .failed(.readFailed(underlying: String(describing: error)))
+            state = .failed(.read(error))
         }
         recomputeDerivedState()
     }
@@ -260,14 +260,12 @@ final class LogsViewerViewModel {
     /// For composite levels, picks the highest-priority bit set
     /// (`.error` > `.warning` > `.info` > `.debug`).
     private func emit(_ message: String, at level: Log.Level, on logger: Log) {
-        if level.contains(.error) {
-            logger.error(message)
-        } else if level.contains(.warning) {
-            logger.warning(message)
-        } else if level.contains(.info) {
-            logger.info(message)
-        } else if level.contains(.debug) {
-            logger.debug(message)
+        switch level.primary {
+        case .error: logger.error(message)
+        case .warning: logger.warning(message)
+        case .info: logger.info(message)
+        case .debug: logger.debug(message)
+        case nil: break
         }
     }
 #endif
@@ -283,7 +281,7 @@ final class LogsViewerViewModel {
             recomputeDerivedState()
             return
         } catch {
-            state = .failed(.writeFailed(underlying: String(describing: error)))
+            state = .failed(.write(error))
             recomputeDerivedState()
             return
         }

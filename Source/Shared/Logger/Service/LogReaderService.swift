@@ -24,8 +24,7 @@ actor LogReaderService: LogReaderServiceProtocol {
     private let now: @Sendable () -> Date
     
     /// - Parameters:
-    ///   - fileURL: Absolute URL of the log file. Defaults to the live
-    ///     `Log.logDirectoryUrl/log.log` location.
+    ///   - fileURL: Absolute URL of the log file. Defaults to `Log.logFileUrl`.
     ///   - parser: Pure parser. Defaults to a fresh `LogEntryParser`.
     ///   - maximumReadBytes: Maximum tail bytes read before parsing.
     ///   - maxStreamedEntries: Maximum entries returned for large files.
@@ -35,15 +34,15 @@ actor LogReaderService: LogReaderServiceProtocol {
         parser: LogEntryParser = LogEntryParser(),
         maximumReadBytes: Int = LogFileLimits.retainedBytes,
         writer: FileLogHandler? = nil,
-        maxStreamedEntries: Int = 5000,
+        maxStreamedEntries: Int = LogFileLimits.maximumStreamedEntries,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
-        self.fileURL = fileURL ?? Log.logDirectoryUrl.appending(path: "log.log")
+        self.fileURL = fileURL ?? Log.logFileUrl
         self.writer = writer
         usesLiveWriter = fileURL == nil
         self.parser = parser
         self.maximumReadBytes = max(1, min(maximumReadBytes, LogFileLimits.retainedBytes))
-        self.maxStreamedEntries = max(1, min(maxStreamedEntries, 5000))
+        self.maxStreamedEntries = max(1, min(maxStreamedEntries, LogFileLimits.maximumStreamedEntries))
         self.now = now
     }
     
@@ -64,7 +63,7 @@ actor LogReaderService: LogReaderServiceProtocol {
             }
             content = text
         } catch {
-            throw LogReaderError.readFailed(underlying: String(describing: error))
+            throw LogReaderError.read(error)
         }
         
         let entries = parser.parseAll(content)
@@ -75,12 +74,12 @@ actor LogReaderService: LogReaderServiceProtocol {
         let filename = Self.exportFilename(for: now())
         let url = FileManager.default.temporaryDirectory.appending(path: filename)
         
-        let body = entries.map(\.rawLine).joined(separator: "\n").appending("\n")
+        let body = entries.exportText
         
         do {
             try body.write(to: url, atomically: true, encoding: .utf8)
         } catch {
-            throw LogReaderError.writeFailed(underlying: String(describing: error))
+            throw LogReaderError.write(error)
         }
         return url
     }
@@ -102,19 +101,13 @@ actor LogReaderService: LogReaderServiceProtocol {
         do {
             try Data().write(to: fileURL, options: .atomic)
         } catch {
-            throw LogReaderError.writeFailed(underlying: String(describing: error))
+            throw LogReaderError.write(error)
         }
     }
     
     // MARK: - Filename helper
     
-    private static let exportFilenameFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = "yyyyMMdd-HHmmss"
-        return formatter
-    }()
+    private static let exportFilenameFormatter = LogDateFormat.posixFormatter("yyyyMMdd-HHmmss")
     
     /// Produces the export filename for a given clock instant.
     /// Format: `wardaxis-logs-YYYYMMDD-HHmmss.txt` (device-local timezone).

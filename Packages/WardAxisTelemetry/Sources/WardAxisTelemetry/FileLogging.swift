@@ -14,6 +14,36 @@ public enum LogFileLimits {
     public static let retainedBytes = 2 * 1024 * 1024
     public static let maximumEntryBytes = 16 * 1024
     static let maximumPendingEntries = 64
+    
+    /// Most entries the log viewer keeps from one read, newest last.
+    public static let maximumStreamedEntries = 5000
+    
+    /// Ends an entry cut at ``maximumEntryBytes``.
+    public static let truncationMarker = " [truncated]\n"
+}
+
+/// Where the app keeps its log file: `Library/Logs/<bundle identifier>/log.log`
+/// in the user domain, inside the sandbox container.
+public enum LogFileLocation {
+    public static let fileName = "log.log"
+    
+    /// The subsystem and folder name for a process without a bundle identifier,
+    /// such as a command-line test runner.
+    public static let fallbackBundleIdentifier = "com.agnidia.wardaxis"
+    
+    static var bundleIdentifier: String {
+        Bundle.main.bundleIdentifier ?? fallbackBundleIdentifier
+    }
+    
+    public static func directory(bundleIdentifier: String) -> URL {
+        FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Logs", isDirectory: true)
+            .appendingPathComponent(bundleIdentifier, isDirectory: true)
+    }
+    
+    public static func file(bundleIdentifier: String) -> URL {
+        directory(bundleIdentifier: bundleIdentifier).appending(path: fileName)
+    }
 }
 
 /// Reads at most `maximumBytes`, discarding a partial first line after seeking.
@@ -89,12 +119,10 @@ struct BoundedLogFile {
 /// Owns rotation, writes and deletion on one executor (ADR-FileLogHandler-001).
 public actor FileLogHandler {
     public static let shared: FileLogHandler? = {
+        // No file without a real bundle identifier: the fallback folder is shared by every such process.
         guard let bundleID = Bundle.main.bundleIdentifier else { return nil }
-        let directory = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Logs", isDirectory: true)
-            .appendingPathComponent(bundleID, isDirectory: true)
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        return try? FileLogHandler(label: "FileLogHandler", localFile: directory.appending(path: "log.log"))
+        try? FileManager.default.createDirectory(at: LogFileLocation.directory(bundleIdentifier: bundleID), withIntermediateDirectories: true)
+        return try? FileLogHandler(label: "FileLogHandler", localFile: LogFileLocation.file(bundleIdentifier: bundleID))
     }()
     
     private struct Pending {
@@ -107,7 +135,7 @@ public actor FileLogHandler {
     private let logger: os.Logger
     
     public init(label: String, localFile url: URL) throws {
-        logger = os.Logger(subsystem: Bundle.main.bundleIdentifier ?? "WardAxis", category: label)
+        logger = os.Logger(subsystem: LogFileLocation.bundleIdentifier, category: label)
         file = try BoundedLogFile(url: url, maximumBytes: LogFileLimits.maximumFileBytes, retainedBytes: LogFileLimits.retainedBytes)
     }
     
@@ -156,7 +184,7 @@ public actor FileLogHandler {
     }
     
     static func boundedEntry(_ entry: String) -> Data {
-        let suffix = Data(" [truncated]\n".utf8)
+        let suffix = Data(LogFileLimits.truncationMarker.utf8)
         let limit = LogFileLimits.maximumEntryBytes
         if entry.utf8.count >= limit {
             var bytes = Data(entry.utf8.prefix(limit - suffix.count))

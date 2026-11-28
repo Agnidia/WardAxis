@@ -61,7 +61,7 @@ struct AccentAlert: View {
                 .scaleEffect(0.8)
                 .isHidden(!isLoading)
             
-            Text(message.uppercased())
+            Text(message)
                 .bodySmall()
                 .foregroundStyle(labelColor)
         }
@@ -74,7 +74,7 @@ struct AccentAlert: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(message)
         .accessibilityAddTraits(.isStaticText)
-        .accessibilityHint(onTap != nil ? "Double tap to dismiss" : "")
+        .accessibilityHint(onTap != nil ? AccessibilityHint.dismiss : "")
     }
     
     // MARK: - Computed Properties
