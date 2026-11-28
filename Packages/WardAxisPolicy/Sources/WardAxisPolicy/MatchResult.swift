@@ -25,6 +25,18 @@ public enum MatchResult: Sendable, Hashable {
     case unknown
 }
 
+extension MatchResult {
+    /// Both criteria must hold. A known contradiction is definite, so `noMatch`
+    /// wins over `unknown`, and `unknown` over `match` (ADR 0020 D4).
+    func and(_ other: @autoclosure () -> MatchResult) -> MatchResult {
+        guard self != .noMatch else {
+            return .noMatch
+        }
+        let other = other()
+        return other == .match ? self : other
+    }
+}
+
 extension Observed {
     /// Evaluates a field whose known value can be absent, such as a flow with
     /// no host name. An absent field never matches, so the rules for the other

@@ -32,6 +32,10 @@ public enum PolicyLimits {
     /// IPv4 tail, the RFC 6874 `%25` delimiter and a zone.
     public static let maximumReportedAddressLength = bracketedIPv6WithIPv4TailLength + "%25".utf8.count + maximumZoneLength
     
+    /// A reported port above this many UTF-8 bytes is refused before parsing:
+    /// `65535` is the longest canonical port (ADR 0020 D1).
+    public static let maximumReportedPortLength = 5
+
     /// `[` + six groups of four hex digits with their colons + a dotted IPv4 + `]`.
     private static let bracketedIPv6WithIPv4TailLength = 1 + 6 * 5 + 15 + 1
     
